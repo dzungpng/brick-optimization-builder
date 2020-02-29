@@ -33,7 +33,7 @@ macx:DEFINES+=OSMac_
 macx:MAYALOCATION=/Applications/Autodesk/maya2018
 macx:CONFIG -= app_bundle
 macx:INCLUDEPATH+=$$MAYALOCATION/devkit/include
-macx:INCLUDEPATH += include/glm
+macx:INCLUDEPATH += /include/glm
 # under mac we need to build a bundle, to do this use
 # the -bundle flag but we also need to not use -dynamic lib so
 # remove this
@@ -44,8 +44,12 @@ macx:LIBS += -L$$MAYALOCATION/Maya.app/Contents/MacOS \
              $$MAYALIBS
 
 HEADERS += \
-    bobnode.h
+    bobnode.h \
+    brick.h \
+    grid.h
 
 SOURCES += \
     bobnode.cpp \
+    brick.cpp \
+    grid.cpp \
     pluginmain.cpp

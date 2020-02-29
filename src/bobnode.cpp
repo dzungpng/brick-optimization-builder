@@ -13,6 +13,7 @@ void* BobNode::creator()
     return new BobNode;
 }
 
+
 MStatus BobNode::initialize()
 {
 
@@ -26,6 +27,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
     return MS::kSuccess;
 }
 
+// code to initialize the plugin //
 MStatus initializePlugin( MObject obj )
 {
 
