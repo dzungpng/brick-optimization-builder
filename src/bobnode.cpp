@@ -8,7 +8,7 @@ void* BobNode::creator()
 MStatus BobNode::initialize()
 {
     // INPUT ATTRIBUTES
-    MFnTypedAttribute inputMeshAttr; // Input mesh to be voxelized
+    MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
     MFnNumericAttribute iterAttr; // Iterations until stable
 
@@ -80,7 +80,37 @@ MStatus BobNode::initialize()
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
-    return MS::kSuccess;
+    MStatus returnStatus;
+
+    if(plug == BobNode::outputMesh) {
+        // GET INPUT HANDLES
+        MDataHandle inputMeshData = data.inputValue(BobNode::inputMesh, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
+
+        MDataHandle colorContraintData = data.inputValue(BobNode::colorConstraint, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting color contraint handle!\n");
+
+        MDataHandle iterationData = data.inputValue(BobNode::iteration, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
+
+        // GET OUTPUT HANDLES
+        MDataHandle outputMeshData = data.outputValue(BobNode::outputMesh, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
+
+        MDataHandle stabilityStatusData = data.outputValue(BobNode::stabilityStatus, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
+
+        // INITIALIZE INPUTS
+        MString colorContraintInput = colorContraintData.asString();
+        int iterationInput = iterationData.asInt();
+
+        // Copy the input mesh into the output mesh, so we can perform operations directly on the output mesh
+        // Reference: meshOpNode.cpp
+        outputMeshData.set(inputMeshData.asMesh());
+        MObject mesh = outputMeshData.asMesh();
+
+        //TODO: Call function generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+    }
 }
 
 MStatus initializePlugin( MObject obj )

@@ -34,13 +34,13 @@ public:
     static MTypeId id;
 
     // inputs
-    static MObject inputMesh;
-    static MObject iteration;
-    static MObject colorConstraint;
+    static MObject inputMesh; // Input mesh (already voxelized by the voxelizerNode)
+    static MObject iteration; // Iterations until stable
+    static MObject colorConstraint; // HARD or SOFT
 
     // outputs
-    static MObject outputMesh;
-    static MObject stabilityStatus;
+    static MObject outputMesh; // Output stablized mesh
+    static MObject stabilityStatus; // Either stable or unstable depending on the output of refinement step
 };
 
 MTypeId BobNode::id(0x80000);
