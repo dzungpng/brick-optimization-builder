@@ -32,7 +32,7 @@ MAYALIBS=-lOpenMaya \
 macx:DEFINES+=OSMac_
 macx:MAYALOCATION=/Applications/Autodesk/maya2018
 macx:CONFIG -= app_bundle
-macx:INCLUDEPATH+=$$MAYALOCATION/devkit/include
+macx:INCLUDEPATH+=$$MAYALOCATION/include
 macx:INCLUDEPATH += include/glm
 # under mac we need to build a bundle, to do this use
 # the -bundle flag but we also need to not use -dynamic lib so
