@@ -1,13 +1,5 @@
 #include "bobnode.h"
 
-#define McheckErr(stat,msg)			\
-    if ( MS::kSuccess != stat ) {	\
-        cerr << msg;				\
-        return MS::kFailure;		\
-}
-
-MTypeId BobNode::id(0x80000);
-
 void* BobNode::creator()
 {
     return new BobNode;
@@ -15,6 +7,71 @@ void* BobNode::creator()
 
 MStatus BobNode::initialize()
 {
+    // INPUT ATTRIBUTES
+    MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
+    MFnTypedAttribute colorContraintAttr; // HARD or SOFT
+    MFnNumericAttribute iterAttr; // Iterations until stable
+
+    // OUTPUT ATTRIBUTES
+    MFnTypedAttribute statusAttr; // Either stable or unstable
+    MFnTypedAttribute outputMeshAttr; // Output stablized mesh
+
+    MStatus returnStatus;
+
+    // CREATE ATTRIBUTES
+    BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
+
+    MString defaultColorConstraint = "HARD";
+    BobNode::colorConstraint = colorContraintAttr.create(
+                "colorContraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
+
+    BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
+
+    BobNode::outputMesh = outputMeshAttr.create("outputMesh", "outMesh", MFnData::kMesh, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
+
+    MString defaultStatus = "Unstable";
+    BobNode::stabilityStatus = statusAttr.create(
+                "stabilityStatus", "stableStat", MFnData::kString, MFnStringData().create(defaultStatus), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating stability status attribute!\n");
+
+    // ADD ATTRIBUTES
+    returnStatus = addAttribute(BobNode::inputMesh);
+    McheckErr(returnStatus, "ERROR in adding input mesh attribute!\n");
+
+    returnStatus = addAttribute(BobNode::colorConstraint);
+    McheckErr(returnStatus, "ERROR in adding color constraint attribute!\n");
+
+    returnStatus = addAttribute(BobNode::iteration);
+    McheckErr(returnStatus, "ERROR in adding iteration attribute!\n");
+
+    returnStatus = addAttribute(BobNode::stabilityStatus);
+    McheckErr(returnStatus, "ERROR in adding statbility status attribute!\n")
+
+    returnStatus = addAttribute(BobNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
+
+    // ADD ATTRIBUTE AFFECTS
+    returnStatus = attributeAffects(BobNode::inputMesh, BobNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for input mesh to output mesh!\n");
+
+    returnStatus = attributeAffects(BobNode::inputMesh, BobNode::stabilityStatus);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for input mesh to stability status!\n");
+
+    returnStatus = attributeAffects(BobNode::iteration, BobNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for iteration to output mesh!\n");
+
+    returnStatus = attributeAffects(BobNode::iteration, BobNode::stabilityStatus);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for iteration to stability status!\n");
+
+    returnStatus = attributeAffects(BobNode::colorConstraint, BobNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for color contraint to output mesh!\n");
+
+    returnStatus = attributeAffects(BobNode::colorConstraint, BobNode::stabilityStatus);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for color contraint to stability status!\n");
 
     return MS::kSuccess;
 }
@@ -23,7 +80,37 @@ MStatus BobNode::initialize()
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
-    return MS::kSuccess;
+    MStatus returnStatus;
+
+    if(plug == BobNode::outputMesh) {
+        // GET INPUT HANDLES
+        MDataHandle inputMeshData = data.inputValue(BobNode::inputMesh, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
+
+        MDataHandle colorContraintData = data.inputValue(BobNode::colorConstraint, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting color contraint handle!\n");
+
+        MDataHandle iterationData = data.inputValue(BobNode::iteration, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
+
+        // GET OUTPUT HANDLES
+        MDataHandle outputMeshData = data.outputValue(BobNode::outputMesh, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
+
+        MDataHandle stabilityStatusData = data.outputValue(BobNode::stabilityStatus, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
+
+        // INITIALIZE INPUTS
+        MString colorContraintInput = colorContraintData.asString();
+        int iterationInput = iterationData.asInt();
+
+        // Copy the input mesh into the output mesh, so we can perform operations directly on the output mesh
+        // Reference: meshOpNode.cpp
+        outputMeshData.set(inputMeshData.asMesh());
+        MObject mesh = outputMeshData.asMesh();
+
+        //TODO: Call function generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+    }
 }
 
 MStatus initializePlugin( MObject obj )
