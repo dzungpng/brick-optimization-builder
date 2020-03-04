@@ -1,17 +1,17 @@
 #pragma once
-#include <maya/MSimple.h>
 #include <maya/MPxNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MFnMeshData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MFnMesh.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MFnStringData.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
+
+#include "voxelizer.h"
 
 #define MNoVersionString
 
@@ -41,6 +41,7 @@ public:
     // outputs
     static MObject outputMesh; // Output stablized mesh
     static MObject stabilityStatus; // Either stable or unstable depending on the output of refinement step
+
 };
 
 MTypeId BobNode::id(0x80000);
