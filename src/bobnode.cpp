@@ -84,7 +84,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
     MStatus returnStatus;
-
     if(plug == BobNode::outputMesh) {
         // GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
@@ -108,7 +107,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
-        //TODO: VOXELIZE INPUT MESH
+        //VOXELIZE INPUT MESH
         Voxelizer voxelizer = Voxelizer();
 
         // 1. Compute the bounding box around the mesh vertices
@@ -118,16 +117,21 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
 
         // 3. Create a mesh data container, which will store our new voxelized mesh
-
+        MFnMeshData meshDataFn;
+        MObject newOutputMeshData = meshDataFn.create(&returnStatus);
+        McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
         // 4. Create a cubic polygon for each voxel and populate the MeshData object
-
+        voxelizer.createVoxelMesh(voxels, &newOutputMeshData);
 
         // 5. Set the output data
-
+        outputMeshHandle.setMObject(newOutputMeshData);
 
         //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+
+        return MS::kSuccess;
     }
+    return MS::kFailure;
 }
 
 // code to initialize the plugin //
