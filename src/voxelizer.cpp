@@ -124,3 +124,122 @@ std::vector<MFloatPoint> Voxelizer::getVoxels(const MObject& pMeshObj, const MBo
     // return the list of voxel coordinates which lie within the mesh
     return voxels;
 }
+
+
+void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions, MObject* pOutMeshData) const
+{
+    // Create a mesh containing one cubic polygon for each voxel in the pVoxelPositions list.
+    int numVoxels = pVoxelPositions.size();
+
+    int numVerticesPerVoxel     = 8; // a cube has eight vertices.
+    int numPolygonsPerVoxel     = 6; // a cube has six faces.
+    int numVerticesPerPolygon   = 4; // four vertices are required to define a face of a cube.
+    int numPolygonConnectsPerVoxel = numPolygonsPerVoxel * numVerticesPerPolygon; // 24
+
+    // Initialize the required arrays used to create the mesh in MFnMesh.create()
+    int totalVertices = numVoxels * numVerticesPerVoxel;
+    MFloatPointArray vertexArray;
+    vertexArray.setLength(totalVertices);
+    int vertexIndexOffset = 0;
+
+    int totalPolygons = numVoxels * numPolygonsPerVoxel;
+    MIntArray polygonCounts;
+    polygonCounts.setLength(totalPolygons);
+    int polygonCountsIndexOffset = 0;
+
+    int totalPolygonConnects = numVoxels * numPolygonConnectsPerVoxel;
+    MIntArray polygonConnects;
+    polygonConnects.setLength(totalPolygonConnects);
+    int polygonConnectsIndexOffset = 0;
+
+    //Populate the required arrays used in MFnMesh.create()
+    for(int i = 0; i < numVoxels; i++) {
+        MFloatPoint voxelPosition = pVoxelPositions[i];
+
+        // Add a new cube to the arrays
+        createCube(voxelPosition, &vertexArray, vertexIndexOffset, numVerticesPerVoxel,
+                   &polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
+                   &polygonConnects, polygonConnectsIndexOffset);
+
+
+        // Increment the respective index offsets
+         vertexIndexOffset += numVerticesPerVoxel;
+         polygonCountsIndexOffset += numPolygonsPerVoxel;
+         polygonConnectsIndexOffset += numPolygonConnectsPerVoxel;
+
+    }
+
+     // Create the mesh now that the arrays have been populated. The mesh is stored in pOutMeshData
+     MFnMesh meshFn;
+     MStatus status;
+     meshFn.create(totalVertices, totalPolygons, vertexArray, polygonCounts, polygonConnects, *pOutMeshData, &status);
+     McheckErr(status, "ERROR in creating final voxel mesh in createVoxelMesh!");
+}
+
+void Voxelizer::createCube(
+        const MFloatPoint pVoxelPosition,
+        MFloatPointArray* pVertexArray,
+        int pVertexIndexOffset,
+        int pNumVerticesPerVoxel,
+        MIntArray* pPolygonCountArray,
+        int pPolygonCountIndexOffset,
+        int pNumPolygonsPerVoxel,
+        int pNumVerticesPerPolygon,
+        MIntArray* pPolygonConnectsArray,
+        int pPolygonConnectsIndexOffset) const
+{
+    // Add a cubic polygon to the specified arrays.
+
+    // We are using half the given width to compute the vertices of the cube.
+    float halfWidth = float( defaultVoxelWidth / 2.f );
+
+    // Declare the eight corners of the cube. The cube is centered at pVoxelPosition.
+    MFloatPoint v0(-halfWidth + pVoxelPosition.x, -halfWidth + pVoxelPosition.y, -halfWidth + pVoxelPosition.z);
+    MFloatPoint v1(halfWidth + pVoxelPosition.x, -halfWidth + pVoxelPosition.y, -halfWidth + pVoxelPosition.z);
+    MFloatPoint v2(halfWidth + pVoxelPosition.x, -halfWidth + pVoxelPosition.y,  halfWidth + pVoxelPosition.z);
+    MFloatPoint v3(-halfWidth + pVoxelPosition.x, -halfWidth + pVoxelPosition.y,  halfWidth + pVoxelPosition.z);
+    MFloatPoint v4(-halfWidth + pVoxelPosition.x,  halfWidth + pVoxelPosition.y, -halfWidth + pVoxelPosition.z);
+    MFloatPoint v5(-halfWidth + pVoxelPosition.x,  halfWidth + pVoxelPosition.y,  halfWidth + pVoxelPosition.z);
+    MFloatPoint v6(halfWidth + pVoxelPosition.x,  halfWidth + pVoxelPosition.y,  halfWidth + pVoxelPosition.z);
+    MFloatPoint v7(halfWidth + pVoxelPosition.x,  halfWidth + pVoxelPosition.y, -halfWidth + pVoxelPosition.z);
+
+    std::vector<MFloatPoint> vertices;
+    vertices.push_back(v0);
+    vertices.push_back(v1);
+    vertices.push_back(v2);
+    vertices.push_back(v3);
+    vertices.push_back(v4);
+    vertices.push_back(v5);
+    vertices.push_back(v6);
+    vertices.push_back(v7);
+
+    // Declare the data structure which binds each vertex to a polygon corner
+    std::vector<glm::vec3> polygonConnections;
+    // the vertex indexed at 0 corresponds to the polygon corners whose indexes are (0, 12, 16) in pPolygonConnectsArray.
+    polygonConnections.push_back(glm::vec3(0, 12, 16));
+    polygonConnections.push_back(glm::vec3(1, 19, 20));
+    polygonConnections.push_back(glm::vec3(2,  9, 23));
+    polygonConnections.push_back(glm::vec3(3,  8, 13));
+    polygonConnections.push_back(glm::vec3(4, 15, 17));
+    polygonConnections.push_back(glm::vec3(5, 11, 14));
+    polygonConnections.push_back(glm::vec3(6, 10, 22));
+    polygonConnections.push_back(glm::vec3(7, 18, 21));
+
+    // Store the eight corners of the cube in the vertex array.
+    for(int i = 0; i < pNumVerticesPerVoxel; i++){
+        // Store the vertex in the passed vertex array.
+        (*pVertexArray)[pVertexIndexOffset + i] = vertices[i];
+
+        // Assign the vertex in the pVertexArray to the relevant polygons.
+        for(int j = 0; j < 3; j++) {
+            int polygonConnectionIndex = polygonConnections[i][j];
+            pPolygonConnectsArray[pPolygonConnectsIndexOffset + polygonConnectionIndex] = pVertexIndexOffset + i;
+        }
+    }
+
+    // Declare the number of vertices for each face.
+    for(int i = 0; i < pNumPolygonsPerVoxel; i++) {
+        // Set the number of vertices for the polygon at the given index.
+        pPolygonCountArray[pPolygonCountIndexOffset + i] =  pNumVerticesPerPolygon;
+    }
+}
