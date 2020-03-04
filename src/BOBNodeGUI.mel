@@ -1,0 +1,13 @@
+global proc createBOBNode() {
+    string $selected[] = `ls -sl`;
+    if (size($selected) == 1)
+    {
+       createNode BOBNode;
+       string $node = "BOBNode1";
+       string $mesh = $selected[0];
+       connectAttr ($mesh + ".outMesh") ($node + ".inputMesh");
+       select $node;
+    } else {
+        error "Please select exactly one mesh"; 
+    }
+}
