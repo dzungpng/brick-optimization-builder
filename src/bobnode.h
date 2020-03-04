@@ -15,7 +15,7 @@
 
 #define MNoVersionString
 
-// A quick function to check for maya errors
+/// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
     if (MS::kSuccess != stat) { \
         cerr << msg; \
@@ -33,14 +33,14 @@ public:
 
     static MTypeId id;
 
-    // inputs
-    static MObject inputMesh; // Input mesh (already voxelized by the voxelizerNode)
-    static MObject iteration; // Iterations until stable
-    static MObject colorConstraint; // HARD or SOFT
+    /// inputs
+    static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)
+    static MObject iteration; /// Iterations until stable
+    static MObject colorConstraint; /// HARD or SOFT
 
-    // outputs
-    static MObject outputMesh; // Output stablized mesh
-    static MObject stabilityStatus; // Either stable or unstable depending on the output of refinement step
+    /// outputs
+    static MObject outputMesh; /// Output stablized mesh
+    static MObject stabilityStatus; /// Either stable or unstable depending on the output of refinement step
 
 };
 

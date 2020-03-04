@@ -17,7 +17,7 @@
 #include <vector>
 #include <include/glm/vec3.hpp>
 
-// A quick function to check for maya errors
+/// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
     if (MS::kSuccess != stat) { \
         cerr << msg; \
@@ -34,24 +34,24 @@ public:
 
     MBoundingBox getBoundingBox(const MObject&) const;
     std::vector<MFloatPoint> getVoxels(const MObject&, const MBoundingBox&) const;
-    void createVoxelMesh(const std::vector<MFloatPoint>&, MObject*) const;
+    void createVoxelMesh(const std::vector<MFloatPoint>&, MObject&) const;
 
 
 private:
-    float defaultVoxelWidth; // the width of a cubic voxel
-    float defaultVoxelDistance; // the distance which separates the center of two adjacent voxels
+    float defaultVoxelWidth; /// the width of a cubic voxel
+    float defaultVoxelDistance; /// the distance which separates the center of two adjacent voxels
 
     void createCube(const MFloatPoint,
-                    MFloatPointArray*,
-                    int,
-                    int,
-                    MIntArray*,
-                    int,
-                    int,
-                    int,
-                    MIntArray*,
-                    int) const;
+                    MFloatPointArray&,
+                    const unsigned int,
+                    const unsigned int,
+                    MIntArray&,
+                    const unsigned int,
+                    const unsigned int,
+                    const unsigned int,
+                    MIntArray&,
+                    const unsigned int) const;
 
 };
 
-#endif // VOXELIZER_H
+#endif /// VOXELIZER_H
