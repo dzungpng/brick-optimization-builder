@@ -9,11 +9,11 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MFnStringData.h>
 
+#include "grid.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
-
-#define MNoVersionString
 
 // A quick function to check for maya errors
 #define McheckErr(stat, msg) \
@@ -24,6 +24,9 @@
 
 class BobNode: public MPxNode
 {
+private:
+    Grid* grid = new Grid(glm::vec3(10, 10, 10), glm::vec3());
+
 public:
     BobNode() {}
     ~BobNode() override {}

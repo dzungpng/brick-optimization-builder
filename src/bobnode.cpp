@@ -1,4 +1,6 @@
 #include "bobnode.h"
+#include <stdio.h>
+
 
 void* BobNode::creator()
 {
@@ -132,18 +134,19 @@ MStatus initializePlugin( MObject obj )
     }
 
 //	// code for setting up the menu items
-//	MString guiPath = plugin.loadPath() + MString("/LSystemGUI.mel");
-//	MString quoteInStr = "\\\"";
-//	MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
-//	MString menu = MString("menu - parent MayaWindow - l \"LSystems\" LSystems;");
-//	MString addLSystemCmd = MString("menuItem - label \"LSystem Command\" - parent MayaWindow|LSystems - command \"createGUI()\" LSystemCommand;");
-//	MString addNodeCmd = MString("menuItem - label \"LSystem Node\" - parent MayaWindow|LSystems - command \"setupNode()\" LSystemNodeItem;");
+    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MGlobal::displayInfo("PATH: " + guiPath);
+    MString quoteInStr = "\\\"";
+    MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
+    MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
+    MString addNodeCmd = MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
 
-//	MString createMenu = eval + "\n" + menu + "\n" + addLSystemCmd + "\n" + addNodeCmd;
+    MString createMenu = eval + "\n" + menu + "\n" + addNodeCmd;
 
-//	char buffer[2048];
-//	sprintf_s(buffer, 2048, createMenu.asChar());
-//	MGlobal::executeCommand(buffer, true);
+//    char buffer[2048];
+//    sprintf_s(buffer, 2048, createMenu.asChar());
+//    MGlobal::executeCommand(buffer, true);
+      MGlobal::executeCommand(createMenu.asChar());
 
     return status;
 }
