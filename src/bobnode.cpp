@@ -7,14 +7,14 @@ void* BobNode::creator()
 
 MStatus BobNode::initialize()
 {
-    // INPUT ATTRIBUTES
-    MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
-    MFnTypedAttribute colorContraintAttr; // HARD or SOFT
-    MFnNumericAttribute iterAttr; // Iterations until stable
+    /// INPUT ATTRIBUTES
+    MFnTypedAttribute inputMeshAttr; /// Input mesh (already voxelized by the voxelizerNode)
+    MFnTypedAttribute colorContraintAttr; /// HARD or SOFT
+    MFnNumericAttribute iterAttr; /// Iterations until stable
 
-    // OUTPUT ATTRIBUTES
-    MFnTypedAttribute statusAttr; // Either stable or unstable
-    MFnTypedAttribute outputMeshAttr; // Output stablized mesh
+    /// OUTPUT ATTRIBUTES
+    MFnTypedAttribute statusAttr; /// Either stable or unstable
+    MFnTypedAttribute outputMeshAttr; /// Output stablized mesh
 
     statusAttr.setWritable(false);
     outputMeshAttr.setWritable(false);
@@ -22,7 +22,7 @@ MStatus BobNode::initialize()
 
     MStatus returnStatus;
 
-    // CREATE ATTRIBUTES
+    /// CREATE ATTRIBUTES
     BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
 
@@ -42,7 +42,7 @@ MStatus BobNode::initialize()
                 "stabilityStatus", "stableStat", MFnData::kString, MFnStringData().create(defaultStatus), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating stability status attribute!\n");
 
-    // ADD ATTRIBUTES
+    /// ADD ATTRIBUTES
     returnStatus = addAttribute(BobNode::inputMesh);
     McheckErr(returnStatus, "ERROR in adding input mesh attribute!\n");
 
@@ -58,7 +58,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
 
-    // ADD ATTRIBUTE AFFECTS
+    /// ADD ATTRIBUTE AFFECTS
     returnStatus = attributeAffects(BobNode::inputMesh, BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in adding attributeAffects for input mesh to output mesh!\n");
 
@@ -86,7 +86,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 {
     MStatus returnStatus;
     if(plug == BobNode::outputMesh) {
-        // GET INPUT HANDLES
+        /// GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
 
@@ -96,42 +96,42 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MDataHandle iterationHandle = data.inputValue(BobNode::iteration, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
 
-        // GET OUTPUT HANDLES
+        /// GET OUTPUT HANDLES
         MDataHandle outputMeshHandle = data.outputValue(BobNode::outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
 
         MDataHandle stabilityStatusHandle = data.outputValue(BobNode::stabilityStatus, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
 
-        // INITIALIZE INPUTS
+        /// INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
         int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
-        //VOXELIZE INPUT MESH
+        /// VOXELIZE INPUT MESH
         Voxelizer voxelizer = Voxelizer();
 
-        // 1. Compute the bounding box around the mesh vertices
+        /// 1. Compute the bounding box around the mesh vertices
         MBoundingBox boundingBox = voxelizer.getBoundingBox(inputMeshObj);
 
-        // 2. Determine which voxel centerpoints are contained within the mesh
+        /// 2. Determine which voxel centerpoints are contained within the mesh
         std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
-        std::string voxels_size = std::to_string(voxels.size());
-        MGlobal::displayInfo(voxels_size.c_str());
+//        std::string voxels_size = std::to_string(voxels.size());
+//        MGlobal::displayInfo(voxels_size.c_str());
 
 
-        // 3. Create a mesh data container, which will store our new voxelized mesh
+        /// 3. Create a mesh data container, which will store our new voxelized mesh
         MFnMeshData meshDataFn;
         MObject newOutputMeshData = meshDataFn.create(&returnStatus);
         McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
-        // 4. Create a cubic polygon for each voxel and populate the MeshData object
-        //voxelizer.createVoxelMesh(voxels, &newOutputMeshData);
+        /// 4. Create a cubic polygon for each voxel and populate the MeshData object
+        voxelizer.createVoxelMesh(voxels, newOutputMeshData);
 
-        // 5. Set the output data
-        //outputMeshHandle.setMObject(newOutputMeshData);
+        /// 5. Set the output data
+        outputMeshHandle.setMObject(newOutputMeshData);
 
-        //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+        ///TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
 
         return MS::kSuccess;
     }
