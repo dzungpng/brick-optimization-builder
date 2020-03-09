@@ -1,21 +1,24 @@
 #pragma once
-#include <maya/MSimple.h>
 #include <maya/MPxNode.h>
 #include <maya/MGlobal.h>
+
 #include <maya/MFnMeshData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MFnMesh.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MFnStringData.h>
+
+#include "grid.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 
+#include "voxelizer.h"
+
 #define MNoVersionString
 
-// A quick function to check for maya errors
+/// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
     if (MS::kSuccess != stat) { \
         cerr << msg; \
@@ -24,6 +27,9 @@
 
 class BobNode: public MPxNode
 {
+private:
+    Grid* grid = new Grid(glm::vec3(10, 10, 10), glm::vec3());
+
 public:
     BobNode() {}
     ~BobNode() override {}
@@ -33,14 +39,15 @@ public:
 
     static MTypeId id;
 
-    // inputs
-    static MObject inputMesh; // Input mesh (already voxelized by the voxelizerNode)
-    static MObject iteration; // Iterations until stable
-    static MObject colorConstraint; // HARD or SOFT
+    /// inputs
+    static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)
+    static MObject iteration; /// Iterations until stable
+    static MObject colorConstraint; /// HARD or SOFT
 
-    // outputs
-    static MObject outputMesh; // Output stablized mesh
-    static MObject stabilityStatus; // Either stable or unstable depending on the output of refinement step
+    /// outputs
+    static MObject outputMesh; /// Output stablized mesh
+    static MObject stabilityStatus; /// Either stable or unstable depending on the output of refinement step
+
 };
 
 MTypeId BobNode::id(0x80000);
