@@ -18,7 +18,7 @@ MStatus BobNode::initialize()
     MFnTypedAttribute statusAttr; /// Either stable or unstable
     MFnTypedAttribute outputMeshAttr; /// Output stablized mesh
 
-    statusAttr.setWritable(false);
+    statusAttr.setWritable(true);
     outputMeshAttr.setWritable(false);
     outputMeshAttr.setStorable(false);
 
@@ -30,16 +30,18 @@ MStatus BobNode::initialize()
 
     MString defaultColorConstraint = "HARD";
     BobNode::colorConstraint = colorContraintAttr.create(
-                "colorContraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
+                "colorConstraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
+    colorContraintAttr.setHidden(false);
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
 
     BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
+    //iterAttr.setHidden(true);
     McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
     BobNode::outputMesh = outputMeshAttr.create("outputMesh", "outMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
 
-    MString defaultStatus = "Unstable";
+    MString defaultStatus = "Uninitialized";
     BobNode::stabilityStatus = statusAttr.create(
                 "stabilityStatus", "stableStat", MFnData::kString, MFnStringData().create(defaultStatus), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating stability status attribute!\n");
