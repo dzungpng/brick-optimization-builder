@@ -191,6 +191,17 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "iterations";
 	editorTemplate -suppress "iterateUntilStable";
 	editorTemplate -suppress "outputMesh";
+	editorTemplate -suppress "oneXone";
+	editorTemplate -suppress "oneXtwo";
+	editorTemplate -suppress "oneXthree";
+	editorTemplate -suppress "oneXfour";
+	editorTemplate -suppress "oneXsix";
+	editorTemplate -suppress "oneXeight";
+	editorTemplate -suppress "twoXtwo";
+	editorTemplate -suppress "twoXthree";
+	editorTemplate -suppress "twoXfour";
+	editorTemplate -suppress "twoXsix";
+	editorTemplate -suppress "twoXeight";
 
 	editorTemplate -addSeparator;
 

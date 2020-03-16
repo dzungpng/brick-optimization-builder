@@ -24,6 +24,7 @@ MStatus BobNode::initialize()
     statusAttr.setWritable(true);
     outputMeshAttr.setWritable(false);
     outputMeshAttr.setStorable(false);
+    outputMeshAttr.setHidden(true);
 
     MStatus returnStatus;
 
@@ -38,11 +39,10 @@ MStatus BobNode::initialize()
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
 
     BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
-    //iterAttr.setHidden(true);
+    iterAttr.setHidden(true);
     McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
     BobNode::iterateUntilStable = untilStableAttr.create("iterateUntilStable", "itrSt", MFnNumericData::kBoolean, 0, &returnStatus);
-    //iterAttr.setHidden(true);
     McheckErr(returnStatus, "ERROR in creating iterate until stable attribute!\n");
 
     MString defaultStatus = "Uninitialized";
@@ -124,6 +124,9 @@ MStatus BobNode::initialize()
     returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to output mesh!\n");
 
+    returnStatus = attributeAffects(BobNode::iterateUntilStable, BobNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to output mesh!\n");
+
 
     return MS::kSuccess;
 }
@@ -133,6 +136,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
     MStatus returnStatus;
+    MGlobal::displayInfo("COMPUTE!");
     if(plug == BobNode::outputMesh) {
         MGlobal::displayInfo("OUTPUT MESH AFFECTED");
         /// GET INPUT HANDLES
