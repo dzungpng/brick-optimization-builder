@@ -43,10 +43,27 @@ public:
     static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)
     static MObject iteration; /// Iterations until stable
     static MObject colorConstraint; /// HARD or SOFT
+    static MObject iterateUntilStable; // if true, iterate until max iterations or stable. otherwise, iterate once
+
+    // array attrs data for instanced bricks
+    static MObject oneXoneArr;
+    static MObject oneXtwoArr;
+    static MObject oneXthreeArr;
+    static MObject oneXfourArr;
+    static MObject oneXsixArr;
+    static MObject oneXeightArr;
+    static MObject twoXtwoArr;
+    static MObject twoXthreeArr;
+    static MObject twoXfourArr;
+    static MObject twoXsixArr;
+    static MObject twoXeightArr;
+
+
 
     /// outputs
     static MObject outputMesh; /// Output stablized mesh
     static MObject stabilityStatus; /// Either stable or unstable depending on the output of refinement step
+
 
 };
 
@@ -56,7 +73,19 @@ MObject BobNode::iteration;
 MObject BobNode::colorConstraint;
 MObject BobNode::outputMesh;
 MObject BobNode::stabilityStatus;
+MObject BobNode::iterateUntilStable;
 
+MObject BobNode::oneXoneArr;
+MObject BobNode::oneXtwoArr;
+MObject BobNode::oneXthreeArr;
+MObject BobNode::oneXfourArr;
+MObject BobNode::oneXsixArr;
+MObject BobNode::oneXeightArr;
+MObject BobNode::twoXtwoArr;
+MObject BobNode::twoXthreeArr;
+MObject BobNode::twoXfourArr;
+MObject BobNode::twoXsixArr;
+MObject BobNode::twoXeightArr;
 
 
 

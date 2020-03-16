@@ -1,11 +1,26 @@
+global proc importBrick(string $node, string $brickObj, string $attrArr) {
+  string $importArr[] = file("-import", "-rnn", "/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/objs/" + $brickObj);
+  for($brick in $importArr) {
+      if ( `nodeType $brick` == "transform" ) {
+          print ($brick);
+          string $instancer = instancer();
+          connectAttr ($brick + ".matrix") ($instancer + ".inputHierarchy[0]");
+          connectAttr ($node + "." + $attrArr) ($instancer + ".inputPoints");
+      }
+  }
+}
+
 global proc createBOBNode() {
     string $selected[] = `ls -sl`;
     if (size($selected) == 1)
     {
-       createNode BOBNode;
-       string $node = "BOBNode1";
+       string $node = createNode("BOBNode");
        string $mesh = $selected[0];
        connectAttr ($mesh + ".outMesh") ($node + ".inputMesh");
+
+       // import base bricks and attach to data arr attr of the node for visualization
+      importBrick($node, "1x1.obj", "oneXone");
+
        select $node;
     } else {
         error "Please select exactly one mesh"; 

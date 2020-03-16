@@ -1,3 +1,5 @@
+
+
 //=====================================================================================================================//
 // Initialize																					
 //
@@ -14,9 +16,23 @@ global proc AEInitializeBuild (string $nodeNameArr) {
 	// Attribute controls and buttons																					//
 	//------------------------------------------------------------------------------------------------------------------//
 
+		//--------------------------------------------------------------------------------------------------------------//
+		// User instructions / description																				//
+		//--------------------------------------------------------------------------------------------------------------//
+
+		separator -style none;
+		text -l "To create a LEGO layout of your mesh, first initialize it";
+		separator -style none;
+
 	string $initCmd = "editorTemplate -dimControl " + $nodeName + " InitializeButton true; \
 					     button -e -enable false InitializeButton; \
-					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initialized\";";
+					     button -e -enable true IterateButton; \
+					     editorTemplate -dimControl " + $nodeName + " IterateButton false; \
+					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initializing...\";";
+
+	//string $mesh = 'getAttr ($nodeName + ".inputMesh")';
+	//text -label $mesh meshLabel;
+
 	button -label "Initialize" -enable true -c $initCmd InitializeButton;
 }
 
@@ -35,7 +51,7 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 		button -e -enable true InitializeButton;
 		string $initCmd = "editorTemplate -dimControl " + $nodeName + " InitializeButton true; \
 					     button -e -enable false InitializeButton; \
-					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initialized\";";
+					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initializing...\";";
 
 	} else { // do nothing, node has already been initialized
 		editorTemplate -dimControl $nodeName InitializeButton true;
@@ -43,7 +59,61 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 		$initCmd = "";
 	} 
 
+	// string $mesh = 'getAttr ($nodeName + ".inputMesh")';
+	// text -e $mesh meshLabel;
+
 	button -e -c $initCmd InitializeButton;
+}
+
+//=====================================================================================================================
+//
+// Iterate																					
+//
+//=====================================================================================================================
+
+
+global proc AEIterateBuild (string $nodeNameArr) {
+
+	// get node name
+	string $buffer[];
+	tokenize($nodeNameArr,".",$buffer);
+	string $nodeName = $buffer[0];
+
+	//------------------------------------------------------------------------------------------------------------------//
+	// Attribute controls and buttons																					//
+	//------------------------------------------------------------------------------------------------------------------//
+
+	string $iterCmd = "editorTemplate -dimControl " + $nodeName + " IterateButton true; \
+					     button -e -enable false IterateButton; \
+					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Computing...\";";
+	button -label "Iterate" -enable false -c $iterCmd IterateButton;
+	editorTemplate -dimControl " + $nodeName + " IterateButton true; 
+}
+
+global proc AEIterateUpdate (string $nodeNameArr) {
+
+	// get node name
+	string $buffer[];
+	tokenize($nodeNameArr,".",$buffer);
+	string $nodeName = $buffer[0];
+	string $iterCmd = "";
+
+	// dim/undim attribute fields based on nodeStage
+	string $stage = `getAttr ($nodeName + ".stabilityStatus")`;
+	if ($stage == "Uninitialized") {
+		editorTemplate -dimControl $nodeName IterateButton true;
+		button -e -enable false IterateButton;
+		string $iterCmd = "";
+
+	} else { // allow the user to iterate since initialization has been completed
+		editorTemplate -dimControl $nodeName IterateButton false;
+		button -e -enable true IterateButton;
+		string $iterCmd = "editorTemplate -dimControl " + $nodeName + " IterateButton true; \
+					     button -e -enable false InitializeButton; \
+					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Computing...\";";
+	} 
+
+	button -e -c $iterCmd IterateButton;
 }
 
 //=====================================================================================================================//
@@ -72,15 +142,16 @@ global proc AEColorConstraintBuild (string $nodeNameArr) {
 	// Attribute controls and buttons																				
 	//
 	//-----------------------------------------------------------------------------------------------------------------//
+	
+	intSliderGrp -label "Max Iterations" -value 5 -min 1 -max 20 maxIter;
+	connectControl maxIter ($nodeName+".iterations");
 
-	//	string $getSelected = "optionMenuGrp -q true -value " + "colorMenu;"
-	//string $getSelected = optionMenuGrp("-query", "-value", "colorMenu");
-
-    //string $onChange = setAttr("-type", "string", $nodeName + ".colorConstraint", switchColorVal($nodeName));
     string $onChange = "setAttr -type \"string\" " + $nodeName + ".colorConstraint " + switchColorVal($nodeName);
-	optionMenuGrp -label "Color Constraint" -cc $onChange;
+	optionMenuGrp -label "Color Constraint" -cc $onChange colorMenu;
 	menuItem -label "HARD";  
 	menuItem -label "SOFT";  
+
+
 }
 
 global proc AEColorConstraintUpdate (string $nodeNameArr) {
@@ -95,50 +166,17 @@ global proc AEColorConstraintUpdate (string $nodeNameArr) {
 	//
 	//-----------------------------------------------------------------------------------------------------------------//
 
+
+	string $val = `getAttr ($nodeName + ".iterations")`;
+	intSliderGrp -e -value $val maxIter;
+	connectControl maxIter ($nodeName+".iterations");
+
 	string $stage = `getAttr ($nodeName + ".colorConstraint")`;
 	if ($stage == "HARD") {
-		optionMenuGrp -value "HARD";
+		optionMenuGrp -select "HARD" colorMenu;
 	} else {
-		optionMenuGrp -value "SOFT";
+		optionMenuGrp -select "SOFT" colorMenu;
 	}
-}
-
-//=====================================================================================================================//
-// Iteration Box 																			
-//
-//=====================================================================================================================//
-
-global proc AEMaxIterBuild (string $nodeNameArr) {
-
-	// get node name
-	string $buffer[];
-	tokenize($nodeNameArr,".",$buffer);
-	string $nodeName = $buffer[0];
-
-	//-----------------------------------------------------------------------------------------------------------------//
-	// Attribute controls and buttons																				
-	//
-	//-----------------------------------------------------------------------------------------------------------------//
-
-	checkBox -label "Iterate Until Stable" -value true;  
-	intSliderGrp -label "Max Iterations" -value 5 -min 1 -max 20;
-
-}
-
-global proc AEMaxIterUpdate (string $nodeNameArr) {
-
-	// get node name
-	string $buffer[];
-	tokenize($nodeNameArr,".",$buffer);
-	string $nodeName = $buffer[0];
-
-	//-----------------------------------------------------------------------------------------------------------------//
-	// Attribute controls and buttons																				
-	//
-	//-----------------------------------------------------------------------------------------------------------------//
-
-	string $stage = `getAttr ($nodeName + ".maxIterations")`;
-	intSliderGrp -label "Max Iterations" -value 5 -min 1 -max 20;
 }
 
 
@@ -147,18 +185,16 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -beginLayout "BOBNode" -collapse false;
 
 	editorTemplate -suppress "caching";
+	editorTemplate -suppress "frozen";
 	editorTemplate -suppress "nodeState";
-	//editorTemplate -suppress "colorConstraint";
-	//editorTemplate -suppress "iterations";
+	editorTemplate -suppress "colorConstraint";
+	editorTemplate -suppress "iterations";
+	editorTemplate -suppress "iterateUntilStable";
 	editorTemplate -suppress "outputMesh";
 
-	//--------------------------------------------------------------------------------------------------------------//
-	// tessellation stage
-	//--------------------------------------------------------------------------------------------------------------//
 	editorTemplate -addSeparator;
 
 	editorTemplate -beginLayout "Initialization" -collapse false;
-		editorTemplate -addControl "inputMesh";
 		editorTemplate -callCustom "AEInitializeBuild" "AEInitializeUpdate" $nodeName;
 	editorTemplate -endLayout;
 	
@@ -166,10 +202,14 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -addSeparator;
 
 	editorTemplate -beginLayout "Layout Settings" -collapse false;
+		editorTemplate -addControl "iterateUntilStable";
 		editorTemplate -callCustom "AEColorConstraintBuild" "AEColorConstraintUpdate" $nodeName;
-		//editorTemplate -callCustom "AEMaxIterBuild" "AEMaxIterUpdate" $nodeName;
+		
+		
 	editorTemplate -endLayout;
 	editorTemplate -addSeparator;
+
+	editorTemplate -callCustom "AEIterateBuild" "AEIterateUpdate" $nodeName;
 
 	editorTemplate -endLayout;
 }
