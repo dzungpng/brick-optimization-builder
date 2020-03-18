@@ -45,7 +45,7 @@ MStatus BobNode::initialize()
     BobNode::iterateUntilStable = untilStableAttr.create("iterateUntilStable", "itrSt", MFnNumericData::kBoolean, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating iterate until stable attribute!\n");
 
-    MString defaultStatus = "Uninitialized";
+    MString defaultStatus = "Initializing...";
     BobNode::stabilityStatus = statusAttr.create(
                 "stabilityStatus", "stableStat", MFnData::kString, MFnStringData().create(defaultStatus), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating stability status attribute!\n");
@@ -186,8 +186,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
             /// 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
-    //        std::string voxels_size = std::to_string(voxels.size());
-    //        MGlobal::displayInfo(voxels_size.c_str());
 
             /// 3. Create a mesh data container, which will store our new voxelized mesh
             MFnMeshData meshDataFn;
@@ -199,7 +197,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
             /// 5. Set the output data
             outputMeshHandle.setMObject(newOutputMeshData);
-
 
             // run initialization code
             // set status to "Initialized"
@@ -222,10 +219,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         } else {
             MGlobal::displayInfo("OTHER STABILITY STATUS");
         }
-
-
-
-
 
 
         ///TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
@@ -253,7 +246,8 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+//    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
     MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
