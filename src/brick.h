@@ -23,7 +23,9 @@ private:
     glm::vec2 scale;
 
 public:
-    Brick(glm::vec3 pos, BrickType type);
+    Brick(); // default is one by one brick
+    Brick(glm::vec3 pos, BrickType type, glm::vec2 scale);
+    ~Brick();
 
     void setPos(glm::vec3 p) {pos = p;}
     void setRot(glm::vec3 r) {rot = r;}
