@@ -2,7 +2,7 @@
 
 Grid::Grid(glm::vec3 dim, glm::vec3 origin): dim(dim), origin(origin)
 {
-  baseGrid = std::vector<Brick*>((dim[0] * dim[1] * dim[2]), nullptr);
+    baseGrid = std::vector<Brick*>((dim[0] * dim[1] * dim[2]), nullptr);
 }
 
 int Grid::flat(int x, int y, int z) const {
@@ -17,6 +17,16 @@ void Grid::setBrick(Brick* brick) {
             int gridPos = flat(pos[0] + i, pos[1], pos[2] + j);
             baseGrid[gridPos] = brick;
         }
+    }
+}
+
+Brick* Grid::getBrick(glm::vec3 pos) {
+    int gridPos = flat(pos[0], pos[1], pos[2]);
+    // bounds checking
+    if (gridPos >= 0 && gridPos < baseGrid.size()) {
+        return baseGrid[gridPos];
+    } else {
+        return nullptr;
     }
 }
 

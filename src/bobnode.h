@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <set>
 
 #include "voxelizer.h"
 
@@ -29,6 +30,10 @@ class BobNode: public MPxNode
 {
 private:
     Grid* grid = new Grid(glm::vec3(10, 10, 10), glm::vec3());
+
+    // modifies an adjacency list of bricks that are mergeable, given an input set of bricks
+    // used either on all bricks or a k-ring set of bricks
+    void initAdjBricks(std::set<Brick*> bricks, std::map<Brick*, std::set<Brick*>> &adjList);
 
 public:
     BobNode() {}

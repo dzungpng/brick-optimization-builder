@@ -19,4 +19,6 @@ public:
     Grid(glm::vec3 dim, glm::vec3 origin);
 
     void setBrick(Brick* brick);
+
+    Brick* getBrick(glm::vec3 pos);
 };

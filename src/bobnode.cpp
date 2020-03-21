@@ -131,6 +131,94 @@ MStatus BobNode::initialize()
     return MS::kSuccess;
 }
 
+static bool isValidBrick(glm::vec2 scale) {
+    if (scale[0] == 1 || scale[0] == 2) {
+        if (scale[1] >= 1 && scale[1] <= 8 && scale[1] != 7 && scale[1] != 5) {
+            return true;
+        }
+    }
+    if (scale[1] == 1 || scale[1] == 2) {
+        if (scale[0] >= 1 && scale[0] <= 8 && scale[0] != 7 && scale[0] != 5) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void addBricksAdjList(std::map<Brick*, std::set<Brick*>> &adjList, Brick* brick1, Brick* brick2) {
+    if (adjList.count(brick1) == 0) {
+        // add brick1 as key to adjacency list
+        adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick1, std::set<Brick*>()));
+    }
+
+    if (adjList.count(brick2) == 0) {
+        // add brick2 as key to adjacency list
+        adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick2, std::set<Brick*>()));
+    }
+
+    adjList[brick1].insert(brick2);
+    adjList[brick2].insert(brick1);
+}
+
+void BobNode::initAdjBricks(std::set<Brick *> bricks, std::map<Brick *, std::set<Brick *> > &adjList) {
+
+    for (Brick* brick: bricks) {
+        if (adjList.count(brick) == 0) {
+            // add brick as key to adjacency list
+            adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick, std::set<Brick*>()));
+        }
+
+        glm::vec3 pos = brick->getPos();
+        glm::vec2 scale = brick->getScale();
+
+        Brick* left = grid->getBrick(glm::vec3(pos[0] - 1, pos[1], pos[2]));
+        Brick* right = grid->getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
+        Brick* front = grid->getBrick(glm::vec3(pos[0], pos[1], pos[2] + scale[1]));
+        Brick* back = grid->getBrick(glm::vec3(pos[0], pos[1], pos[2] - 1));
+
+        if (left != nullptr) {
+            glm::vec2 leftScale = left->getScale();
+            if (leftScale[1] == scale[1] && left->getPos()[2] == pos[2]) {
+                // check if mergeable
+                glm::vec2 newScale = glm::vec2(leftScale[0] + scale[0], scale[1]);
+                if(isValidBrick(newScale)) {
+                    addBricksAdjList(adjList, left, brick);
+                }
+            }
+        }
+        if (right != nullptr) {
+            glm::vec2 rightScale = right->getScale();
+            if (rightScale[1] == scale[1] && right->getPos()[2] == pos[2]) {
+                // check if mergeable
+                glm::vec2 newScale = glm::vec2(rightScale[0] + scale[0], scale[1]);
+                if(isValidBrick(newScale)) {
+                    addBricksAdjList(adjList, right, brick);
+                }
+            }
+        }
+        if (front != nullptr) {
+            glm::vec2 frontScale = front->getScale();
+            if (frontScale[0] == scale[0] && front->getPos()[0] == pos[0]) {
+                // check if mergeable
+                glm::vec2 newScale = glm::vec2(scale[0], frontScale[1] + scale[1]);
+                if(isValidBrick(newScale)) {
+                    addBricksAdjList(adjList, front, brick);
+                }
+            }
+        }
+        if (back != nullptr) {
+            glm::vec2 backScale = back->getScale();
+            if (backScale[0] == scale[0] && back->getPos()[0] == pos[0]) {
+                // check if mergeable
+                glm::vec2 newScale = glm::vec2(scale[0], backScale[1] + scale[1]);
+                if(isValidBrick(newScale)) {
+                    addBricksAdjList(adjList, back, brick);
+                }
+            }
+        }
+    }
+}
+
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
@@ -203,7 +291,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             MGlobal::displayInfo("INIT");
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Initialized");
-            //MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
+            MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
         } else if (stabStatus == MString("Computing...")) {
             MGlobal::displayInfo("COMPUTING");
@@ -247,7 +335,7 @@ MStatus initializePlugin( MObject obj )
 
     // code for setting up the menu items
 //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
     MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
