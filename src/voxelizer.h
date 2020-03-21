@@ -13,6 +13,8 @@
 #include <maya/MFloatVector.h>
 #include <maya/MFloatPointArray.h>
 #include <maya/MIntArray.h>
+#include <grid.h>
+#include "maya/MGlobal.h"
 
 #include <vector>
 #include <include/glm/vec3.hpp>
@@ -34,7 +36,7 @@ public:
 
     MBoundingBox getBoundingBox(const MObject&) const;
     std::vector<MFloatPoint> getVoxels(const MObject&, const MBoundingBox&) const;
-    void createVoxelMesh(const std::vector<MFloatPoint>&, MObject&) const;
+    void createVoxelMesh(const std::vector<MFloatPoint>&, MObject&, Grid&);
 
 
 private:

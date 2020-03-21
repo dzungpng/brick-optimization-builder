@@ -2,8 +2,7 @@
 #include <include/glm/vec2.hpp>
 #include <include/glm/vec3.hpp>
 
-enum BrickType {ONE_ONE, ONE_TWO, ONE_THREE, ONE_FOUR, ONE_SIX, ONE_EIGHT,
-                TWO_TWO, TWO_THREE, TWO_FOUR, TWO_SIX, TWO_EIGHT};
+enum BrickType {EMPTY, BRICK};
 
 class Brick
 {
@@ -14,8 +13,7 @@ private:
     int compId;
     // assigned color based on input mesh
     glm::vec3 color;
-    // shape identifier
-    BrickType type;
+
 
     // global transform data
     glm::vec3 pos;
@@ -23,7 +21,12 @@ private:
     glm::vec2 scale;
 
 public:
-    Brick(glm::vec3 pos, BrickType type);
+    Brick(); // default is one by one brick
+    Brick(glm::vec3 pos, BrickType type, glm::vec2 scale);
+    ~Brick();
+
+    // shape identifier - just used to tell us if a grid cell is empty or a real brick
+    BrickType type;
 
     void setPos(glm::vec3 p) {pos = p;}
     void setRot(glm::vec3 r) {rot = r;}

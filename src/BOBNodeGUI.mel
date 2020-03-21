@@ -34,13 +34,12 @@ global proc createBOBNode() {
         // Creating the target output mesh
         string $target = createNode("transform");
         string $targetMesh = createNode("mesh");
-        // sets target1Shape -add "initialShadingGroup";
+        sets -add "initialShadingGroup" $targetMesh;
 
         //connectAttr ($mesh + ".outMesh") ($node + ".inputMesh");
         // Connect the attributes.
         connectAttr ($mesh + ".outMesh") ($bob + ".inputMesh");
         connectAttr( $bob + ".outputMesh") ($targetMesh + ".inMesh");
-        
     } else {
         error "Please select exactly one mesh"; 
     }

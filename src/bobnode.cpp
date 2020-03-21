@@ -11,15 +11,15 @@ void* BobNode::creator()
 MStatus BobNode::initialize()
 {
 
-    /// INPUT ATTRIBUTES
-    MFnTypedAttribute inputMeshAttr; /// Input mesh (already voxelized by the voxelizerNode)
-    MFnTypedAttribute colorContraintAttr; /// HARD or SOFT
-    MFnNumericAttribute iterAttr; /// max Iterations or until stable
-    MFnNumericAttribute untilStableAttr; /// bool for iterating until stable or just once
+    // INPUT ATTRIBUTES
+    MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
+    MFnTypedAttribute colorContraintAttr; // HARD or SOFT
+    MFnNumericAttribute iterAttr; // max Iterations or until stable
+    MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
 
-    /// OUTPUT ATTRIBUTES
-    MFnTypedAttribute statusAttr; /// Either stable or unstable
-    MFnTypedAttribute outputMeshAttr; /// Output stablized mesh
+    // OUTPUT ATTRIBUTES
+    MFnTypedAttribute statusAttr; // Either stable or unstable
+    MFnTypedAttribute outputMeshAttr; // Output stablized mesh
 
     statusAttr.setWritable(true);
     outputMeshAttr.setWritable(false);
@@ -28,7 +28,7 @@ MStatus BobNode::initialize()
 
     MStatus returnStatus;
 
-    /// CREATE ATTRIBUTES
+    // CREATE ATTRIBUTES
     BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
 
@@ -78,7 +78,7 @@ MStatus BobNode::initialize()
     McheckErr(returnStatus, "ERROR in creating array attr for 2x8 bricks!\n");
 
 
-    /// ADD ATTRIBUTES
+    // ADD ATTRIBUTES
     returnStatus = addAttribute(BobNode::inputMesh);
     McheckErr(returnStatus, "ERROR in adding input mesh attribute!\n");
 
@@ -120,7 +120,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::twoXeightArr);
     McheckErr(returnStatus, "ERROR in creating output attribute!\n");
 
-    /// ADD ATTRIBUTE AFFECTS
+    // ADD ATTRIBUTE AFFECTS
     returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to output mesh!\n");
 
@@ -145,40 +145,40 @@ static bool isValidBrick(glm::vec2 scale) {
     return false;
 }
 
-static void addBricksAdjList(std::map<Brick*, std::set<Brick*>> &adjList, Brick* brick1, Brick* brick2) {
+static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, const Brick &brick1, const Brick &brick2) {
     if (adjList.count(brick1) == 0) {
         // add brick1 as key to adjacency list
-        adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick1, std::set<Brick*>()));
+        adjList.insert(std::pair<Brick, std::set<Brick, cmpBrickIds>>(brick1, std::set<Brick, cmpBrickIds>()));
     }
 
     if (adjList.count(brick2) == 0) {
         // add brick2 as key to adjacency list
-        adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick2, std::set<Brick*>()));
+        adjList.insert(std::pair<Brick, std::set<Brick, cmpBrickIds>>(brick2, std::set<Brick, cmpBrickIds>()));
     }
 
     adjList[brick1].insert(brick2);
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::initAdjBricks(std::set<Brick *> bricks, std::map<Brick *, std::set<Brick *> > &adjList) {
+void BobNode::initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
 
-    for (Brick* brick: bricks) {
+    for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
-            adjList.insert(std::pair<Brick*, std::set<Brick*>>(brick, std::set<Brick*>()));
+            adjList.insert(std::pair<Brick, std::set<Brick, cmpBrickIds>>(brick, std::set<Brick, cmpBrickIds>()));
         }
 
-        glm::vec3 pos = brick->getPos();
-        glm::vec2 scale = brick->getScale();
+        glm::vec3 pos = brick.getPos();
+        glm::vec2 scale = brick.getScale();
 
-        Brick* left = grid->getBrick(glm::vec3(pos[0] - 1, pos[1], pos[2]));
-        Brick* right = grid->getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
-        Brick* front = grid->getBrick(glm::vec3(pos[0], pos[1], pos[2] + scale[1]));
-        Brick* back = grid->getBrick(glm::vec3(pos[0], pos[1], pos[2] - 1));
+        Brick left = grid.getBrick(glm::vec3(pos[0] - 1, pos[1], pos[2]));
+        Brick right = grid.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
+        Brick front = grid.getBrick(glm::vec3(pos[0], pos[1], pos[2] + scale[1]));
+        Brick back = grid.getBrick(glm::vec3(pos[0], pos[1], pos[2] - 1));
 
-        if (left != nullptr) {
-            glm::vec2 leftScale = left->getScale();
-            if (leftScale[1] == scale[1] && left->getPos()[2] == pos[2]) {
+        if (left.type != EMPTY) {
+            glm::vec2 leftScale = left.getScale();
+            if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(leftScale[0] + scale[0], scale[1]);
                 if(isValidBrick(newScale)) {
@@ -186,9 +186,9 @@ void BobNode::initAdjBricks(std::set<Brick *> bricks, std::map<Brick *, std::set
                 }
             }
         }
-        if (right != nullptr) {
-            glm::vec2 rightScale = right->getScale();
-            if (rightScale[1] == scale[1] && right->getPos()[2] == pos[2]) {
+        if (right.type != EMPTY) {
+            glm::vec2 rightScale = right.getScale();
+            if (rightScale[1] == scale[1] && right.getPos()[2] == pos[2]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(rightScale[0] + scale[0], scale[1]);
                 if(isValidBrick(newScale)) {
@@ -196,9 +196,9 @@ void BobNode::initAdjBricks(std::set<Brick *> bricks, std::map<Brick *, std::set
                 }
             }
         }
-        if (front != nullptr) {
-            glm::vec2 frontScale = front->getScale();
-            if (frontScale[0] == scale[0] && front->getPos()[0] == pos[0]) {
+        if (front.type != EMPTY) {
+            glm::vec2 frontScale = front.getScale();
+            if (frontScale[0] == scale[0] && front.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], frontScale[1] + scale[1]);
                 if(isValidBrick(newScale)) {
@@ -206,9 +206,9 @@ void BobNode::initAdjBricks(std::set<Brick *> bricks, std::map<Brick *, std::set
                 }
             }
         }
-        if (back != nullptr) {
-            glm::vec2 backScale = back->getScale();
-            if (backScale[0] == scale[0] && back->getPos()[0] == pos[0]) {
+        if (back.type != EMPTY) {
+            glm::vec2 backScale = back.getScale();
+            if (backScale[0] == scale[0] && back.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], backScale[1] + scale[1]);
                 if(isValidBrick(newScale)) {
@@ -227,7 +227,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
     MGlobal::displayInfo("COMPUTE!");
     if(plug == BobNode::outputMesh) {
         MGlobal::displayInfo("OUTPUT MESH AFFECTED");
-        /// GET INPUT HANDLES
+        // GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
 
@@ -237,53 +237,54 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MDataHandle iterationHandle = data.inputValue(BobNode::iteration, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
 
-        /// GET OUTPUT HANDLES
+        // GET OUTPUT HANDLES
         MDataHandle outputMeshHandle = data.outputValue(BobNode::outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
 
         MDataHandle stabilityStatusHandle = data.outputValue(BobNode::stabilityStatus, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
 
-        /// INITIALIZE INPUTS
+        // INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
         int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
         MString stabStatus = stabilityStatusHandle.asString();
 
-
         MObject thisNode = thisMObject();
         MFnDependencyNode fnNode(thisNode);
         MString nodeName = fnNode.name();
 
         if (stabStatus == MString("Initializing...")) {
-
-            /// VOXELIZE INPUT MESH
+            // VOXELIZE INPUT MESH
             Voxelizer voxelizer = Voxelizer();
 
-            /// 1. Compute the bounding box around the mesh vertices
+            // 1. Compute the bounding box around the mesh vertices
             MBoundingBox boundingBox = voxelizer.getBoundingBox(inputMeshObj);
 
-            if (grid ==  nullptr) {
-                // initialize grid to mesh dimensions
-                grid = new Grid(glm::vec3(boundingBox.max()[0] - boundingBox.min()[0],
-                                          boundingBox.max()[1] - boundingBox.min()[1],
-                                          boundingBox.max()[2] - boundingBox.min()[2]),
-                                          glm::vec3());
-            }
+            // Initialize voxel grid
+            grid.initialize(boundingBox);
 
-            /// 2. Determine which voxel centerpoints are contained within the mesh
+//            if (grid ==  nullptr) {
+//                // initialize grid to mesh dimensions
+//                grid = new Grid(glm::vec3(boundingBox.max()[0] - boundingBox.min()[0],
+//                                          boundingBox.max()[1] - boundingBox.min()[1],
+//                                          boundingBox.max()[2] - boundingBox.min()[2]),
+//                                          glm::vec3());
+//            }
+
+            // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
 
-            /// 3. Create a mesh data container, which will store our new voxelized mesh
+            // 3. Create a mesh data container, which will store our new voxelized mesh
             MFnMeshData meshDataFn;
             MObject newOutputMeshData = meshDataFn.create(&returnStatus);
             McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
-            /// 4. Create a cubic polygon for each voxel and populate the MeshData object
-            voxelizer.createVoxelMesh(voxels, newOutputMeshData);
+            // 4. Create a cubic polygon for each voxel and populate the MeshData object
+            voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
-            /// 5. Set the output data
+            // 5. Set the output data
             outputMeshHandle.setMObject(newOutputMeshData);
 
             // run initialization code
@@ -298,7 +299,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // computing code - num iterations based on iterateUntilStable attr
             // set status to "Stable" or "Unstable" based on analysis
             // lock iterate button if mesh is stable
-            /// NOTE; do we want to also keep track of a number to just show us how many iterations we've performed?
+            // NOTE; do we want to also keep track of a number to just show us how many iterations we've performed?
 
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Stable");
@@ -309,7 +310,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         }
 
 
-        ///TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+        //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
 
         return MS::kSuccess;
     }

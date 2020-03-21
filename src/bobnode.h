@@ -26,15 +26,19 @@
         return MS::kFailure; \
     }
 
+struct cmpBrickIds {
+    bool operator()(const Brick& a, const Brick& b) const {
+        return a.getId() < b.getId();
+    }
+};
+
 class BobNode: public MPxNode
 {
 private:
-    Grid* grid = new Grid(glm::vec3(10, 10, 10), glm::vec3());
 
     // modifies an adjacency list of bricks that are mergeable, given an input set of bricks
     // used either on all bricks or a k-ring set of bricks
-    void initAdjBricks(std::set<Brick*> bricks, std::map<Brick*, std::set<Brick*>> &adjList);
-
+    void initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList);
 public:
     BobNode() {}
     ~BobNode() override {}
@@ -43,6 +47,7 @@ public:
     static  MStatus initialize();
 
     static MTypeId id;
+    Grid grid;
 
     /// inputs
     static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)
@@ -62,8 +67,6 @@ public:
     static MObject twoXfourArr;
     static MObject twoXsixArr;
     static MObject twoXeightArr;
-
-
 
     /// outputs
     static MObject outputMesh; /// Output stablized mesh
