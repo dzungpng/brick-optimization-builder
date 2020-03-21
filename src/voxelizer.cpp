@@ -153,14 +153,6 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
     polygonConnects.setLength(totalPolygonConnects);
     unsigned int polygonConnectsIndexOffset = 0;
 
-    MString info = "Base grid length: ";
-    MGlobal::displayInfo(info + grid.getBaseGridLength());
-    info = "Base grid dimension ";
-    MGlobal::displayInfo(info + "x: " + grid.getDim().x + ", ");
-    MGlobal::displayInfo(info + "y: " + grid.getDim().y + ", ");
-    MGlobal::displayInfo(info + "z: " + grid.getDim().z + ", ");
-
-
     // Populate the required arrays used in MFnMesh.create()
     for(unsigned int i = 0; i < numVoxels; i++) {
         MFloatPoint voxelPosition = pVoxelPositions[i];
@@ -177,13 +169,12 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         polygonConnectsIndexOffset += numPolygonConnectsPerVoxel;
 
         // Add 1x1 brick corresponding with this voxel to grid
-        Brick brick;
+        Brick brick = Brick();
         float halfWidth = float( defaultVoxelWidth / 2.f );
         MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
         brick.setPos(glm::vec3(pos[0], pos[1], pos[2]));
-
-        // Set brick can go out of range because positions can be negative
-        //grid.setBrick(brick);
+        brick.setScale(glm::vec2(1));
+        grid.setBrick(brick);
     }
 
     // Create the mesh now that the arrays have been populated. The mesh is stored in pOutMeshData

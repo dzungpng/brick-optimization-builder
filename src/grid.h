@@ -1,8 +1,10 @@
 #pragma once
+#pragma once
 #include <vector>
 #include <include/glm/vec3.hpp>
 #include <brick.h>
 #include <maya/MGlobal.h>
+#include <maya/MBoundingBox.h>
 
 class Grid
 {
@@ -23,13 +25,17 @@ public:
     Grid();
     ~Grid();
 
-    void setBrick(Brick& brick);
+    void setBrick(const Brick& brick);
     void setDim(const glm::vec3 newDim) { dim = newDim; }
     void setBaseGridSize() { baseGrid = std::vector<Brick>(dim.x * dim.y * dim.z); }
     void setOrigin(const glm::vec3 newOrigin) { origin = newOrigin; }
     void setShift() { shift = glm::vec3(0) - origin; }
 
-    glm::vec3 getDim() { return dim; }
-    glm::vec3 getOrigin() { return origin; }
-    int getBaseGridLength() { return baseGrid.size(); }
+    glm::vec3 getDim() const { return dim; }
+    glm::vec3 getOrigin() const { return origin; }
+    int getBaseGridLength() const { return baseGrid.size(); }
+    const Brick getBrick(const int index) const;
+    glm::vec3 getShift() const { return shift; }
+
+    void initialize(const MBoundingBox&);
 };

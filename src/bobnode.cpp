@@ -175,10 +175,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             MBoundingBox boundingBox = voxelizer.getBoundingBox(inputMeshObj);
 
             // Initialize voxel grid
-            grid.setDim(glm::vec3(ceilf(boundingBox.width()), ceilf(boundingBox.height()), ceilf(boundingBox.depth())));
-            grid.setOrigin(glm::vec3(boundingBox.min().x, boundingBox.min().y, boundingBox.min().z));
-            grid.setBaseGridSize();
-            grid.setShift();
+            grid.initialize(boundingBox);
 
 //            if (grid ==  nullptr) {
 //                // initialize grid to mesh dimensions
