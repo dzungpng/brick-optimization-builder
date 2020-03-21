@@ -219,6 +219,40 @@ void BobNode::initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick,
     }
 }
 
+Brick &BobNode::mergeBricks(Brick brick1, Brick brick2) {
+
+}
+
+void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+    ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
+    /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
+    /// -> rather than O(n) to just init this vector and pop/push_back on queries
+
+    std::vector<Brick> bricks = std::vector<Brick>();
+    for (std::map<Brick, std::set<Brick, cmpBrickIds>>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
+        bricks.push_back(it->first);
+    }
+
+    int randIdx;
+    while(adjList.size() > 0) {
+        randIdx = std::rand() % bricks.size();
+        Brick brick1 = bricks[randIdx];
+        if (adjList.count(brick1) > 0) {
+            std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
+
+            randIdx = std::rand() % adjBricks.size();
+            auto it = std::begin(adjBricks);
+            // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
+            std::advance(it, randIdx);
+            Brick brick2 = *it;
+
+
+
+        }
+
+    }
+}
+
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
@@ -265,14 +299,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // Initialize voxel grid
             grid.initialize(boundingBox);
 
-//            if (grid ==  nullptr) {
-//                // initialize grid to mesh dimensions
-//                grid = new Grid(glm::vec3(boundingBox.max()[0] - boundingBox.min()[0],
-//                                          boundingBox.max()[1] - boundingBox.min()[1],
-//                                          boundingBox.max()[2] - boundingBox.min()[2]),
-//                                          glm::vec3());
-//            }
-
             // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
 
@@ -287,7 +313,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // 5. Set the output data
             outputMeshHandle.setMObject(newOutputMeshData);
 
-            // run initialization code
+            /// code for updating node gui
             // set status to "Initialized"
             MGlobal::displayInfo("INIT");
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
@@ -320,8 +346,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 // code to initialize the plugin //
 MStatus initializePlugin( MObject obj )
 {
-
-
     MStatus   status = MStatus::kSuccess;
     MFnPlugin plugin( obj, "MyPlugin", "1.0", "Any");
 

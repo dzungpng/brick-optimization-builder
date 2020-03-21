@@ -35,10 +35,17 @@ struct cmpBrickIds {
 class BobNode: public MPxNode
 {
 private:
+    /// function: helper to take two bricks and replace them in the grid with a new brick
+    /// returns: the new brick
+    Brick &mergeBricks(Brick brick1, Brick brick2);
 
-    // modifies an adjacency list of bricks that are mergeable, given an input set of bricks
-    // used either on all bricks or a k-ring set of bricks
+    /// function: modifies an adjacency list of bricks that are mergeable, given an input set of bricks
+    // bricks: input set to check adjacency on
+    // adjList: adjacency list to modify given input bricks
     void initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList);
+
+    /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
+    void generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList);
 public:
     BobNode() {}
     ~BobNode() override {}
