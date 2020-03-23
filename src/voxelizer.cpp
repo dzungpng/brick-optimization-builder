@@ -158,25 +158,14 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         MFloatPoint voxelPosition = pVoxelPositions[i];
 
         // Add 1x1 brick corresponding with this voxel to grid
-        Brick brick = Brick();
         float halfWidth = float( defaultVoxelWidth / 2.f );
         MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
-        brick.setPos(glm::vec3(pos[0], pos[1], pos[2]));
-        brick.setScale(glm::vec2(1));
+        Brick brick = Brick(glm::vec3(pos.x, pos.y, pos.z), BRICK, glm::vec2(1));
         grid.setBrick(brick);
 
         MFloatPoint shiftedVoxelPos = MFloatPoint(voxelPosition.x + grid.getShift().x,
                                                   voxelPosition.y + grid.getShift().y,
                                                   voxelPosition.z + grid.getShift().z);
-
-//        MString info = "voxel pos: ";
-//        MGlobal::displayInfo(info + voxelPosition.x);
-//        MGlobal::displayInfo(info + voxelPosition.y);
-//        MGlobal::displayInfo(info + voxelPosition.z);
-//        info = "shifted voxel pos: ";
-//        MGlobal::displayInfo(info + shiftedVoxelPos.x);
-//        MGlobal::displayInfo(info + shiftedVoxelPos.y);
-//        MGlobal::displayInfo(info + shiftedVoxelPos.z);
 
         // Add a new cube to the arrays
         createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,

@@ -245,9 +245,6 @@ void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBr
             // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
             std::advance(it, randIdx);
             Brick brick2 = *it;
-
-
-
         }
 
     }
