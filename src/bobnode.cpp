@@ -94,7 +94,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::stabilityStatus);
     McheckErr(returnStatus, "ERROR in adding statbility status attribute!\n")
 
-    returnStatus = addAttribute(BobNode::outputMesh);
+            returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
 
     returnStatus = addAttribute(BobNode::oneXoneArr);
@@ -160,7 +160,7 @@ static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBr
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+void BobNode::updateAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
 
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
@@ -219,8 +219,25 @@ void BobNode::initAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick,
     }
 }
 
-Brick &BobNode::mergeBricks(Brick brick1, Brick brick2) {
-
+void BobNode::mergeBricks(Brick brick1, Brick brick2, Brick &newBrick) {
+    glm::vec3 pos1 = brick1.getPos();
+    glm::vec3 pos2 = brick2.getPos();
+    glm::vec3 newPos = glm::vec3();
+    glm::vec2 newScale = glm::vec2();
+    if(pos1[0] == pos2[0]) {
+        // merge along z direction
+        newScale = glm::vec2(brick1.getScale()[0], brick1.getScale()[1] + brick2.getScale()[1]);
+        newPos = glm::vec3(pos1[0], pos1[1], std::min(pos1[2], pos2[2]));
+    } else {
+        // merge along x direction
+        newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
+        newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
+    }
+    // update grid
+    newBrick.setPos(newPos);
+    newBrick.setScale(newScale);
+    newBrick.setType(BRICK);
+    grid.setBrick(newBrick);
 }
 
 void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
@@ -233,20 +250,28 @@ void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBr
         bricks.push_back(it->first);
     }
 
-    int randIdx;
     while(adjList.size() > 0) {
-        randIdx = std::rand() % bricks.size();
-        Brick brick1 = bricks[randIdx];
+        int randIdx1 = std::rand() % bricks.size();
+        Brick brick1 = bricks[randIdx1];
         if (adjList.count(brick1) > 0) {
             std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
 
-            randIdx = std::rand() % adjBricks.size();
+            int randIdx2 = std::rand() % adjBricks.size();
             auto it = std::begin(adjBricks);
             // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
-            std::advance(it, randIdx);
+            std::advance(it, randIdx2);
             Brick brick2 = *it;
 
+            // add new brick to grid
+            Brick newBrick = Brick();
+            mergeBricks(brick1, brick2, newBrick);
 
+            // add newBrick to adjList
+            updateAdjBricks({newBrick}, adjList);
+            // update bricks vector - I guess this isn't much better than iterating over a map
+            bricks.erase(bricks.begin() + randIdx1);
+            bricks.erase(bricks.begin() + randIdx2);
+            bricks.push_back(newBrick);
 
         }
 
@@ -351,7 +376,7 @@ MStatus initializePlugin( MObject obj )
 
 
     status = plugin.registerNode("BOBNode", BobNode::id,
-        BobNode::creator, BobNode::initialize);
+                                 BobNode::creator, BobNode::initialize);
     if (!status) {
         MGlobal::displayInfo("ERROR INIT NODE \n\n\n");
         status.perror("registerNode");
@@ -359,7 +384,7 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-//    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+    //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
     MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
     MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
