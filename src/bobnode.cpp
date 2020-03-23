@@ -347,50 +347,20 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
-            // 5. Set the output data
+            // 5. Set the output data for voxels - uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
 
             // Adding the initial grid with 1x1 bricks to the 1x1 lego array
-            // TODO: Fix the infinite loop here
-
             std::vector<Brick> baseGrid = grid.getBaseGrid();
-            MString info = "base grid length: ";
-            MGlobal::displayInfo(info + baseGrid.size());
-
             int i = 0;
             for(Brick b : baseGrid) {
                 if(b.type != EMPTY) {
                     glm::vec3 brickPos = b.getPos();
-    //                info = "Brick pos x: ";
-    //                MGlobal::displayInfo(info + brickPos.x);
-    //                info = "Brick pos y: ";
-    //                MGlobal::displayInfo(info + brickPos.y);
-    //                info = "Brick pos z: ";
-    //                MGlobal::displayInfo(info + brickPos.z);
                     oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-                    oneXoneIdArray.append(i);
-                    i++;
+                    oneXoneIdArray.append(i++);
                 }
             }
             oneXoneDataHandle.setMObject(oneXoneObject);
-
-
-//            for(int i = 0; i < grid.getBaseGridLength(); i++) {
-//                Brick brick = grid.getBrickWithIndex(i);
-//                if(brick.type != EMPTY) {
-
-//                    glm::vec3 brickPos = brick.getPos();
-//    //                MString info = "Brick pos x: ";
-//    //                MGlobal::displayInfo(info + brickPos.x);
-//    //                info = "Brick pos y: ";
-//    //                MGlobal::displayInfo(info + brickPos.y);
-//    //                 info = "Brick pos y: ";
-//    //                MGlobal::displayInfo(info + brickPos.z);
-
-//                    oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-//                    oneXoneIdArray.append(i);
-//                }
-//            }
 
             /// code for updating node gui
             // set status to "Initialized"
@@ -413,8 +383,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         } else {
             MGlobal::displayInfo("OTHER STABILITY STATUS");
         }
-
-
         //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
 
         return MS::kSuccess;
@@ -428,7 +396,6 @@ MStatus initializePlugin( MObject obj )
     MStatus   status = MStatus::kSuccess;
     MFnPlugin plugin( obj, "MyPlugin", "1.0", "Any");
 
-
     status = plugin.registerNode("BOBNode", BobNode::id,
                                  BobNode::creator, BobNode::initialize);
     if (!status) {
@@ -438,7 +405,6 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-//    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
 //    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
     MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
