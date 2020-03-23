@@ -177,6 +177,9 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         grid.setBrick(brick);
     }
 
+    // setting the grid's origin to be 0,0,0 permanently
+    grid.setOrigin(glm::vec3(0));
+
     // Create the mesh now that the arrays have been populated. The mesh is stored in pOutMeshData
     MFnMesh meshFn;
     MStatus status;

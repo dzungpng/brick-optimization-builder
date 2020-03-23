@@ -34,6 +34,8 @@ void Grid::setBrick(const Brick& brick) {
             baseGrid[gridPos] = brick;
         }
     }
+    // permanently change the position of the brick so that we assume an origin of (0,0,0)
+    brick.setPos(shiftedBrickPos);
 }
 
 const Brick Grid::getBrick(const glm::vec3 brickPos) const {
