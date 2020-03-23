@@ -1,6 +1,6 @@
 global proc importBrick(string $node, string $brickObj, string $attrArr) {
   // string $importArr[] = file("-import", "-rnn", "/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/objs/" + $brickObj);
-  string $importArr[] = file("-import", "-rnn", "/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/objs" + $brickObj);
+  string $importArr[] = file("-import", "-rnn", "/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/objs/" + $brickObj);
   for($brick in $importArr) {
       if ( `nodeType $brick` == "transform" ) {
           print ($brick);

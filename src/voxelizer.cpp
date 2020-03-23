@@ -168,9 +168,9 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
                                                   voxelPosition.z + grid.getShift().z);
 
         // Add a new cube to the arrays
-        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
-                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
-                   polygonConnects, polygonConnectsIndexOffset);
+//        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
+//                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
+//                   polygonConnects, polygonConnectsIndexOffset);
 
 
         // Increment the respective index offsets

@@ -321,16 +321,49 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
             // 5. Set the output data
-            outputMeshHandle.setMObject(newOutputMeshData);
+            // outputMeshHandle.setMObject(newOutputMeshData);
 
             // Adding the initial grid with 1x1 bricks to the 1x1 lego array
             // TODO: Fix the infinite loop here
-            for(int i = 0; i < grid.getBaseGridLength(); i++) {
-                glm::vec3 brickPos = grid.getBrick(i).getPos();
-                oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-                oneXoneIdArray.append(i);
+
+            std::vector<Brick> baseGrid = grid.getBaseGrid();
+            MString info = "base grid length: ";
+            MGlobal::displayInfo(info + baseGrid.size());
+
+            int i = 0;
+            for(Brick b : baseGrid) {
+                if(b.type != EMPTY) {
+                    glm::vec3 brickPos = b.getPos();
+    //                info = "Brick pos x: ";
+    //                MGlobal::displayInfo(info + brickPos.x);
+    //                info = "Brick pos y: ";
+    //                MGlobal::displayInfo(info + brickPos.y);
+    //                info = "Brick pos z: ";
+    //                MGlobal::displayInfo(info + brickPos.z);
+                    oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                    oneXoneIdArray.append(i);
+                    i++;
+                }
             }
             oneXoneDataHandle.setMObject(oneXoneObject);
+
+
+//            for(int i = 0; i < grid.getBaseGridLength(); i++) {
+//                Brick brick = grid.getBrickWithIndex(i);
+//                if(brick.type != EMPTY) {
+
+//                    glm::vec3 brickPos = brick.getPos();
+//    //                MString info = "Brick pos x: ";
+//    //                MGlobal::displayInfo(info + brickPos.x);
+//    //                info = "Brick pos y: ";
+//    //                MGlobal::displayInfo(info + brickPos.y);
+//    //                 info = "Brick pos y: ";
+//    //                MGlobal::displayInfo(info + brickPos.z);
+
+//                    oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+//                    oneXoneIdArray.append(i);
+//                }
+//            }
 
             /// code for updating node gui
             // set status to "Initialized"
