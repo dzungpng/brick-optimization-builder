@@ -25,7 +25,7 @@ public:
     Grid();
     ~Grid();
 
-    void setBrick(const Brick& brick);
+    void setBrick(Brick& brick);
     void setDim(const glm::vec3 newDim) { dim = newDim; }
     void setBaseGridSize() { baseGrid = std::vector<Brick>(dim.x * dim.y * dim.z); }
     void setOrigin(const glm::vec3 newOrigin) { origin = newOrigin; }

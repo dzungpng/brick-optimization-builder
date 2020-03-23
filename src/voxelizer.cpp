@@ -157,8 +157,18 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
     for(unsigned int i = 0; i < numVoxels; i++) {
         MFloatPoint voxelPosition = pVoxelPositions[i];
 
+        // Add 1x1 brick corresponding with this voxel to grid
+        float halfWidth = float( defaultVoxelWidth / 2.f );
+        MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
+        Brick brick = Brick(glm::vec3(pos.x, pos.y, pos.z), BRICK, glm::vec2(1));
+        grid.setBrick(brick);
+
+        MFloatPoint shiftedVoxelPos = MFloatPoint(voxelPosition.x + grid.getShift().x,
+                                                  voxelPosition.y + grid.getShift().y,
+                                                  voxelPosition.z + grid.getShift().z);
+
         // Add a new cube to the arrays
-        createCube(voxelPosition, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
+        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
                    polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
                    polygonConnects, polygonConnectsIndexOffset);
 
@@ -168,14 +178,10 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         polygonCountsIndexOffset += numPolygonsPerVoxel;
         polygonConnectsIndexOffset += numPolygonConnectsPerVoxel;
 
-        // Add 1x1 brick corresponding with this voxel to grid
-        Brick brick = Brick();
-        float halfWidth = float( defaultVoxelWidth / 2.f );
-        MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
-        brick.setPos(glm::vec3(pos[0], pos[1], pos[2]));
-        brick.setScale(glm::vec2(1));
-        grid.setBrick(brick);
     }
+
+    // setting the grid's origin to be 0,0,0 permanently
+    grid.setOrigin(glm::vec3(0));
 
     // Create the mesh now that the arrays have been populated. The mesh is stored in pOutMeshData
     MFnMesh meshFn;

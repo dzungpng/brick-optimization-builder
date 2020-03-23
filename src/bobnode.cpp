@@ -272,7 +272,6 @@ void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBr
             bricks.erase(bricks.begin() + randIdx1);
             bricks.erase(bricks.begin() + randIdx2);
             bricks.push_back(newBrick);
-
         }
 
     }
@@ -384,8 +383,10 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-    //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
+//    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+//    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+
     MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
