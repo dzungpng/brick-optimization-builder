@@ -275,16 +275,29 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MDataHandle stabilityStatusHandle = data.outputValue(BobNode::stabilityStatus, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
 
+        MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting oneXone handle");
+
         // INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
         int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
+        // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
 
         MObject thisNode = thisMObject();
         MFnDependencyNode fnNode(thisNode);
         MString nodeName = fnNode.name();
+
+        /// 1x1 bricks
+        MFnArrayAttrsData oneXoneAAD;
+        MObject oneXoneObject = oneXoneAAD.create(&returnStatus);
+        McheckErr(returnStatus, "ERROR in creating 1x1 object!\n");
+        MVectorArray oneXonePositionArray = oneXoneAAD.vectorArray("position", &returnStatus);
+        McheckErr(returnStatus, "ERROR in creating 1x1 position array!\n");
+        MDoubleArray oneXoneIdArray = oneXoneAAD.doubleArray("id", &returnStatus);
+        McheckErr(returnStatus, "ERROR in creating 1x1 id array!\n");
 
         if (stabStatus == MString("Initializing...")) {
             // VOXELIZE INPUT MESH
@@ -309,6 +322,15 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
             // 5. Set the output data
             outputMeshHandle.setMObject(newOutputMeshData);
+
+            // Adding the initial grid with 1x1 bricks to the 1x1 lego array
+            // TODO: Fix the infinite loop here
+            for(int i = 0; i < grid.getBaseGridLength(); i++) {
+                glm::vec3 brickPos = grid.getBrick(i).getPos();
+                oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXoneIdArray.append(i);
+            }
+            oneXoneDataHandle.setMObject(oneXoneObject);
 
             /// code for updating node gui
             // set status to "Initialized"

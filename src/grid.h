@@ -37,6 +37,7 @@ public:
     void setBrick(Brick* brick);
     const Brick getBrick(const glm::vec3 brickPos) const;
     glm::vec3 getShift() const { return shift; }
+    const Brick getBrick(const int index) const { baseGrid[index]; }
 
     void initialize(const MBoundingBox&);
 };

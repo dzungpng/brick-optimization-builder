@@ -1,5 +1,6 @@
 global proc importBrick(string $node, string $brickObj, string $attrArr) {
-  string $importArr[] = file("-import", "-rnn", "/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/objs/" + $brickObj);
+  // string $importArr[] = file("-import", "-rnn", "/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/objs/" + $brickObj);
+  string $importArr[] = file("-import", "-rnn", "/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/objs" + $brickObj);
   for($brick in $importArr) {
       if ( `nodeType $brick` == "transform" ) {
           print ($brick);
@@ -36,10 +37,12 @@ global proc createBOBNode() {
         string $targetMesh = createNode("mesh");
         sets -add "initialShadingGroup" $targetMesh;
 
-        //connectAttr ($mesh + ".outMesh") ($node + ".inputMesh");
         // Connect the attributes.
         connectAttr ($mesh + ".outMesh") ($bob + ".inputMesh");
         connectAttr( $bob + ".outputMesh") ($targetMesh + ".inMesh");
+        
+        // import base bricks and attach to data arr attr of the node for visualization
+        importBrick($bob, "1x1.obj", "oneXone");
     } else {
         error "Please select exactly one mesh"; 
     }
