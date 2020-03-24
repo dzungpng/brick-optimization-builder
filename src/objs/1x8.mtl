@@ -1,4 +1,16 @@
-newmtl x1:initialShadingGroup
+newmtl x7:initialShadingGroup
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x8:initialShadingGroup
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x10:initialShadingGroup
 illum 4
 Kd 0.50 0.50 0.50
 Ka 0.00 0.00 0.00
