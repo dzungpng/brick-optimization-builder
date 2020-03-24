@@ -9,10 +9,12 @@ class Brick
 private:
     // unique identifier for each individual brick
     static int id;
+    int brickId;
     // id of the connected component this brick is associated with
     int compId;
     // assigned color based on input mesh
     glm::vec3 color;
+
 
 
     // global transform data
@@ -39,7 +41,7 @@ public:
     glm::vec3 getRot() const {return rot;}
     glm::vec2 getScale() const {return scale;}
     glm::vec3 getColor() const {return color;}
-    int getId() const {return id;}
+    int getId() const {return brickId;}
     int getCompId() const {return compId;}
     BrickType getType() const {return type;}
 

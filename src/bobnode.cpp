@@ -45,6 +45,7 @@ MStatus BobNode::initialize()
     BobNode::iterateUntilStable = untilStableAttr.create("iterateUntilStable", "itrSt", MFnNumericData::kBoolean, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating iterate until stable attribute!\n");
 
+    //MString defaultStatus = "Uninitialized";
     MString defaultStatus = "Initializing...";
     BobNode::stabilityStatus = statusAttr.create(
                 "stabilityStatus", "stableStat", MFnData::kString, MFnStringData().create(defaultStatus), &returnStatus);
@@ -277,6 +278,109 @@ void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBr
     }
 }
 
+MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
+    MStatus returnStatus;
+    MGlobal::displayInfo("SET UP DATA HANDLES \n\n\n");
+    // STEP 1: GET OUTPUT HANDLES
+    MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXone handle");
+
+    MDataHandle oneXtwoDataHandle = data.outputValue(BobNode::oneXtwoArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXtwo handle");
+
+    //    MDataHandle oneXthreeDataHandle = data.outputValue(BobNode::oneXthreeArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting oneXthree handle");
+
+    //    MDataHandle oneXfourDataHandle = data.outputValue(BobNode::oneXfourArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting oneXfour handle");
+
+    //    MDataHandle oneXsixDataHandle = data.outputValue(BobNode::oneXsixArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting oneXsize handle");
+
+    //    MDataHandle oneXeightDataHandle = data.outputValue(BobNode::oneXeightArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting oneXeight handle");
+
+    //    MDataHandle twoXtwoDataHandle = data.outputValue(BobNode::twoXtwoArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting twoXtwo handle");
+
+    //    MDataHandle twoXthreeDataHandle = data.outputValue(BobNode::twoXthreeArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting twoXthree handle");
+
+    //    MDataHandle twoXfourDataHandle = data.outputValue(BobNode::twoXfourArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting twoXfour handle");
+
+    //    MDataHandle twoXsixDataHandle = data.outputValue(BobNode::twoXsixArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting twoXsize handle");
+
+    //    MDataHandle twoXeightDataHandle = data.outputValue(BobNode::twoXeightArr, &returnStatus);
+    //    McheckErr(returnStatus, "ERROR in getting twoXeight handle");
+
+
+    // STEP 2: SETUP ATTRS DATA ARRAYS
+
+    /// 1x1 bricks
+    MFnArrayAttrsData oneXoneAAD;
+    MObject oneXoneObject = oneXoneAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 object!\n");
+    MVectorArray oneXonePositionArray = oneXoneAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 position array!\n");
+    MDoubleArray oneXoneIdArray = oneXoneAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 id array!\n");
+
+    /// 1x2 bricks
+    MFnArrayAttrsData oneXtwoAAD;
+    MObject oneXtwoObject = oneXtwoAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 object!\n");
+    MVectorArray oneXtwoPositionArray = oneXtwoAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 position array!\n");
+    MDoubleArray oneXtwoIdArray = oneXtwoAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 id array!\n");
+
+
+
+    // STEP 3: POPULATE ARRAYS
+    //     Adding the initial grid with 1x1 bricks to the 1x1 lego array
+    int i = 0;
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        Brick b = it->second;
+        if(b.type != EMPTY) {
+            glm::vec3 brickPos = b.getPos();
+            glm::vec2 brickScale = b.getScale();
+            if (brickScale[0] == 1 && brickScale[1] == 1) {
+                MGlobal::displayInfo("ADD 1x1 BRICK");
+                oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXoneIdArray.append(i);
+            } else if (brickScale[0] == 1 && brickScale[1] == 2) {
+                MGlobal::displayInfo("ADD 1x2 BRICK");
+                MString s = "";
+                s += brickPos.x;
+                MGlobal::displayInfo("X: " + s);
+                s = "";
+                s += brickPos.y;
+                MGlobal::displayInfo("Y: " + s);
+                s = "";
+                s += brickPos.z;
+                MGlobal::displayInfo("Z: " + s);
+                s = "";
+                s += i;//b.getId();
+                MGlobal::displayInfo("ID: " + s);
+
+                oneXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXtwoIdArray.append(i);
+            }
+
+        }
+        i++;
+    }
+    MString size = "";
+    size += int(grid.allBricks.size());
+    MGlobal::displayInfo("ALL BRICKS SIZE: " + size);
+
+    oneXoneDataHandle.setMObject(oneXoneObject);
+    oneXtwoDataHandle.setMObject(oneXtwoObject);
+
+    return returnStatus;
+}
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
@@ -302,9 +406,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MDataHandle stabilityStatusHandle = data.outputValue(BobNode::stabilityStatus, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting stability status handle!\n");
 
-        MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
-        McheckErr(returnStatus, "ERROR in getting oneXone handle");
-
         // INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
         int iterationInput = iterationHandle.asInt();
@@ -317,16 +418,9 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MFnDependencyNode fnNode(thisNode);
         MString nodeName = fnNode.name();
 
-        /// 1x1 bricks
-        MFnArrayAttrsData oneXoneAAD;
-        MObject oneXoneObject = oneXoneAAD.create(&returnStatus);
-        McheckErr(returnStatus, "ERROR in creating 1x1 object!\n");
-        MVectorArray oneXonePositionArray = oneXoneAAD.vectorArray("position", &returnStatus);
-        McheckErr(returnStatus, "ERROR in creating 1x1 position array!\n");
-        MDoubleArray oneXoneIdArray = oneXoneAAD.doubleArray("id", &returnStatus);
-        McheckErr(returnStatus, "ERROR in creating 1x1 id array!\n");
-
         if (stabStatus == MString("Initializing...")) {
+
+            /*
             // VOXELIZE INPUT MESH
             Voxelizer voxelizer = Voxelizer();
 
@@ -349,18 +443,23 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
             // 5. Set the output data for voxels - uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
+            */
+            /// TEST CODE FOR DIFFERENT BRICK TYPES
+            ///
+            ///
 
-            // Adding the initial grid with 1x1 bricks to the 1x1 lego array
-            std::vector<Brick> baseGrid = grid.getBaseGrid();
-            int i = 0;
-            for(Brick b : baseGrid) {
-                if(b.type != EMPTY) {
-                    glm::vec3 brickPos = b.getPos();
-                    oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-                    oneXoneIdArray.append(i++);
-                }
-            }
-            oneXoneDataHandle.setMObject(oneXoneObject);
+            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(4, 4, 4));
+            grid.initialize(boundingBox);
+            Brick brick1 = Brick(glm::vec3(2, 2, 0), BRICK, glm::vec2(1, 2));
+            Brick brick2 = Brick(glm::vec3(3, 2, 2), BRICK, glm::vec2(1, 2));
+            grid.setBrick(brick1);
+            grid.setBrick(brick2);
+
+            ///
+            ///
+            ///
+            ///x
+            returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
             // set status to "Initialized"
@@ -405,9 +504,9 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-//    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
+    //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
     MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-//    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+    //    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
     MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";

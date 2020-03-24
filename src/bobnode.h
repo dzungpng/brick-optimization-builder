@@ -35,6 +35,9 @@ struct cmpBrickIds {
 class BobNode: public MPxNode
 {
 private:
+
+    MStatus setupBrickDataHandles(MDataBlock& data);
+
     /// function: helper to take two bricks and replace them in the grid with a new brick
     /// newBrick: brick that will replace brick1 and brick2 in grid and have its pos, scale, and type updated
     void mergeBricks(Brick brick1, Brick brick2, Brick &newBrick);

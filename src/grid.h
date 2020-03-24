@@ -5,6 +5,7 @@
 #include <brick.h>
 #include <maya/MGlobal.h>
 #include <maya/MBoundingBox.h>
+#include <map>
 
 class Grid
 {
@@ -24,6 +25,8 @@ public:
     Grid(glm::vec3 dim, glm::vec3 origin);
     Grid();
     ~Grid();
+
+    std::map<int, Brick> allBricks = std::map<int, Brick>();
 
     void setBrick(Brick& brick);
     void setDim(const glm::vec3 newDim) { dim = newDim; }
