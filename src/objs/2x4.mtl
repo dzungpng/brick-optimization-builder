@@ -1,6 +1,60 @@
-newmtl x14:initialShadingGroup
+newmtl x2:initialShadingGroup
 illum 4
-Kd 0.50 0.50 0.50
+Kd 0.21 0.22 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x3:initialShadingGroup
+illum 4
+Kd 0.50 0.11 0.16
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x4:initialShadingGroup
+illum 4
+Kd 0.34 0.50 0.07
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x6:initialShadingGroup
+illum 4
+Kd 0.14 0.11 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x8:initialShadingGroup
+illum 4
+Kd 0.54 0.13 0.09
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x9:initialShadingGroup
+illum 4
+Kd 0.19 0.77 0.59
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x10:initialShadingGroup
+illum 4
+Kd 0.98 0.87 0.35
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x11:initialShadingGroup
+illum 4
+Kd 1.00 0.41 0.21
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x12:initialShadingGroup
+illum 4
+Kd 0.47 0.83 0.48
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl x13:initialShadingGroup
+illum 4
+Kd 0.50 0.13 0.50
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 Ni 1.00
