@@ -278,110 +278,6 @@ void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBr
     }
 }
 
-MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
-    MStatus returnStatus;
-    MGlobal::displayInfo("SET UP DATA HANDLES \n\n\n");
-    // STEP 1: GET OUTPUT HANDLES
-    MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
-    McheckErr(returnStatus, "ERROR in getting oneXone handle");
-
-    MDataHandle oneXtwoDataHandle = data.outputValue(BobNode::oneXtwoArr, &returnStatus);
-    McheckErr(returnStatus, "ERROR in getting oneXtwo handle");
-
-    //    MDataHandle oneXthreeDataHandle = data.outputValue(BobNode::oneXthreeArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting oneXthree handle");
-
-    //    MDataHandle oneXfourDataHandle = data.outputValue(BobNode::oneXfourArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting oneXfour handle");
-
-    //    MDataHandle oneXsixDataHandle = data.outputValue(BobNode::oneXsixArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting oneXsize handle");
-
-    //    MDataHandle oneXeightDataHandle = data.outputValue(BobNode::oneXeightArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting oneXeight handle");
-
-    //    MDataHandle twoXtwoDataHandle = data.outputValue(BobNode::twoXtwoArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting twoXtwo handle");
-
-    //    MDataHandle twoXthreeDataHandle = data.outputValue(BobNode::twoXthreeArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting twoXthree handle");
-
-    //    MDataHandle twoXfourDataHandle = data.outputValue(BobNode::twoXfourArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting twoXfour handle");
-
-    //    MDataHandle twoXsixDataHandle = data.outputValue(BobNode::twoXsixArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting twoXsize handle");
-
-    //    MDataHandle twoXeightDataHandle = data.outputValue(BobNode::twoXeightArr, &returnStatus);
-    //    McheckErr(returnStatus, "ERROR in getting twoXeight handle");
-
-
-    // STEP 2: SETUP ATTRS DATA ARRAYS
-
-    /// 1x1 bricks
-    MFnArrayAttrsData oneXoneAAD;
-    MObject oneXoneObject = oneXoneAAD.create(&returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x1 object!\n");
-    MVectorArray oneXonePositionArray = oneXoneAAD.vectorArray("position", &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x1 position array!\n");
-    MDoubleArray oneXoneIdArray = oneXoneAAD.doubleArray("id", &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x1 id array!\n");
-
-    /// 1x2 bricks
-    MFnArrayAttrsData oneXtwoAAD;
-    MObject oneXtwoObject = oneXtwoAAD.create(&returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x2 object!\n");
-    MVectorArray oneXtwoPositionArray = oneXtwoAAD.vectorArray("position", &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x2 position array!\n");
-    MDoubleArray oneXtwoIdArray = oneXtwoAAD.doubleArray("id", &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating 1x2 id array!\n");
-
-
-
-    // STEP 3: POPULATE ARRAYS
-    //     Adding the initial grid with 1x1 bricks to the 1x1 lego array
-    int i = 0;
-    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
-        Brick b = it->second;
-        if(b.type != EMPTY) {
-            glm::vec3 brickPos = b.getPos();
-            glm::vec2 brickScale = b.getScale();
-            if (brickScale[0] == 1 && brickScale[1] == 1) {
-                MGlobal::displayInfo("ADD 1x1 BRICK");
-                oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-                oneXoneIdArray.append(i);
-            } else if (brickScale[0] == 1 && brickScale[1] == 2) {
-                MGlobal::displayInfo("ADD 1x2 BRICK");
-                MString s = "";
-                s += brickPos.x;
-                MGlobal::displayInfo("X: " + s);
-                s = "";
-                s += brickPos.y;
-                MGlobal::displayInfo("Y: " + s);
-                s = "";
-                s += brickPos.z;
-                MGlobal::displayInfo("Z: " + s);
-                s = "";
-                s += i;//b.getId();
-                MGlobal::displayInfo("ID: " + s);
-
-                oneXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
-                oneXtwoIdArray.append(i);
-            }
-
-        }
-        i++;
-    }
-    MString size = "";
-    size += int(grid.allBricks.size());
-    MGlobal::displayInfo("ALL BRICKS SIZE: " + size);
-
-    oneXoneDataHandle.setMObject(oneXoneObject);
-    oneXtwoDataHandle.setMObject(oneXtwoObject);
-
-    return returnStatus;
-}
-
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
@@ -448,17 +344,37 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             ///
             ///
 
-            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(4, 4, 4));
+            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
             grid.initialize(boundingBox);
-            Brick brick1 = Brick(glm::vec3(2, 2, 0), BRICK, glm::vec2(1, 2));
-            Brick brick2 = Brick(glm::vec3(3, 2, 2), BRICK, glm::vec2(1, 2));
+            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
+            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
+            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
+            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
+            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
             grid.setBrick(brick1);
             grid.setBrick(brick2);
+            grid.setBrick(brick3);
+            grid.setBrick(brick4);
+            grid.setBrick(brick5);
+            grid.setBrick(brick6);
 
+            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
+            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
+            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
+            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
+            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
+            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
+            grid.setBrick(brick7);
+            grid.setBrick(brick8);
+            grid.setBrick(brick9);
+            grid.setBrick(brick10);
+            grid.setBrick(brick11);
+            grid.setBrick(brick12);
             ///
             ///
             ///
-            ///x
+            ///
             returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
@@ -487,6 +403,288 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         return MS::kSuccess;
     }
     return MS::kFailure;
+}
+
+
+MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
+    MStatus returnStatus;
+    MGlobal::displayInfo("SET UP DATA HANDLES \n\n\n");
+    // STEP 1: GET OUTPUT HANDLES
+    MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXone handle");
+
+    MDataHandle oneXtwoDataHandle = data.outputValue(BobNode::oneXtwoArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXtwo handle");
+
+    MDataHandle oneXthreeDataHandle = data.outputValue(BobNode::oneXthreeArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXthree handle");
+
+    MDataHandle oneXfourDataHandle = data.outputValue(BobNode::oneXfourArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXfour handle");
+
+    MDataHandle oneXsixDataHandle = data.outputValue(BobNode::oneXsixArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXsize handle");
+
+    MDataHandle oneXeightDataHandle = data.outputValue(BobNode::oneXeightArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting oneXeight handle");
+
+    MDataHandle twoXtwoDataHandle = data.outputValue(BobNode::twoXtwoArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting twoXtwo handle");
+
+    MDataHandle twoXthreeDataHandle = data.outputValue(BobNode::twoXthreeArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting twoXthree handle");
+
+    MDataHandle twoXfourDataHandle = data.outputValue(BobNode::twoXfourArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting twoXfour handle");
+
+    MDataHandle twoXsixDataHandle = data.outputValue(BobNode::twoXsixArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting twoXsize handle");
+
+    MDataHandle twoXeightDataHandle = data.outputValue(BobNode::twoXeightArr, &returnStatus);
+    McheckErr(returnStatus, "ERROR in getting twoXeight handle");
+
+
+    // STEP 2: SETUP ATTRS DATA ARRAYS
+
+    /// 1x1 bricks
+    MFnArrayAttrsData oneXoneAAD;
+    MObject oneXoneObject = oneXoneAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 object!\n");
+    MVectorArray oneXonePositionArray = oneXoneAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 position array!\n");
+    MDoubleArray oneXoneIdArray = oneXoneAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x1 id array!\n");
+
+    /// 1x2 bricks
+    MFnArrayAttrsData oneXtwoAAD;
+    MObject oneXtwoObject = oneXtwoAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 object!\n");
+    MVectorArray oneXtwoPositionArray = oneXtwoAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 position array!\n");
+    MVectorArray oneXtwoRotationArray = oneXtwoAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 rotation array!\n");
+    MVectorArray oneXtwoScaleArray = oneXtwoAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 scale array!\n");
+    MDoubleArray oneXtwoIdArray = oneXtwoAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x2 id array!\n");
+
+    /// 1x3 bricks
+    MFnArrayAttrsData oneXthreeAAD;
+    MObject oneXthreeObject = oneXthreeAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x3 object!\n");
+    MVectorArray oneXthreePositionArray = oneXthreeAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x3 position array!\n");
+    MVectorArray oneXthreeRotationArray = oneXthreeAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x3 rotation array!\n");
+    MVectorArray oneXthreeScaleArray = oneXthreeAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x3 scale array!\n");
+    MDoubleArray oneXthreeIdArray = oneXthreeAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x3 id array!\n");
+
+    /// 1x4 bricks
+    MFnArrayAttrsData oneXfourAAD;
+    MObject oneXfourObject = oneXfourAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x4 object!\n");
+    MVectorArray oneXfourPositionArray = oneXfourAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x4 position array!\n");
+    MVectorArray oneXfourRotationArray = oneXfourAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x4 rotation array!\n");
+    MVectorArray oneXfourScaleArray = oneXfourAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x4 scale array!\n");
+    MDoubleArray oneXfourIdArray = oneXfourAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x4 id array!\n");
+
+    /// 1x6 bricks
+    MFnArrayAttrsData oneXsixAAD;
+    MObject oneXsixObject = oneXsixAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x6 object!\n");
+    MVectorArray oneXsixPositionArray = oneXsixAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x6 position array!\n");
+    MVectorArray oneXsixRotationArray = oneXsixAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x6 rotation array!\n");
+    MVectorArray oneXsixScaleArray = oneXsixAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x6 scale array!\n");
+    MDoubleArray oneXsixIdArray = oneXsixAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x6 id array!\n");
+
+    /// 1x8 bricks
+    MFnArrayAttrsData oneXeightAAD;
+    MObject oneXeightObject = oneXeightAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x8 object!\n");
+    MVectorArray oneXeightPositionArray = oneXeightAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x8 position array!\n");
+    MVectorArray oneXeightRotationArray = oneXeightAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x8 rotation array!\n");
+    MVectorArray oneXeightScaleArray = oneXeightAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x8 scale array!\n");
+    MDoubleArray oneXeightIdArray = oneXeightAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 1x8 id array!\n");
+
+
+    /// 2x2 bricks
+    MFnArrayAttrsData twoXtwoAAD;
+    MObject twoXtwoObject = twoXtwoAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x2 object!\n");
+    MVectorArray twoXtwoPositionArray = twoXtwoAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x2 position array!\n");
+    MVectorArray twoXtwoRotationArray = twoXtwoAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x2 rotation array!\n");
+    MVectorArray twoXtwoScaleArray = twoXtwoAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x2 scale array!\n");
+    MDoubleArray twoXtwoIdArray = twoXtwoAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x2 id array!\n");
+
+    /// 2x3 bricks
+    MFnArrayAttrsData twoXthreeAAD;
+    MObject twoXthreeObject = twoXthreeAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x3 object!\n");
+    MVectorArray twoXthreePositionArray = twoXthreeAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x3 position array!\n");
+    MVectorArray twoXthreeRotationArray = twoXthreeAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x3 rotation array!\n");
+    MVectorArray twoXthreeScaleArray = twoXthreeAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x3 scale array!\n");
+    MDoubleArray twoXthreeIdArray = twoXthreeAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x3 id array!\n");
+
+    /// 2x4 bricks
+    MFnArrayAttrsData twoXfourAAD;
+    MObject twoXfourObject = twoXfourAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x4 object!\n");
+    MVectorArray twoXfourPositionArray = twoXfourAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x4 position array!\n");
+    MVectorArray twoXfourRotationArray = twoXfourAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x4 rotation array!\n");
+    MVectorArray twoXfourScaleArray = twoXfourAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x4 scale array!\n");
+    MDoubleArray twoXfourIdArray = twoXfourAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x4 id array!\n");
+
+    /// 2x6 bricks
+    MFnArrayAttrsData twoXsixAAD;
+    MObject twoXsixObject = twoXsixAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x6 object!\n");
+    MVectorArray twoXsixPositionArray = twoXsixAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x6 position array!\n");
+    MVectorArray twoXsixRotationArray = twoXsixAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x6 rotation array!\n");
+    MVectorArray twoXsixScaleArray = twoXsixAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x6 scale array!\n");
+    MDoubleArray twoXsixIdArray = twoXsixAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x6 id array!\n");
+
+    /// 2x8 bricks
+    MFnArrayAttrsData twoXeightAAD;
+    MObject twoXeightObject = twoXeightAAD.create(&returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x8 object!\n");
+    MVectorArray twoXeightPositionArray = twoXeightAAD.vectorArray("position", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x8 position array!\n");
+    MVectorArray twoXeightRotationArray = twoXeightAAD.vectorArray("rotation", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x8 rotation array!\n");
+    MVectorArray twoXeightScaleArray = twoXeightAAD.vectorArray("scale", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x8 scale array!\n");
+    MDoubleArray twoXeightIdArray = twoXeightAAD.doubleArray("id", &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating 2x8 id array!\n");
+
+    // STEP 3: POPULATE ARRAYS
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        Brick b = it->second;
+        if(b.type != EMPTY) {
+            glm::vec3 brickPos = b.getPos();
+            glm::vec2 brickScale = b.getScale();
+            if (brickScale[0] == 1 && brickScale[1] == 1) {
+                oneXonePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXoneIdArray.append(b.getId());
+            } else if ((brickScale[0] == 1 && brickScale[1] == 2) ||(brickScale[0] == 2 && brickScale[1] == 1)) {
+                oneXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXtwoIdArray.append(b.getId());
+                if (brickScale[1] == 1) {
+                    oneXtwoRotationArray.append(MVector(0, 90, 0));
+                    oneXtwoScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 1 && brickScale[1] == 3) ||(brickScale[0] == 3 && brickScale[1] == 1)) {
+                oneXthreePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXthreeIdArray.append(b.getId());
+                if (brickScale[1] == 1) {
+                    oneXthreeRotationArray.append(MVector(0, 90, 0));
+                    oneXthreeScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 1 && brickScale[1] == 4) ||(brickScale[0] == 4 && brickScale[1] == 1)) {
+                oneXfourPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXfourIdArray.append(b.getId());
+                if (brickScale[1] == 1) {
+                    oneXfourRotationArray.append(MVector(0, 90, 0));
+                    oneXfourScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 1 && brickScale[1] == 6) ||(brickScale[0] == 6 && brickScale[1] == 1)) {
+                oneXsixPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXsixIdArray.append(b.getId());
+                if (brickScale[1] == 1) {
+                    oneXsixRotationArray.append(MVector(0, 90, 0));
+                    oneXsixScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 1 && brickScale[1] == 8) ||(brickScale[0] == 8 && brickScale[1] == 1)) {
+                oneXeightPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXeightIdArray.append(b.getId());
+                if (brickScale[1] == 1) {
+                    oneXeightRotationArray.append(MVector(0, 90, 0));
+                    oneXeightScaleArray.append(MVector(-1, 1, 1));
+                }
+            }
+
+            // 2x_ bricks
+            else if (brickScale[0] == 2 && brickScale[1] == 2) {
+                oneXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                oneXtwoIdArray.append(b.getId());
+            } else if ((brickScale[0] == 2 && brickScale[1] == 3) ||(brickScale[0] == 3 && brickScale[1] == 2)) {
+                twoXthreePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                twoXthreeIdArray.append(b.getId());
+                if (brickScale[1] == 2) {
+                    twoXthreeRotationArray.append(MVector(0, 90, 0));
+                    twoXthreeScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 2 && brickScale[1] == 4) ||(brickScale[0] == 4 && brickScale[1] == 2)) {
+                twoXfourPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                twoXfourIdArray.append(b.getId());
+                if (brickScale[1] == 2) {
+                    twoXfourRotationArray.append(MVector(0, 90, 0));
+                    twoXfourScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 2 && brickScale[1] == 6) ||(brickScale[0] == 6 && brickScale[1] == 2)) {
+                twoXsixPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                twoXsixIdArray.append(b.getId());
+                if (brickScale[1] == 2) {
+                    twoXsixRotationArray.append(MVector(0, 90, 0));
+                    twoXsixScaleArray.append(MVector(-1, 1, 1));
+                }
+            } else if ((brickScale[0] == 2 && brickScale[1] == 8) ||(brickScale[0] == 8 && brickScale[1] == 2)) {
+                twoXeightPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
+                twoXeightIdArray.append(b.getId());
+                if (brickScale[1] == 2) {
+                    twoXeightRotationArray.append(MVector(0, 90, 0));
+                    twoXeightScaleArray.append(MVector(-1, 1, 1));
+                }
+            }
+        }
+    }
+    MString size = "";
+    size += int(grid.allBricks.size());
+    MGlobal::displayInfo("ALL BRICKS SIZE: " + size);
+
+    oneXoneDataHandle.setMObject(oneXoneObject);
+    oneXtwoDataHandle.setMObject(oneXtwoObject);
+    oneXthreeDataHandle.setMObject(oneXthreeObject);
+    oneXfourDataHandle.setMObject(oneXfourObject);
+    oneXsixDataHandle.setMObject(oneXsixObject);
+    oneXeightDataHandle.setMObject(oneXeightObject);
+
+    twoXtwoDataHandle.setMObject(twoXtwoObject);
+    twoXthreeDataHandle.setMObject(twoXthreeObject);
+    twoXfourDataHandle.setMObject(twoXfourObject);
+    twoXsixDataHandle.setMObject(twoXsixObject);
+    twoXeightDataHandle.setMObject(twoXeightObject);
+
+    return returnStatus;
 }
 
 // code to initialize the plugin //
