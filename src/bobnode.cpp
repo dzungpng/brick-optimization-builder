@@ -601,6 +601,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 1) {
                     oneXtwoRotationArray.append(MVector(0, 90, 0));
                     oneXtwoScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    oneXtwoRotationArray.append(MVector(0, 0, 0));
+                    oneXtwoScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 1 && brickScale[1] == 3) ||(brickScale[0] == 3 && brickScale[1] == 1)) {
                 oneXthreePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -608,6 +611,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 1) {
                     oneXthreeRotationArray.append(MVector(0, 90, 0));
                     oneXthreeScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    oneXthreeRotationArray.append(MVector(0, 0, 0));
+                    oneXthreeScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 1 && brickScale[1] == 4) ||(brickScale[0] == 4 && brickScale[1] == 1)) {
                 oneXfourPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -615,6 +621,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 1) {
                     oneXfourRotationArray.append(MVector(0, 90, 0));
                     oneXfourScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    oneXfourRotationArray.append(MVector(0, 0, 0));
+                    oneXfourScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 1 && brickScale[1] == 6) ||(brickScale[0] == 6 && brickScale[1] == 1)) {
                 oneXsixPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -622,6 +631,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 1) {
                     oneXsixRotationArray.append(MVector(0, 90, 0));
                     oneXsixScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    oneXsixRotationArray.append(MVector(0, 0, 0));
+                    oneXsixScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 1 && brickScale[1] == 8) ||(brickScale[0] == 8 && brickScale[1] == 1)) {
                 oneXeightPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -629,6 +641,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 1) {
                     oneXeightRotationArray.append(MVector(0, 90, 0));
                     oneXeightScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    oneXeightRotationArray.append(MVector(0, 0, 0));
+                    oneXeightScaleArray.append(MVector(1, 1, 1));
                 }
             }
 
@@ -642,6 +657,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 2) {
                     twoXthreeRotationArray.append(MVector(0, 90, 0));
                     twoXthreeScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    twoXthreeRotationArray.append(MVector(0, 0, 0));
+                    twoXthreeScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 2 && brickScale[1] == 4) ||(brickScale[0] == 4 && brickScale[1] == 2)) {
                 twoXfourPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -649,6 +667,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 2) {
                     twoXfourRotationArray.append(MVector(0, 90, 0));
                     twoXfourScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    twoXfourRotationArray.append(MVector(0, 0, 0));
+                    twoXfourScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 2 && brickScale[1] == 6) ||(brickScale[0] == 6 && brickScale[1] == 2)) {
                 twoXsixPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -656,6 +677,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 2) {
                     twoXsixRotationArray.append(MVector(0, 90, 0));
                     twoXsixScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    twoXsixRotationArray.append(MVector(0, 0, 0));
+                    twoXsixScaleArray.append(MVector(1, 1, 1));
                 }
             } else if ((brickScale[0] == 2 && brickScale[1] == 8) ||(brickScale[0] == 8 && brickScale[1] == 2)) {
                 twoXeightPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
@@ -663,6 +687,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
                 if (brickScale[1] == 2) {
                     twoXeightRotationArray.append(MVector(0, 90, 0));
                     twoXeightScaleArray.append(MVector(-1, 1, 1));
+                } else {
+                    twoXeightRotationArray.append(MVector(0, 0, 0));
+                    twoXeightScaleArray.append(MVector(1, 1, 1));
                 }
             }
         }
