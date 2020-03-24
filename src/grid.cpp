@@ -21,6 +21,8 @@ void Grid::setBrick(Brick& brick) {
     glm::vec3 pos = brick.getPos();
     // loop over all 1x1 units of the brick and fill in grid
     glm::vec3 shiftedBrickPos = pos + shift;
+    // permanently change the position of the brick so that we assume an origin of (0,0,0)
+    brick.setPos(shiftedBrickPos);
     for (int i = 0; i < brick.getScale().x; i++) {
         for (int j = 0; j < brick.getScale().y; j++) {
             // Shifting brick so that we assume the bottom left corner of the grid starts at 0,0,0 to index into 1D array
@@ -34,8 +36,6 @@ void Grid::setBrick(Brick& brick) {
             baseGrid[gridPos] = brick;
         }
     }
-    // permanently change the position of the brick so that we assume an origin of (0,0,0)
-    brick.setPos(shiftedBrickPos);
 }
 
 const Brick Grid::getBrick(const glm::vec3 brickPos) const {
