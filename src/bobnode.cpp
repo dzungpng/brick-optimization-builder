@@ -161,7 +161,7 @@ static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBr
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::updateAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
 
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
@@ -220,7 +220,7 @@ void BobNode::updateAdjBricks(std::set<Brick, cmpBrickIds> bricks, std::map<Bric
     }
 }
 
-void BobNode::mergeBricks(Brick brick1, Brick brick2, Brick &newBrick) {
+void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick) {
     glm::vec3 pos1 = brick1.getPos();
     glm::vec3 pos2 = brick2.getPos();
     glm::vec3 newPos = glm::vec3();
@@ -241,14 +241,17 @@ void BobNode::mergeBricks(Brick brick1, Brick brick2, Brick &newBrick) {
     grid.setBrick(newBrick);
 }
 
-void BobNode::generateInitialMaximalLayout(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
 
+    std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
+    updateAdjBricks(brickSet, adjList);
+
     std::vector<Brick> bricks = std::vector<Brick>();
-    for (std::map<Brick, std::set<Brick, cmpBrickIds>>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
-        bricks.push_back(it->first);
+    for (Brick b: brickSet) {
+        bricks.push_back(b);
     }
 
     while(adjList.size() > 0) {
@@ -316,7 +319,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
         if (stabStatus == MString("Initializing...")) {
 
-            /*
+
             // VOXELIZE INPUT MESH
             Voxelizer voxelizer = Voxelizer();
 
@@ -337,40 +340,40 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
-            // 5. Set the output data for voxels - uncomment this if we want to test voxels
+            // TEST: uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
-            */
+
             /// TEST CODE FOR DIFFERENT BRICK TYPES
             ///
             ///
 
-            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-            grid.initialize(boundingBox);
-            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
-            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
-            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
-            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
-            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
-            grid.setBrick(brick1);
-            grid.setBrick(brick2);
-            grid.setBrick(brick3);
-            grid.setBrick(brick4);
-            grid.setBrick(brick5);
-            grid.setBrick(brick6);
+//            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
+//            grid.initialize(boundingBox);
+//            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+//            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
+//            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
+//            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
+//            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
+//            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
+//            grid.setBrick(brick1);
+//            grid.setBrick(brick2);
+//            grid.setBrick(brick3);
+//            grid.setBrick(brick4);
+//            grid.setBrick(brick5);
+//            grid.setBrick(brick6);
 
-            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
-            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
-            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
-            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
-            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
-            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
-            grid.setBrick(brick7);
-            grid.setBrick(brick8);
-            grid.setBrick(brick9);
-            grid.setBrick(brick10);
-            grid.setBrick(brick11);
-            grid.setBrick(brick12);
+//            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
+//            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
+//            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
+//            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
+//            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
+//            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
+//            grid.setBrick(brick7);
+//            grid.setBrick(brick8);
+//            grid.setBrick(brick9);
+//            grid.setBrick(brick10);
+//            grid.setBrick(brick11);
+//            grid.setBrick(brick12);
             ///
             ///
             ///

@@ -1,12 +1,17 @@
-global proc importBrick(string $node, string $brickObj, string $attrArr) {
+global proc importBrick(string $node, string $brickObj, string $attrArr, string $brickGrp, string $instGrp) {
   string $importArr[] = file("-import", "-rnn", "/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/objs/" + $brickObj);
   //string $importArr[] = file("-import", "-rnn", "/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/objs/" + $brickObj);
   for($brick in $importArr) {
-      if ( `nodeType $brick` == "transform" ) {
-          print ($brick);
+      if (`nodeType $brick` == "transform" ) {
+
           string $instancer = instancer();
           connectAttr ($brick + ".matrix") ($instancer + ".inputHierarchy[0]");
           connectAttr ($node + "." + $attrArr) ($instancer + ".inputPoints");
+
+          // organize in outliner and return
+          parent $brick $brickGrp;
+          parent $instancer $instGrp;
+          return;
       }
   }
 }
@@ -17,6 +22,8 @@ global proc createBOBNode() {
     {
         string $bob = createNode("BOBNode");
         string $mesh = $selected[0];
+        string $instGrp = group("-em", "-name", "instancers");
+        string $parentGrp = group("-em", "-name", "bricks");
         
         // Creating the target output mesh
         string $target = createNode("transform");
@@ -28,18 +35,21 @@ global proc createBOBNode() {
         connectAttr( $bob + ".outputMesh") ($targetMesh + ".inMesh");
         
         // import base bricks and attach to data arr attr of the node for visualization
-        importBrick($bob, "1x1.obj", "oneXone");
-        importBrick($bob, "1x2.obj", "oneXtwo");
-        importBrick($bob, "1x3.obj", "oneXthree");
-        importBrick($bob, "1x4.obj", "oneXfour");
-        importBrick($bob, "1x6.obj", "oneXsix");
-        importBrick($bob, "1x8.obj", "oneXeight");
+        importBrick($bob, "1x1.obj", "oneXone", $parentGrp, $instGrp);
+        importBrick($bob, "1x2.obj", "oneXtwo", $parentGrp, $instGrp);
+        importBrick($bob, "1x3.obj", "oneXthree", $parentGrp, $instGrp);
+        importBrick($bob, "1x4.obj", "oneXfour", $parentGrp, $instGrp);
+        importBrick($bob, "1x6.obj", "oneXsix", $parentGrp, $instGrp);
+        importBrick($bob, "1x8.obj", "oneXeight", $parentGrp, $instGrp);
 
-        importBrick($bob, "2x2.obj", "twoXtwo");
-        importBrick($bob, "2x3.obj", "twoXthree");
-        importBrick($bob, "2x4.obj", "twoXfour");
-        importBrick($bob, "2x6.obj", "twoXsix");
-        importBrick($bob, "2x8.obj", "twoXeight");
+        importBrick($bob, "2x2.obj", "twoXtwo", $parentGrp, $instGrp);
+        importBrick($bob, "2x3.obj", "twoXthree", $parentGrp, $instGrp);
+        importBrick($bob, "2x4.obj", "twoXfour", $parentGrp, $instGrp);
+        importBrick($bob, "2x6.obj", "twoXsix", $parentGrp, $instGrp);
+        importBrick($bob, "2x8.obj", "twoXeight", $parentGrp, $instGrp);
+
+        // hide original brick geometry
+        hide($parentGrp);
     } else {
         error "Please select exactly one mesh"; 
     }
