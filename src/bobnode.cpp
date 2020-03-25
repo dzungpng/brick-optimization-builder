@@ -101,7 +101,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::stabilityStatus);
     McheckErr(returnStatus, "ERROR in adding statbility status attribute!\n")
 
-    returnStatus = addAttribute(BobNode::outputMesh);
+            returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
 
     returnStatus = addAttribute(BobNode::oneXoneArr);
@@ -133,6 +133,27 @@ MStatus BobNode::initialize()
 
     returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXoneArr);
     McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXoneArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXtwoArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXtwoArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXthreeArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXthreeArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXfourArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXfourArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXsixArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXsixArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXeightArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXeightArr!\n");
+
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXtwoArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXtwoArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXthreeArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXthreeArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXfourArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXfourArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXsixArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXsixArr!\n");
+    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXeightArr);
+    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXeightArr!\n");
 
     return MS::kSuccess;
 }
@@ -277,30 +298,30 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             MGlobal::displayInfo("ERROR: IDX OUT OF RANGE FOR BRICKS!!!! \n\n\n\n");
         }
         return;
-//        Brick brick1 = bricks[randIdx1];
-//        if (adjList.count(brick1) > 0) {
-////            std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
+        //        Brick brick1 = bricks[randIdx1];
+        //        if (adjList.count(brick1) > 0) {
+        ////            std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
 
-////            int randIdx2 = std::rand() % adjBricks.size();
-////            print("RAND IDX2:", randIdx2);
-////            print("BRICK SET SIZE:", adjBricks.size());
+        ////            int randIdx2 = std::rand() % adjBricks.size();
+        ////            print("RAND IDX2:", randIdx2);
+        ////            print("BRICK SET SIZE:", adjBricks.size());
 
-////            auto it = std::begin(adjBricks);
-////            // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
-////            std::advance(it, randIdx2);
-////            Brick brick2 = *it;
+        ////            auto it = std::begin(adjBricks);
+        ////            // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
+        ////            std::advance(it, randIdx2);
+        ////            Brick brick2 = *it;
 
-////            // add new brick to grid
-////            Brick newBrick = Brick();
-////            mergeBricks(brick1, brick2, newBrick);
+        ////            // add new brick to grid
+        ////            Brick newBrick = Brick();
+        ////            mergeBricks(brick1, brick2, newBrick);
 
-////            // add newBrick to adjList
-////            updateAdjBricks({newBrick}, adjList);
-////            // update bricks vector - I guess this isn't much better than iterating over a map
-////            bricks.erase(bricks.begin() + randIdx1);
-////            bricks.erase(bricks.begin() + randIdx2);
-////            bricks.push_back(newBrick);
-//        }
+        ////            // add newBrick to adjList
+        ////            updateAdjBricks({newBrick}, adjList);
+        ////            // update bricks vector - I guess this isn't much better than iterating over a map
+        ////            bricks.erase(bricks.begin() + randIdx1);
+        ////            bricks.erase(bricks.begin() + randIdx2);
+        ////            bricks.push_back(newBrick);
+        //        }
     }
 }
 
@@ -309,7 +330,11 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 {
     MStatus returnStatus;
     MGlobal::displayInfo("COMPUTE!");
-    if(plug == BobNode::outputMesh) {
+    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
+                                   || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
+                                   || plug == BobNode::twoXthreeArr || plug == BobNode::twoXfourArr || plug == BobNode::twoXsixArr
+                                   || plug == BobNode::twoXeightArr) {
+
         MGlobal::displayInfo("OUTPUT MESH AFFECTED");
         // GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
@@ -381,33 +406,33 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             ///
             ///
 
-//            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-//            grid.initialize(boundingBox);
-//            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-//            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
-//            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
-//            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
-//            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
-//            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
-//            grid.setBrick(brick1);
-//            grid.setBrick(brick2);
-//            grid.setBrick(brick3);
-//            grid.setBrick(brick4);
-//            grid.setBrick(brick5);
-//            grid.setBrick(brick6);
+            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
+            //            grid.initialize(boundingBox);
+            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
+            //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
+            //            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
+            //            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
+            //            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
+            //            grid.setBrick(brick1);
+            //            grid.setBrick(brick2);
+            //            grid.setBrick(brick3);
+            //            grid.setBrick(brick4);
+            //            grid.setBrick(brick5);
+            //            grid.setBrick(brick6);
 
-//            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
-//            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
-//            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
-//            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
-//            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
-//            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
-//            grid.setBrick(brick7);
-//            grid.setBrick(brick8);
-//            grid.setBrick(brick9);
-//            grid.setBrick(brick10);
-//            grid.setBrick(brick11);
-//            grid.setBrick(brick12);
+            //            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
+            //            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
+            //            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
+            //            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
+            //            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
+            //            grid.setBrick(brick7);
+            //            grid.setBrick(brick8);
+            //            grid.setBrick(brick9);
+            //            grid.setBrick(brick10);
+            //            grid.setBrick(brick11);
+            //            grid.setBrick(brick12);
             ///
             ///
             ///
@@ -445,7 +470,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
     MStatus returnStatus;
-    MGlobal::displayInfo("SET UP DATA HANDLES \n\n\n");
+    MGlobal::displayInfo("SET UP DATA HANDLES");
     // STEP 1: GET OUTPUT HANDLES
     MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
     McheckErr(returnStatus, "ERROR in getting oneXone handle");
