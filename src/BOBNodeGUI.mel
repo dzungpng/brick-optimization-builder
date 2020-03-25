@@ -33,6 +33,7 @@ global proc createBOBNode() {
         // Connect the attributes.
         connectAttr ($mesh + ".outMesh") ($bob + ".inputMesh");
         connectAttr( $bob + ".outputMesh") ($targetMesh + ".inMesh");
+      
         
         // import base bricks and attach to data arr attr of the node for visualization
         importBrick($bob, "1x1.obj", "oneXone", $parentGrp, $instGrp);

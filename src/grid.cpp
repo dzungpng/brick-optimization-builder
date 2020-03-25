@@ -53,7 +53,9 @@ void Grid::setBrick(Brick& brick) {
 const Brick Grid::getBrick(const glm::vec3 brickPos) const {
     int index = flat(brickPos[0], brickPos[1], brickPos[2]);
     if(index < 0 || index > baseGrid.size()) {
-        MGlobal::displayInfo("ERROR: index out of range in Grid::getBrick!");
+        // return empty brick
+        return Brick();
+        //MGlobal::displayInfo("ERROR: index out of range in Grid::getBrick!");
     }
     return baseGrid[index];
 }
