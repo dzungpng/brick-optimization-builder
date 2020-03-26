@@ -299,6 +299,9 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
     grid.setBrick(newBrick);
+    print("GRID SHIFT X:", grid.getShift()[0]);
+    print("GRID SHIFT Y:", grid.getShift()[1]);
+    print("GRID SHIFT Z:", grid.getShift()[2]);
 }
 
 void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet) {
@@ -308,8 +311,8 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList);
-
-    while(adjList.size() > 0) {
+    for(int i=0; i < 1; i++) {
+    //while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
         std::advance(it1, randIdx1);
@@ -388,7 +391,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         MString nodeName = fnNode.name();
 
         if (stabStatus == MString("Initializing...")) {
-            /*
+
             // VOXELIZE INPUT MESH
             Voxelizer voxelizer = Voxelizer();
 
@@ -409,8 +412,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
-            */
-
             // TEST: uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
 
@@ -418,20 +419,20 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             ///
             ///
 
-            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-            grid.initialize(boundingBox);
-            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
-            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
-            Brick brick4 = Brick(glm::vec3(2, 5, 0), BRICK, glm::vec2(1, 1));
+            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
+            //            grid.initialize(boundingBox);
+            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick4 = Brick(glm::vec3(2, 5, 0), BRICK, glm::vec2(1, 1));
             //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
             //            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
             //            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
             //            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
-            grid.setBrick(brick1);
-            grid.setBrick(brick2);
+            //            grid.setBrick(brick1);
+            //            grid.setBrick(brick2);
             //grid.setBrick(brick3);
-            grid.setBrick(brick4);
+            //            grid.setBrick(brick4);
             //            grid.setBrick(brick3);
             //            grid.setBrick(brick4);
             //            grid.setBrick(brick5);
