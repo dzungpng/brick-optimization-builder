@@ -1,13 +1,26 @@
 #include "bobnode.h"
 #include <stdio.h>
 #include <maya/MFnArrayAttrsData.h>
+#include <maya/MPlugArray.h>
 
-// helper for printing numbers
+//// helpers for printing
 static void print(MString label, int i) {
     MString s = "";
     s += i;
     MGlobal::displayInfo(label + " " + i);
 }
+
+static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+    for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
+        Brick b = it->first;
+        print("Brick", b.getId());
+        for (Brick n: adjList[b]) {
+            print("neighbor:", n.getId());
+        }
+    }
+    MGlobal::displayInfo("\n END ADJ LIST ");
+}
+
 
 void* BobNode::creator()
 {
@@ -133,27 +146,27 @@ MStatus BobNode::initialize()
 
     returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXoneArr);
     McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXoneArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXtwoArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXtwoArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXthreeArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXthreeArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXfourArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXfourArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXsixArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXsixArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXeightArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXeightArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXtwoArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXtwoArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXthreeArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXthreeArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXfourArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXfourArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXsixArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXsixArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::oneXeightArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to oneXeightArr!\n");
 
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXtwoArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXtwoArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXthreeArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXthreeArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXfourArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXfourArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXsixArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXsixArr!\n");
-    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXeightArr);
-    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXeightArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXtwoArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXtwoArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXthreeArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXthreeArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXfourArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXfourArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXsixArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXsixArr!\n");
+    //    returnStatus = attributeAffects(BobNode::stabilityStatus, BobNode::twoXeightArr);
+    //    McheckErr(returnStatus, "ERROR in adding attributeAffects for stability status to twoXeightArr!\n");
 
     return MS::kSuccess;
 }
@@ -191,6 +204,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
+            print("ADJ LIST SIZE:", adjList.size());
             adjList.insert(std::pair<Brick, std::set<Brick, cmpBrickIds>>(brick, std::set<Brick, cmpBrickIds>()));
         }
 
@@ -242,6 +256,10 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
                 }
             }
         }
+        // if no neighbors are mergeable, erase this brick
+        if (adjList[brick].size() == 0) {
+            adjList.erase(brick);
+        }
     }
 
 }
@@ -260,6 +278,22 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
+    MGlobal::displayInfo("MERGE BRICKS");
+    MGlobal::displayInfo("BRICK1 POS: ");
+    print("X:", pos1[0]);
+    print("Y:", pos1[1]);
+    print("Z:", pos1[2]);
+    MGlobal::displayInfo("BRICK2 POS: ");
+    print("X:", pos2[0]);
+    print("Y:", pos2[1]);
+    print("Z:", pos2[2]);
+    MGlobal::displayInfo("NEW POS: ");
+    print("X:", newPos[0]);
+    print("Y:", newPos[1]);
+    print("Z:", newPos[2]);
+    MGlobal::displayInfo("NEW SCALE: ");
+    print("X:", newScale[0]);
+    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
@@ -275,53 +309,38 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList);
 
-    std::vector<Brick> bricks = std::vector<Brick>();
-    for (Brick b: brickSet) {
-        bricks.push_back(b);
-    }
-
-    for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
-        Brick b = it->first;
-        std::set<Brick, cmpBrickIds> adjBricks = it->second;
-        print("BRICK ID:", b.getId());
-        for(Brick b2: adjBricks) {
-            print("neighbor:", b2.getId());
-        }
-        MGlobal::displayInfo("\n\n");
-    }
-
     while(adjList.size() > 0) {
-        int randIdx1 = std::rand() % bricks.size();
-        print("RAND IDX1:", randIdx1);
-        print("BRICK SET SIZE:", bricks.size());
-        if(randIdx1 > bricks.size()) {
-            MGlobal::displayInfo("ERROR: IDX OUT OF RANGE FOR BRICKS!!!! \n\n\n\n");
+        int randIdx1 = std::rand() % adjList.size();
+        auto it1 = std::begin(adjList);
+        std::advance(it1, randIdx1);
+        Brick brick1 = it1->first;
+
+        if (adjList.count(brick1) > 0) {
+            std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
+
+            int randIdx2 = std::rand() % adjBricks.size();
+            auto it2 = std::begin(adjBricks);
+            // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
+            std::advance(it2, randIdx2);
+            Brick brick2 = *it2;
+
+            // add new brick to grid
+            Brick newBrick = Brick();
+            MGlobal::displayInfo("MERGE TO FORM NEW BRICK \n");
+            mergeBricks(brick1, brick2, newBrick);
+
+            MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
+            // add newBrick to adjList
+            std::set<Brick, cmpBrickIds> newBrickSet = std::set<Brick, cmpBrickIds>();
+            newBrickSet.insert(newBrick);
+            updateAdjBricks(newBrickSet, adjList);
+
+            printAdjList(adjList);
+            adjList.erase(brick1);
+            adjList.erase(brick2);
+
+            printAdjList(adjList);
         }
-        return;
-        //        Brick brick1 = bricks[randIdx1];
-        //        if (adjList.count(brick1) > 0) {
-        ////            std::set<Brick, cmpBrickIds> adjBricks = adjList[brick1];
-
-        ////            int randIdx2 = std::rand() % adjBricks.size();
-        ////            print("RAND IDX2:", randIdx2);
-        ////            print("BRICK SET SIZE:", adjBricks.size());
-
-        ////            auto it = std::begin(adjBricks);
-        ////            // 'advance' the iterator n times -> seems inefficient but there are at most 4 adjacent bricks so O(1)
-        ////            std::advance(it, randIdx2);
-        ////            Brick brick2 = *it;
-
-        ////            // add new brick to grid
-        ////            Brick newBrick = Brick();
-        ////            mergeBricks(brick1, brick2, newBrick);
-
-        ////            // add newBrick to adjList
-        ////            updateAdjBricks({newBrick}, adjList);
-        ////            // update bricks vector - I guess this isn't much better than iterating over a map
-        ////            bricks.erase(bricks.begin() + randIdx1);
-        ////            bricks.erase(bricks.begin() + randIdx2);
-        ////            bricks.push_back(newBrick);
-        //        }
     }
 }
 
@@ -329,11 +348,13 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
     MStatus returnStatus;
-    MGlobal::displayInfo("COMPUTE!");
-    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
-                                   || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
-                                   || plug == BobNode::twoXthreeArr || plug == BobNode::twoXfourArr || plug == BobNode::twoXsixArr
-                                   || plug == BobNode::twoXeightArr) {
+    MGlobal::displayInfo("COMPUTE NODE!");
+
+    //    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
+    //            || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
+    //            || plug == BobNode::twoXthreeArr || plug == BobNode::twoXfourArr || plug == BobNode::twoXsixArr
+    //            || plug == BobNode::twoXeightArr || plug == BobNode::outputMesh ) {
+    if(plug == BobNode::outputMesh) {
 
         MGlobal::displayInfo("OUTPUT MESH AFFECTED");
         // GET INPUT HANDLES
@@ -360,14 +381,14 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
+        MGlobal::displayInfo("STATUS: " + stabStatus);
 
         MObject thisNode = thisMObject();
         MFnDependencyNode fnNode(thisNode);
         MString nodeName = fnNode.name();
 
         if (stabStatus == MString("Initializing...")) {
-
-
+            /*
             // VOXELIZE INPUT MESH
             Voxelizer voxelizer = Voxelizer();
 
@@ -388,16 +409,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
-            // inefficient. may need to rework data structure usage
-            std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
-            for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
-                Brick b = it->second;
-                MString id = "";
-                id += b.getId();
-                MGlobal::displayInfo("ID " + id);
-                brickSet.insert(b);
-            }
-            generateInitialMaximalLayout(brickSet);
+            */
 
             // TEST: uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
@@ -406,16 +418,20 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             ///
             ///
 
-            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-            //            grid.initialize(boundingBox);
-            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
+            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
+            grid.initialize(boundingBox);
+            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
+            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
+            Brick brick4 = Brick(glm::vec3(2, 5, 0), BRICK, glm::vec2(1, 1));
             //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
             //            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
             //            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
             //            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
-            //            grid.setBrick(brick1);
-            //            grid.setBrick(brick2);
+            grid.setBrick(brick1);
+            grid.setBrick(brick2);
+            //grid.setBrick(brick3);
+            grid.setBrick(brick4);
             //            grid.setBrick(brick3);
             //            grid.setBrick(brick4);
             //            grid.setBrick(brick5);
@@ -435,19 +451,26 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             //            grid.setBrick(brick12);
             ///
             ///
-            ///
-            ///
+
+            // inefficient. may need to rework data structure usage
+            std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
+            for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+                Brick b = it->second;
+                brickSet.insert(b);
+            }
+            //            MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
+            generateInitialMaximalLayout(brickSet);
             returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
             // set status to "Initialized"
-            MGlobal::displayInfo("INIT");
+            MGlobal::displayInfo("END INIT");
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Initialized");
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
         } else if (stabStatus == MString("Computing...")) {
-            MGlobal::displayInfo("COMPUTING");
+            MGlobal::displayInfo("ITERATING");
             // computing code - num iterations based on iterateUntilStable attr
             // set status to "Stable" or "Unstable" based on analysis
             // lock iterate button if mesh is stable
@@ -459,11 +482,14 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             MGlobal::executeCommand("button -e -enable true IterateButton;");
         } else {
             MGlobal::displayInfo("OTHER STABILITY STATUS");
+            MGlobal::displayInfo(stabStatus);
         }
-        //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
+        //MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
 
+        //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
         return MS::kSuccess;
     }
+    MGlobal::displayInfo("FINISH COMPUTE");
     return MS::kFailure;
 }
 
