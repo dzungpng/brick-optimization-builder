@@ -18,6 +18,7 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
         for (Brick n: adjList[b]) {
             print("neighbor:", n.getId());
         }
+        MGlobal::displayInfo("\n");
     }
     MGlobal::displayInfo("\n END ADJ LIST ");
 }
@@ -206,6 +207,9 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
             adjList.insert(std::pair<Brick, std::set<Brick, cmpBrickIds>>(brick, std::set<Brick, cmpBrickIds>()));
+        } else {
+            // reset the neighbor list to update
+            adjList[brick] =  std::set<Brick, cmpBrickIds>();
         }
 
         glm::vec3 pos = brick.getPos();
@@ -279,14 +283,23 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
     MGlobal::displayInfo("MERGE BRICKS");
-    MGlobal::displayInfo("BRICK1 POS: ");
-    print("X:", pos1[0]);
-    print("Y:", pos1[1]);
-    print("Z:", pos1[2]);
-    MGlobal::displayInfo("BRICK2 POS: ");
-    print("X:", pos2[0]);
-    print("Y:", pos2[1]);
-    print("Z:", pos2[2]);
+    print("BRICK1:", brick1.getId());
+    print("BRICK2:", brick2.getId());
+    print("NEW BRICK:", newBrick.getId());
+    //    MGlobal::displayInfo("BRICK1 POS: ");
+    //    print("X:", pos1[0]);
+    //    print("Y:", pos1[1]);
+    //    print("Z:", pos1[2]);
+    //    MGlobal::displayInfo("BRICK1 SCALE: ");
+    //    print("X:", brick1.getScale()[0]);
+    //    print("Z:", brick1.getScale()[1]);
+    //    MGlobal::displayInfo("BRICK2 POS: ");
+    //    print("X:", pos2[0]);
+    //    print("Y:", pos2[1]);
+    //    print("Z:", pos2[2]);
+    //    MGlobal::displayInfo("BRICK2 SCALE: ");
+    //    print("X:", brick2.getScale()[0]);
+    //    print("Z:", brick2.getScale()[1]);
     MGlobal::displayInfo("NEW POS: ");
     print("X:", newPos[0]);
     print("Y:", newPos[1]);
@@ -330,15 +343,26 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             mergeBricks(brick1, brick2, newBrick);
 
             MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
-            // add newBrick to adjList
+
+            // add newBrick to adjList and update all neighbors of merged bricks
             std::set<Brick, cmpBrickIds> newBrickSet = std::set<Brick, cmpBrickIds>();
             newBrickSet.insert(newBrick);
-            updateAdjBricks(newBrickSet, adjList);
+            for(Brick neighbor: adjList[brick1]) {
+                if (neighbor.getId() != brick2.getId()) {
+                    newBrickSet.insert(neighbor);
+                }
 
-            printAdjList(adjList);
+            }
+            for(Brick neighbor: adjList[brick2]) {
+                if (neighbor.getId() != brick1.getId()) {
+                    newBrickSet.insert(neighbor);
+                }
+            }
+            // delete merged bricks from adjList
             adjList.erase(brick1);
             adjList.erase(brick2);
 
+            updateAdjBricks(newBrickSet, adjList);
             printAdjList(adjList);
         }
     }
@@ -416,39 +440,70 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             ///
             ///
 
-//                        MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-//                        grid.initialize(boundingBox);
-//                        Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 2));
-//                        Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 2));
-            //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick4 = Brick(glm::vec3(2, 5, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick3 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 3));
-            //            Brick brick4 = Brick(glm::vec3(3, 4, 0), BRICK, glm::vec2(1, 4));
-            //            Brick brick5 = Brick(glm::vec3(4, 4, 0), BRICK, glm::vec2(1, 6));
-            //            Brick brick6 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 8));
-//                        grid.setBrick(brick1);
-//                        grid.setBrick(brick2);
-            //grid.setBrick(brick3);
-            //            grid.setBrick(brick4);
-            //            grid.setBrick(brick3);
-            //            grid.setBrick(brick4);
-            //            grid.setBrick(brick5);
-            //            grid.setBrick(brick6);
+            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
+            //            grid.initialize(boundingBox);
+            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick3 = Brick(glm::vec3(0, 4, 1), BRICK, glm::vec2(1, 1));
+            //            Brick brick4 = Brick(glm::vec3(1, 4, 1), BRICK, glm::vec2(1, 1));
+            //            Brick brick5 = Brick(glm::vec3(0, 4, 2), BRICK, glm::vec2(1, 1));
+            //            Brick brick6 = Brick(glm::vec3(1, 4, 2), BRICK, glm::vec2(1, 1));
+            //            grid.initializeBrick(brick1);
+            //            grid.initializeBrick(brick2);
+            //            grid.initializeBrick(brick3);
+            //            grid.initializeBrick(brick4);
+            //            grid.initializeBrick(brick5);
+            //            grid.initializeBrick(brick6);
 
-            //            Brick brick7 = Brick(glm::vec3(5, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick8 = Brick(glm::vec3(5, 4, 1), BRICK, glm::vec2(2, 1));
-            //            Brick brick9 = Brick(glm::vec3(5, 4, 2), BRICK, glm::vec2(3, 1));
-            //            Brick brick10 = Brick(glm::vec3(5, 4, 3), BRICK, glm::vec2(4, 1));
-            //            Brick brick11 = Brick(glm::vec3(5, 4, 4), BRICK, glm::vec2(6, 1));
-            //            Brick brick12 = Brick(glm::vec3(5, 4, 5), BRICK, glm::vec2(8, 1));
-            //            grid.setBrick(brick7);
-            //            grid.setBrick(brick8);
+            //            Brick brick7 = Brick(glm::vec3(0, 4, 3), BRICK, glm::vec2(1, 1));
+            //            Brick brick8 = Brick(glm::vec3(1, 4, 3), BRICK, glm::vec2(1, 1));
+            //            Brick brick9 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
+            //            Brick brick10 = Brick(glm::vec3(2, 4, 1), BRICK, glm::vec2(1, 1));
+            //            Brick brick11 = Brick(glm::vec3(2, 4, 2), BRICK, glm::vec2(1, 1));
+            //            Brick brick12 = Brick(glm::vec3(2, 4, 3), BRICK, glm::vec2(1, 1));
+            //            grid.initializeBrick(brick7);
+            //            grid.initializeBrick(brick8);
             //            grid.setBrick(brick9);
             //            grid.setBrick(brick10);
             //            grid.setBrick(brick11);
             //            grid.setBrick(brick12);
             ///
             ///
+            //            print("BRICK1:", brick1.getId());
+            //            print("POS X:", brick1.getPos()[0]);
+            //            print("POS Z:", brick1.getPos()[2]);
+
+            //            print("BRICK2:", brick2.getId());
+            //            print("POS X:", brick2.getPos()[0]);
+            //            print("POS Z:", brick2.getPos()[2]);
+
+            //            print("BRICK3:", brick3.getId());
+            //            print("POS X:", brick3.getPos()[0]);
+            //            print("POS Z:", brick3.getPos()[2]);
+
+            //            print("BRICK4:", brick4.getId());
+            //            print("POS X:", brick4.getPos()[0]);
+            //            print("POS Z:", brick4.getPos()[2]);
+
+            //            print("BRICK5:", brick5.getId());
+            //            print("POS X:", brick5.getPos()[0]);
+            //            print("POS Z:", brick5.getPos()[2]);
+
+            //            print("BRICK6:", brick6.getId());
+            //            print("POS X:", brick6.getPos()[0]);
+            //            print("POS Z:", brick6.getPos()[2]);
+
+            //            print("BRICK7:", brick9.getId());
+            //            print("POS X:", brick9.getPos()[0]);
+            //            print("POS Z:", brick9.getPos()[2]);
+
+            //            print("BRICK8:", brick10.getId());
+            //            print("POS X:", brick10.getPos()[0]);
+            //            print("POS Z:", brick10.getPos()[2]);
+
+            //            print("BRICK9:", brick11.getId());
+            //            print("POS X:", brick11.getPos()[0]);
+            //            print("POS Z:", brick11.getPos()[2]);
 
             // inefficient. may need to rework data structure usage
             std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
@@ -782,7 +837,6 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
     }
 
     print("ALL BRICKS SIZE:", grid.allBricks.size());
-    print("1x1 array size:", oneXonePositionArray.length());
 
     oneXoneDataHandle.setMObject(oneXoneObject);
     oneXtwoDataHandle.setMObject(oneXtwoObject);

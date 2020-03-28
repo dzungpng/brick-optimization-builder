@@ -20,6 +20,7 @@ global proc createBOBNode() {
     string $selected[] = `ls -sl`;
     if (size($selected) == 1)
     {
+        performFreezeTransformations(0);
         string $bob = createNode("BOBNode");
         string $mesh = $selected[0];
         string $instGrp = group("-em", "-name", "instancers");
