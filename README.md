@@ -1,4 +1,4 @@
-Brick-Bptimization-Builder (B.O.B)
+Brick-Optimization-Builder (B.O.B)
 =====================================
 
 A Maya-plugin for the construction of stable LEGO models
