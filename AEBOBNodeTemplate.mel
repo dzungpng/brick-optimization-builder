@@ -51,6 +51,8 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 		button -e -enable true InitializeButton;
 		string $initCmd = "editorTemplate -dimControl " + $nodeName + " InitializeButton true; \
 					     button -e -enable false InitializeButton; \
+					     button -e -enable true IterateButton; \
+					     editorTemplate -dimControl " + $nodeName + " IterateButton false; \
 					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initializing...\";";
 
 	} else { // do nothing, node has already been initialized
@@ -167,15 +169,15 @@ global proc AEColorConstraintUpdate (string $nodeNameArr) {
 	//-----------------------------------------------------------------------------------------------------------------//
 
 
-	string $val = `getAttr ($nodeName + ".iterations")`;
+	int $val = getAttr($nodeName + ".iterations");
 	intSliderGrp -e -value $val maxIter;
 	connectControl maxIter ($nodeName+".iterations");
 
 	string $stage = `getAttr ($nodeName + ".colorConstraint")`;
 	if ($stage == "HARD") {
-		optionMenuGrp -select "HARD" colorMenu;
+		optionMenuGrp -e -value "HARD" colorMenu;
 	} else {
-		optionMenuGrp -select "SOFT" colorMenu;
+		optionMenuGrp -e -value "SOFT" colorMenu;
 	}
 }
 

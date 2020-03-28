@@ -161,7 +161,7 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         float halfWidth = float( defaultVoxelWidth / 2.f );
         MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
         Brick brick = Brick(glm::vec3(pos.x, pos.y, pos.z), BRICK, glm::vec2(1));
-        grid.setBrick(brick);
+        grid.initializeBrick(brick);
 
         MFloatPoint shiftedVoxelPos = MFloatPoint(voxelPosition.x + grid.getShift().x,
                                                   voxelPosition.y + grid.getShift().y,

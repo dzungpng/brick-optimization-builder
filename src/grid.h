@@ -29,6 +29,8 @@ public:
     std::map<int, Brick> allBricks = std::map<int, Brick>();
 
     void setBrick(Brick& brick);
+    // same as setBrick except used when first filling grid. shifts positions such that our layout is at (0, 0, 0)
+    void initializeBrick(Brick& brick);
     void setDim(const glm::vec3 newDim) { dim = newDim; }
     void setBaseGridSize() { baseGrid = std::vector<Brick>(dim.x * dim.y * dim.z); }
     void setOrigin(const glm::vec3 newOrigin) { origin = newOrigin; }
