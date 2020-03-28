@@ -282,10 +282,10 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
-    MGlobal::displayInfo("MERGE BRICKS");
-    print("BRICK1:", brick1.getId());
-    print("BRICK2:", brick2.getId());
-    print("NEW BRICK:", newBrick.getId());
+    //    MGlobal::displayInfo("MERGE BRICKS");
+    //    print("BRICK1:", brick1.getId());
+    //    print("BRICK2:", brick2.getId());
+    //    print("NEW BRICK:", newBrick.getId());
     //    MGlobal::displayInfo("BRICK1 POS: ");
     //    print("X:", pos1[0]);
     //    print("Y:", pos1[1]);
@@ -300,13 +300,13 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     //    MGlobal::displayInfo("BRICK2 SCALE: ");
     //    print("X:", brick2.getScale()[0]);
     //    print("Z:", brick2.getScale()[1]);
-    MGlobal::displayInfo("NEW POS: ");
-    print("X:", newPos[0]);
-    print("Y:", newPos[1]);
-    print("Z:", newPos[2]);
-    MGlobal::displayInfo("NEW SCALE: ");
-    print("X:", newScale[0]);
-    print("Z:", newScale[1]);
+    //    MGlobal::displayInfo("NEW POS: ");
+    //    print("X:", newPos[0]);
+    //    print("Y:", newPos[1]);
+    //    print("Z:", newPos[2]);
+    //    MGlobal::displayInfo("NEW SCALE: ");
+    //    print("X:", newScale[0]);
+    //    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
