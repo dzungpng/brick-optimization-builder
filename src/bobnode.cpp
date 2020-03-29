@@ -215,12 +215,54 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         glm::vec3 pos = brick.getPos();
         glm::vec2 scale = brick.getScale();
 
-        Brick left = grid.getBrick(glm::vec3(pos[0] - 1, pos[1], pos[2]));
+        Brick left = grid.getBrick(glm::vec3(pos[0] - 1,         pos[1], pos[2]));
         Brick right = grid.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
-        Brick front = grid.getBrick(glm::vec3(pos[0], pos[1], pos[2] + scale[1]));
-        Brick back = grid.getBrick(glm::vec3(pos[0], pos[1], pos[2] - 1));
+        Brick front = grid.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
+        Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
+        if(left.getPos()[1] != pos[1] && left.type != EMPTY) {
+            MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
+            print("BRICK HEIGHT:", pos[1]);
+            print("LEFT HEIGHT:", left.getPos()[1]);
+            if(grid.getBrick(pos).getId() == brick.getId()) {
+                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+            }else {
+                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+            }
+        }
+        if(right.getPos()[1] != pos[1] && right.type != EMPTY) {
+            MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
+            print("BRICK HEIGHT:", pos[1]);
+            print("RIGHT HEIGHT:", right.getPos()[1]);
+            if(grid.getBrick(pos).getId() == brick.getId()) {
+                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+            }else {
+                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+            }
+        }
+        if(front.getPos()[1] != pos[1] && front.type != EMPTY) {
+            MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
+            print("BRICK HEIGHT:", pos[1]);
+            print("LEFT HEIGHT:", front.getPos()[1]);
+            if(grid.getBrick(pos).getId() == brick.getId()) {
+                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+            }else {
+                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+            }
+        }
+        if(back.getPos()[1] != pos[1] && back.type != EMPTY) {
+            MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
+            print("BRICK HEIGHT:", pos[1]);
+            print("BACK HEIGHT:", back.getPos()[1]);
+            if(grid.getBrick(pos).getId() == brick.getId()) {
+                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+            }else {
+                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+            }
+        }
 
-        if (left.type != EMPTY) {
+
+
+        if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
             glm::vec2 leftScale = left.getScale();
             if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -230,7 +272,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
                 }
             }
         }
-        if (right.type != EMPTY) {
+        if (right.type != EMPTY && right.getPos()[1] == pos[1]) {
             glm::vec2 rightScale = right.getScale();
             if (rightScale[1] == scale[1] && right.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -240,7 +282,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
                 }
             }
         }
-        if (front.type != EMPTY) {
+        if (front.type != EMPTY && front.getPos()[1] == pos[1]) {
             glm::vec2 frontScale = front.getScale();
             if (frontScale[0] == scale[0] && front.getPos()[0] == pos[0]) {
                 // check if mergeable
@@ -250,7 +292,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
                 }
             }
         }
-        if (back.type != EMPTY) {
+        if (back.type != EMPTY && back.getPos()[1] == pos[1]) {
             glm::vec2 backScale = back.getScale();
             if (backScale[0] == scale[0] && back.getPos()[0] == pos[0]) {
                 // check if mergeable
@@ -282,31 +324,31 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
-    //    MGlobal::displayInfo("MERGE BRICKS");
-    //    print("BRICK1:", brick1.getId());
-    //    print("BRICK2:", brick2.getId());
-    //    print("NEW BRICK:", newBrick.getId());
-    //    MGlobal::displayInfo("BRICK1 POS: ");
-    //    print("X:", pos1[0]);
-    //    print("Y:", pos1[1]);
-    //    print("Z:", pos1[2]);
-    //    MGlobal::displayInfo("BRICK1 SCALE: ");
-    //    print("X:", brick1.getScale()[0]);
-    //    print("Z:", brick1.getScale()[1]);
-    //    MGlobal::displayInfo("BRICK2 POS: ");
-    //    print("X:", pos2[0]);
-    //    print("Y:", pos2[1]);
-    //    print("Z:", pos2[2]);
-    //    MGlobal::displayInfo("BRICK2 SCALE: ");
-    //    print("X:", brick2.getScale()[0]);
-    //    print("Z:", brick2.getScale()[1]);
-    //    MGlobal::displayInfo("NEW POS: ");
-    //    print("X:", newPos[0]);
-    //    print("Y:", newPos[1]);
-    //    print("Z:", newPos[2]);
-    //    MGlobal::displayInfo("NEW SCALE: ");
-    //    print("X:", newScale[0]);
-    //    print("Z:", newScale[1]);
+    MGlobal::displayInfo("MERGE BRICKS");
+    print("BRICK1:", brick1.getId());
+    print("BRICK2:", brick2.getId());
+    print("NEW BRICK:", newBrick.getId());
+    MGlobal::displayInfo("BRICK1 POS: ");
+    print("X:", pos1[0]);
+    print("Y:", pos1[1]);
+    print("Z:", pos1[2]);
+    MGlobal::displayInfo("BRICK1 SCALE: ");
+    print("X:", brick1.getScale()[0]);
+    print("Z:", brick1.getScale()[1]);
+    MGlobal::displayInfo("BRICK2 POS: ");
+    print("X:", pos2[0]);
+    print("Y:", pos2[1]);
+    print("Z:", pos2[2]);
+    MGlobal::displayInfo("BRICK2 SCALE: ");
+    print("X:", brick2.getScale()[0]);
+    print("Z:", brick2.getScale()[1]);
+    MGlobal::displayInfo("NEW POS: ");
+    print("X:", newPos[0]);
+    print("Y:", newPos[1]);
+    print("Z:", newPos[2]);
+    MGlobal::displayInfo("NEW SCALE: ");
+    print("X:", newScale[0]);
+    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
