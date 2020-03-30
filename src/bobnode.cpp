@@ -7,7 +7,7 @@
 static void print(MString label, int i) {
     MString s = "";
     s += i;
-    MGlobal::displayInfo(label + " " + i);
+    // MGlobal::displayInfo(label + " " + i);
 }
 
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
@@ -18,9 +18,9 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
         for (Brick n: adjList[b]) {
             print("neighbor:", n.getId());
         }
-        MGlobal::displayInfo("\n");
+        // MGlobal::displayInfo("\n");
     }
-    MGlobal::displayInfo("\n END ADJ LIST ");
+    // MGlobal::displayInfo("\n END ADJ LIST ");
 }
 
 
@@ -220,43 +220,43 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         Brick front = grid.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
         Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
         if(left.getPos()[1] != pos[1] && left.type != EMPTY) {
-            MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
+            // MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
             print("BRICK HEIGHT:", pos[1]);
             print("LEFT HEIGHT:", left.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
-                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
-                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
             }
         }
         if(right.getPos()[1] != pos[1] && right.type != EMPTY) {
-            MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
+            // MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
             print("BRICK HEIGHT:", pos[1]);
             print("RIGHT HEIGHT:", right.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
-                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
-                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
             }
         }
         if(front.getPos()[1] != pos[1] && front.type != EMPTY) {
-            MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
+            // MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
             print("BRICK HEIGHT:", pos[1]);
             print("LEFT HEIGHT:", front.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
-                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
-                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
             }
         }
         if(back.getPos()[1] != pos[1] && back.type != EMPTY) {
-            MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
+            // MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
             print("BRICK HEIGHT:", pos[1]);
             print("BACK HEIGHT:", back.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
-                MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
-                MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
+                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
             }
         }
 
@@ -324,29 +324,29 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
-    MGlobal::displayInfo("MERGE BRICKS");
+    // MGlobal::displayInfo("MERGE BRICKS");
     print("BRICK1:", brick1.getId());
     print("BRICK2:", brick2.getId());
     print("NEW BRICK:", newBrick.getId());
-    MGlobal::displayInfo("BRICK1 POS: ");
+    // MGlobal::displayInfo("BRICK1 POS: ");
     print("X:", pos1[0]);
     print("Y:", pos1[1]);
     print("Z:", pos1[2]);
-    MGlobal::displayInfo("BRICK1 SCALE: ");
+    // MGlobal::displayInfo("BRICK1 SCALE: ");
     print("X:", brick1.getScale()[0]);
     print("Z:", brick1.getScale()[1]);
-    MGlobal::displayInfo("BRICK2 POS: ");
+    // MGlobal::displayInfo("BRICK2 POS: ");
     print("X:", pos2[0]);
     print("Y:", pos2[1]);
     print("Z:", pos2[2]);
-    MGlobal::displayInfo("BRICK2 SCALE: ");
+    // MGlobal::displayInfo("BRICK2 SCALE: ");
     print("X:", brick2.getScale()[0]);
     print("Z:", brick2.getScale()[1]);
-    MGlobal::displayInfo("NEW POS: ");
+    // MGlobal::displayInfo("NEW POS: ");
     print("X:", newPos[0]);
     print("Y:", newPos[1]);
     print("Z:", newPos[2]);
-    MGlobal::displayInfo("NEW SCALE: ");
+    // MGlobal::displayInfo("NEW SCALE: ");
     print("X:", newScale[0]);
     print("Z:", newScale[1]);
     // update grid
@@ -381,10 +381,10 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
             // add new brick to grid
             Brick newBrick = Brick();
-            MGlobal::displayInfo("MERGE TO FORM NEW BRICK \n");
+            // MGlobal::displayInfo("MERGE TO FORM NEW BRICK \n");
             mergeBricks(brick1, brick2, newBrick);
 
-            MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
+            // MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
 
             // add newBrick to adjList and update all neighbors of merged bricks
             std::set<Brick, cmpBrickIds> newBrickSet = std::set<Brick, cmpBrickIds>();
@@ -414,7 +414,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 {
     MStatus returnStatus;
-    MGlobal::displayInfo("COMPUTE NODE!");
+    // MGlobal::displayInfo("COMPUTE NODE!");
 
     //    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
     //            || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
@@ -422,7 +422,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
     //            || plug == BobNode::twoXeightArr || plug == BobNode::outputMesh ) {
     if(plug == BobNode::outputMesh) {
 
-        MGlobal::displayInfo("OUTPUT MESH AFFECTED");
+        // MGlobal::displayInfo("OUTPUT MESH AFFECTED");
         // GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
@@ -447,7 +447,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
-        MGlobal::displayInfo("STATUS: " + stabStatus);
+        // MGlobal::displayInfo("STATUS: " + stabStatus);
 
         MObject thisNode = thisMObject();
         MFnDependencyNode fnNode(thisNode);
@@ -553,19 +553,19 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            //            MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
+            //            // MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
             generateInitialMaximalLayout(brickSet);
             returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
             // set status to "Initialized"
-            MGlobal::displayInfo("END INIT");
+            // MGlobal::displayInfo("END INIT");
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Initialized");
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
         } else if (stabStatus == MString("Computing...")) {
-            MGlobal::displayInfo("ITERATING");
+            // MGlobal::displayInfo("ITERATING");
             // computing code - num iterations based on iterateUntilStable attr
             // set status to "Stable" or "Unstable" based on analysis
             // lock iterate button if mesh is stable
@@ -576,22 +576,22 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // re-enable the iterate button - UNLESS layout is already stable
             MGlobal::executeCommand("button -e -enable true IterateButton;");
         } else {
-            MGlobal::displayInfo("OTHER STABILITY STATUS");
-            MGlobal::displayInfo(stabStatus);
+            // MGlobal::displayInfo("OTHER STABILITY STATUS");
+            // MGlobal::displayInfo(stabStatus);
         }
-        //MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
+        MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
 
         //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
         return MS::kSuccess;
     }
-    MGlobal::displayInfo("FINISH COMPUTE");
+    // MGlobal::displayInfo("FINISH COMPUTE");
     return MS::kFailure;
 }
 
 
 MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
     MStatus returnStatus;
-    MGlobal::displayInfo("SET UP DATA HANDLES");
+    // MGlobal::displayInfo("SET UP DATA HANDLES");
     // STEP 1: GET OUTPUT HANDLES
     MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
     McheckErr(returnStatus, "ERROR in getting oneXone handle");
@@ -905,17 +905,17 @@ MStatus initializePlugin( MObject obj )
     status = plugin.registerNode("BOBNode", BobNode::id,
                                  BobNode::creator, BobNode::initialize);
     if (!status) {
-        MGlobal::displayInfo("ERROR INIT NODE \n\n\n");
+        // MGlobal::displayInfo("ERROR INIT NODE \n\n\n");
         status.perror("registerNode");
         return status;
     }
 
     // code for setting up the menu items
     //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-    //    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+    //MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
-    MGlobal::displayInfo("PATH: " + guiPath);
+    // MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
