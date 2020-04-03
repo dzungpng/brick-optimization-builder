@@ -363,7 +363,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList);
-    //for(int i=0; i < 1; i++) {
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -476,7 +475,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
             // TEST: uncomment this if we want to test voxels
-            // outputMeshHandle.setMObject(newOutputMeshData);
+             outputMeshHandle.setMObject(newOutputMeshData);
 
             /// TEST CODE FOR DIFFERENT BRICK TYPES
             ///
@@ -553,9 +552,8 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            //            // MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
-            generateInitialMaximalLayout(brickSet);
-            returnStatus = setupBrickDataHandles(data);
+            //generateInitialMaximalLayout(brickSet);
+            //returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
             // set status to "Initialized"
@@ -581,7 +579,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         }
         MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
 
-        //TODO: generateSingleConnectedComponent using mesh, interationInput, and colorContraintInput
         return MS::kSuccess;
     }
     // MGlobal::displayInfo("FINISH COMPUTE");
@@ -912,8 +909,8 @@ MStatus initializePlugin( MObject obj )
 
     // code for setting up the menu items
     //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    //MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
+    //MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
     // MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";

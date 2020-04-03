@@ -48,6 +48,14 @@ std::vector<MFloatPoint> Voxelizer::getVoxels(const MObject& pMeshObj, const MBo
 
     // Get a reference to the MFnMesh function set, and use it on the given mesh object.
     MFnMesh meshFn(pMeshObj);
+    // get the texture associated with this mesh
+    MStringArray uvSetNames;
+    meshFn.getUVSetNames(uvSetNames);
+    if(uvSetNames.length() > 0) {
+        MGlobal::displayInfo("UV SET NAME: " + uvSetNames[0]);
+    } else {
+        MGlobal::displayInfo("NO UV SET FOUND");
+    }
 
     // Compute an offset which we will apply to the min and max corners of the bounding box.
     float halfVoxelDist = 0.5f * defaultVoxelDistance;
@@ -117,6 +125,7 @@ std::vector<MFloatPoint> Voxelizer::getVoxels(const MObject& pMeshObj, const MBo
                 // the point lies outside the mesh. We are only concerned with voxels whose centerpoint lies within the mesh
                 if(hit && hitPoints.length() % 2 == 1) {
                     voxels.push_back(raySource);
+
                 }
             }
         }
@@ -168,9 +177,9 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
                                                   voxelPosition.z + grid.getShift().z);
 
         // Add a new cube to the arrays
-//        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
-//                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
-//                   polygonConnects, polygonConnectsIndexOffset);
+        //        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
+        //                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
+        //                   polygonConnects, polygonConnectsIndexOffset);
 
 
         // Increment the respective index offsets
