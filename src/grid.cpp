@@ -37,7 +37,7 @@ void Grid::initializeBrick(Brick& brick) {
             if(gridPos < 0 || gridPos >= baseGrid.size()) {
                 MString info = "index: ";
                 MGlobal::displayInfo(info + gridPos);
-                MGlobal::displayInfo("ERROR: index out of range in Grid::getBrick!");
+                MGlobal::displayError("ERROR: index out of range in Grid::getBrick!");
                 return;
             }
 
@@ -67,7 +67,7 @@ void Grid::setBrick(Brick& brick) {
             if(gridPos < 0 || gridPos >= baseGrid.size() || !isBrickInBounds(glm::vec3(pos.x + i, pos.y, pos.z + j))) {
                 MString info = "index: ";
                 MGlobal::displayInfo(info + gridPos);
-                MGlobal::displayInfo("ERROR: index out of range in Grid::getBrick!");
+                MGlobal::displayError("ERROR: index out of range in Grid::getBrick!");
                 return;
             }
 
@@ -91,8 +91,8 @@ const Brick Grid::getBrick(const glm::vec3 brickPos) const {
         int index = flat(brickPos[0], brickPos[1], brickPos[2]);
         if(index < 0 || index >= baseGrid.size()) {
             // return empty brick
+            MGlobal::displayError("ERROR: index out of range in Grid::getBrick!");
             return Brick();
-            //MGlobal::displayInfo("ERROR: index out of range in Grid::getBrick!");
         }
         return baseGrid[index];
     }
