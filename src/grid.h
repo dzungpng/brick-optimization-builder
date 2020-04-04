@@ -20,7 +20,6 @@ private:
     std::vector<Brick> baseGrid;
 
     // flattens 3d coordinates to become grid index
-    int flat(int x, int y, int z) const;
 public:
     Grid(glm::vec3 dim, glm::vec3 origin);
     Grid();
@@ -45,5 +44,7 @@ public:
     const Brick getBrickWithIndex(const int index) const { baseGrid[index]; }
     const std::vector<Brick> getBaseGrid() const { return baseGrid; }
 
+    int flat(int x, int y, int z) const;
     void initialize(const MBoundingBox&);
+    bool isBrickInBounds(glm::vec3 brickPos) const;
 };
