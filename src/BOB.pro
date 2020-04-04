@@ -60,3 +60,5 @@ SOURCES += \
     pluginmain.cpp \
     voxelizer.cpp \
     graph.cpp
+
+QMAKE_CXXFLAGS += -Wsign-compare

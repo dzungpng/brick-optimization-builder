@@ -34,19 +34,19 @@ void Graph::iterateBrickNeighborsAndAddEdges(const Brick& brick, Grid& grid) {
             glm::vec3 neighborTopCoords(x, pos.y + 1, z);
             if(grid.isBrickInBounds(neighborTopCoords)) {
                 int indexNeighborTop = grid.flat(x, neighborTopCoords.y, z);
-                shared_ptr<Brick> neighborTop = grid.getBrickWithIndex(indexNeighborTop);
-                if(neighborTop) {
+                Brick neighborTop = grid.getBrickWithIndex(indexNeighborTop);
+                if(neighborTop.getType() == BRICK) {
                     vector<int>::iterator it = find(
-                                addedBricks.begin(), addedBricks.end(), neighborTop->getId());
+                                addedBricks.begin(), addedBricks.end(), neighborTop.getId());
                     if(it == addedBricks.end()) {
                         // have not added this neighbor
-                        addedBricks.push_back(neighborTop->getId());
-                        if(neighborTop->getId() >= vertices.size()) {
+                        addedBricks.push_back(neighborTop.getId());
+                        if(neighborTop.getId() >= vertices.size()) {
                             MGlobal::displayError("out of range neighbor top!");
                             throw "Out of range error in Graph::iterateBrickNeighbors!";
                             return;
                         }
-                        adjList[brick.getId()].push_back(vertices[neighborTop->getId()]);
+                        adjList[brick.getId()].push_back(vertices[neighborTop.getId()]);
                         numTop++;
                     }
                 }
@@ -55,19 +55,19 @@ void Graph::iterateBrickNeighborsAndAddEdges(const Brick& brick, Grid& grid) {
             glm::vec3 neighborBottomCoords(x, pos.y - 1, z);
             if(grid.isBrickInBounds(neighborBottomCoords)) {
                 int indexNeighborBottom = grid.flat(x, neighborBottomCoords.y, z);
-                shared_ptr<Brick> neighborBottom = grid.getBrickWithIndex(indexNeighborBottom);
-                if(neighborBottom) {
+                Brick neighborBottom = grid.getBrickWithIndex(indexNeighborBottom);
+                if(neighborBottom.getType() == BRICK) {
                     vector<int>::iterator it = find(
-                                addedBricks.begin(), addedBricks.end(), neighborBottom->getId());
+                                addedBricks.begin(), addedBricks.end(), neighborBottom.getId());
                     if(it == addedBricks.end()) {
                         // have not added this neighbor
-                        addedBricks.push_back(neighborBottom->getId());
-                        if(neighborBottom->getId() >= vertices.size()) {
+                        addedBricks.push_back(neighborBottom.getId());
+                        if(neighborBottom.getId() >= vertices.size()) {
                             MGlobal::displayError("out of range neighbor top!");
                             throw "Out of range error in Graph::iterateBrickNeighbors!";
                             return;
                         }
-                        adjList[brick.getId()].push_back(vertices[neighborBottom->getId()]);
+                        adjList[brick.getId()].push_back(vertices[neighborBottom.getId()]);
                         numBottom++;
                     }
                 }
