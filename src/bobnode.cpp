@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <maya/MFnArrayAttrsData.h>
 #include <maya/MPlugArray.h>
+#include <maya/MFnMesh.h>
 
 //// helpers for printing
 static void print(MString label, int i) {
@@ -475,76 +476,11 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
 
             // TEST: uncomment this if we want to test voxels
-             outputMeshHandle.setMObject(newOutputMeshData);
+            outputMeshHandle.setMObject(newOutputMeshData);
 
-            /// TEST CODE FOR DIFFERENT BRICK TYPES
-            ///
-            ///
 
-            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-            //            grid.initialize(boundingBox);
-            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick3 = Brick(glm::vec3(0, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick4 = Brick(glm::vec3(1, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick5 = Brick(glm::vec3(0, 4, 2), BRICK, glm::vec2(1, 1));
-            //            Brick brick6 = Brick(glm::vec3(1, 4, 2), BRICK, glm::vec2(1, 1));
-            //            grid.initializeBrick(brick1);
-            //            grid.initializeBrick(brick2);
-            //            grid.initializeBrick(brick3);
-            //            grid.initializeBrick(brick4);
-            //            grid.initializeBrick(brick5);
-            //            grid.initializeBrick(brick6);
+            /// TESTING COLORS ///
 
-            //            Brick brick7 = Brick(glm::vec3(0, 4, 3), BRICK, glm::vec2(1, 1));
-            //            Brick brick8 = Brick(glm::vec3(1, 4, 3), BRICK, glm::vec2(1, 1));
-            //            Brick brick9 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick10 = Brick(glm::vec3(2, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick11 = Brick(glm::vec3(2, 4, 2), BRICK, glm::vec2(1, 1));
-            //            Brick brick12 = Brick(glm::vec3(2, 4, 3), BRICK, glm::vec2(1, 1));
-            //            grid.initializeBrick(brick7);
-            //            grid.initializeBrick(brick8);
-            //            grid.setBrick(brick9);
-            //            grid.setBrick(brick10);
-            //            grid.setBrick(brick11);
-            //            grid.setBrick(brick12);
-            ///
-            ///
-            //            print("BRICK1:", brick1.getId());
-            //            print("POS X:", brick1.getPos()[0]);
-            //            print("POS Z:", brick1.getPos()[2]);
-
-            //            print("BRICK2:", brick2.getId());
-            //            print("POS X:", brick2.getPos()[0]);
-            //            print("POS Z:", brick2.getPos()[2]);
-
-            //            print("BRICK3:", brick3.getId());
-            //            print("POS X:", brick3.getPos()[0]);
-            //            print("POS Z:", brick3.getPos()[2]);
-
-            //            print("BRICK4:", brick4.getId());
-            //            print("POS X:", brick4.getPos()[0]);
-            //            print("POS Z:", brick4.getPos()[2]);
-
-            //            print("BRICK5:", brick5.getId());
-            //            print("POS X:", brick5.getPos()[0]);
-            //            print("POS Z:", brick5.getPos()[2]);
-
-            //            print("BRICK6:", brick6.getId());
-            //            print("POS X:", brick6.getPos()[0]);
-            //            print("POS Z:", brick6.getPos()[2]);
-
-            //            print("BRICK7:", brick9.getId());
-            //            print("POS X:", brick9.getPos()[0]);
-            //            print("POS Z:", brick9.getPos()[2]);
-
-            //            print("BRICK8:", brick10.getId());
-            //            print("POS X:", brick10.getPos()[0]);
-            //            print("POS Z:", brick10.getPos()[2]);
-
-            //            print("BRICK9:", brick11.getId());
-            //            print("POS X:", brick11.getPos()[0]);
-            //            print("POS Z:", brick11.getPos()[2]);
 
             // inefficient. may need to rework data structure usage
             std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
@@ -553,11 +489,9 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
                 brickSet.insert(b);
             }
             //generateInitialMaximalLayout(brickSet);
-            //returnStatus = setupBrickDataHandles(data);
+            returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
-            // set status to "Initialized"
-            // MGlobal::displayInfo("END INIT");
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Initialized");
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
@@ -587,7 +521,37 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
 
 MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
+    MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\");");
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        Brick b = it->second;
+        if(b.type != EMPTY) {
+            glm::vec3 brickPos = b.getPos();
+            glm::vec2 brickScale = b.getScale();
+           // glm::vec3 col = b.getColor();
+
+            MString cmd = "select \"bricks|b_1x1\";\n";
+            //cmd += "string $name[] = ;\n";
+            cmd += "select(duplicate());\n";
+            cmd += "parent((ls(\"-selection\")), \"legoLayout\");";
+            MString x = "";
+            x += brickPos[0];
+            MString y = "";
+            y += brickPos[1];
+            MString z = "";
+            z += brickPos[2];
+            cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
+            cmd += "polyColorPerVertex -r 0.789 -g 0.5768 -b 0.5768 -cdo;";
+
+            cmd += "select(\"legoLayout\");";
+            cmd += "showHidden -a -b";
+            MGlobal::executeCommand(cmd);
+            MGlobal::displayInfo(cmd);
+
+
+        }
+    }
     MStatus returnStatus;
+        /*
     // MGlobal::displayInfo("SET UP DATA HANDLES");
     // STEP 1: GET OUTPUT HANDLES
     MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
@@ -889,8 +853,9 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
     twoXfourDataHandle.setMObject(twoXfourObject);
     twoXsixDataHandle.setMObject(twoXsixObject);
     twoXeightDataHandle.setMObject(twoXeightObject);
-
+    */
     return returnStatus;
+
 }
 
 // code to initialize the plugin //
