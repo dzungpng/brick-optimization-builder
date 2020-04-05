@@ -2,7 +2,7 @@
 
 int Brick::id = 0;
 
-Brick::Brick() : type(EMPTY), pos(glm::vec3(0)), scale(glm::vec2(1)), brickId(id)
+Brick::Brick() : type(EMPTY), pos(glm::vec3(0)), scale(glm::vec2(1)), brickId(id), color(MColor(.5, 1.0, .5))
 {
     id++;
 }

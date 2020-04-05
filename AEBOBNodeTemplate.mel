@@ -64,7 +64,7 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 	// string $mesh = 'getAttr ($nodeName + ".inputMesh")';
 	// text -e $mesh meshLabel;
 
-	button -e -c $initCmd InitializeButton;
+	button -edit -c $initCmd InitializeButton;
 }
 
 //=====================================================================================================================
@@ -193,6 +193,7 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "iterations";
 	editorTemplate -suppress "iterateUntilStable";
 	editorTemplate -suppress "outputMesh";
+	editorTemplate -suppress "inputMesh";
 	editorTemplate -suppress "oneXone";
 	editorTemplate -suppress "oneXtwo";
 	editorTemplate -suppress "oneXthree";

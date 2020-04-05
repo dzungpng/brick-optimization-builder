@@ -34,10 +34,12 @@ MStatus BobNode::initialize()
 {
 
     // INPUT ATTRIBUTES
+    MFnTypedAttribute stringAttr; // use for input mesh name and file name
     MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
     MFnNumericAttribute iterAttr; // max Iterations or until stable
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
+
 
     // OUTPUT ATTRIBUTES
     MFnTypedAttribute statusAttr; // Either stable or unstable
@@ -47,21 +49,30 @@ MStatus BobNode::initialize()
     outputMeshAttr.setWritable(false);
     outputMeshAttr.setStorable(false);
     outputMeshAttr.setHidden(true);
+    colorContraintAttr.setHidden(false);
+    iterAttr.setHidden(true);
+    inputMeshAttr.setHidden(true);
 
     MStatus returnStatus;
 
     // CREATE ATTRIBUTES
+    BobNode::inputMeshName = stringAttr.create(
+                "inputMeshName", "ipn", MFnData::kString, MFnStringData().create(""), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating input mesh name attribute!\n");
+
+    BobNode::meshTexture = stringAttr.create(
+                "meshTexture", "mt", MFnData::kString, MFnStringData().create("None"), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating mesh texture attribute!\n");
+
     BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
 
     MString defaultColorConstraint = "HARD";
     BobNode::colorConstraint = colorContraintAttr.create(
                 "colorConstraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
-    colorContraintAttr.setHidden(false);
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
 
     BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
-    iterAttr.setHidden(true);
     McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
     BobNode::iterateUntilStable = untilStableAttr.create("iterateUntilStable", "itrSt", MFnNumericData::kBoolean, 0, &returnStatus);
@@ -102,6 +113,12 @@ MStatus BobNode::initialize()
 
 
     // ADD ATTRIBUTES
+    returnStatus = addAttribute(BobNode::inputMeshName);
+    McheckErr(returnStatus, "ERROR in adding input mesh nameattribute!\n");
+
+    returnStatus = addAttribute(BobNode::meshTexture);
+    McheckErr(returnStatus, "ERROR in adding mesh texture attribute!\n");
+
     returnStatus = addAttribute(BobNode::inputMesh);
     McheckErr(returnStatus, "ERROR in adding input mesh attribute!\n");
 
@@ -325,31 +342,6 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
-    // MGlobal::displayInfo("MERGE BRICKS");
-    print("BRICK1:", brick1.getId());
-    print("BRICK2:", brick2.getId());
-    print("NEW BRICK:", newBrick.getId());
-    // MGlobal::displayInfo("BRICK1 POS: ");
-    print("X:", pos1[0]);
-    print("Y:", pos1[1]);
-    print("Z:", pos1[2]);
-    // MGlobal::displayInfo("BRICK1 SCALE: ");
-    print("X:", brick1.getScale()[0]);
-    print("Z:", brick1.getScale()[1]);
-    // MGlobal::displayInfo("BRICK2 POS: ");
-    print("X:", pos2[0]);
-    print("Y:", pos2[1]);
-    print("Z:", pos2[2]);
-    // MGlobal::displayInfo("BRICK2 SCALE: ");
-    print("X:", brick2.getScale()[0]);
-    print("Z:", brick2.getScale()[1]);
-    // MGlobal::displayInfo("NEW POS: ");
-    print("X:", newPos[0]);
-    print("Y:", newPos[1]);
-    print("Z:", newPos[2]);
-    // MGlobal::displayInfo("NEW SCALE: ");
-    print("X:", newScale[0]);
-    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
@@ -381,10 +373,7 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
             // add new brick to grid
             Brick newBrick = Brick();
-            // MGlobal::displayInfo("MERGE TO FORM NEW BRICK \n");
             mergeBricks(brick1, brick2, newBrick);
-
-            // MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
 
             // add newBrick to adjList and update all neighbors of merged bricks
             std::set<Brick, cmpBrickIds> newBrickSet = std::set<Brick, cmpBrickIds>();
@@ -415,6 +404,14 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 {
     MStatus returnStatus;
     // MGlobal::displayInfo("COMPUTE NODE!");
+    MDataHandle meshNameHandle = data.inputValue(BobNode::inputMeshName, &returnStatus);
+    MString meshName = meshNameHandle.asString();
+    MDataHandle meshTextureHandle = data.inputValue(BobNode::meshTexture, &returnStatus);
+    MString meshTexture = meshTextureHandle.asString();
+
+    MGlobal::displayInfo("MESH NAME: " + meshName);
+    MGlobal::displayInfo("MESH TEXTURE: " + meshTexture);
+
 
     //    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
     //            || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
@@ -445,6 +442,9 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
         int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
+        MString type = inputMeshObj.apiTypeStr();
+        MGlobal::displayInfo("mesh type: " + type);
+
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
         // MGlobal::displayInfo("STATUS: " + stabStatus);
@@ -465,7 +465,9 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             grid.initialize(boundingBox);
 
             // 2. Determine which voxel centerpoints are contained within the mesh
-            std::vector<MFloatPoint> voxels = voxelizer.getVoxels(inputMeshObj, boundingBox);
+            std::vector<MFloatPoint> voxels = std::vector<MFloatPoint>();
+            std::vector<MColor> colors = std::vector<MColor>();
+            voxelizer.getVoxels(inputMeshObj, boundingBox, voxels, colors);
 
             // 3. Create a mesh data container, which will store our new voxelized mesh
             MFnMeshData meshDataFn;
@@ -473,7 +475,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
-            voxelizer.createVoxelMesh(voxels, newOutputMeshData, grid);
+            voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
 
             // TEST: uncomment this if we want to test voxels
             outputMeshHandle.setMObject(newOutputMeshData);
@@ -527,31 +529,38 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         if(b.type != EMPTY) {
             glm::vec3 brickPos = b.getPos();
             glm::vec2 brickScale = b.getScale();
-           // glm::vec3 col = b.getColor();
+            //MColor col = b.getColor();
 
             MString cmd = "select \"bricks|b_1x1\";\n";
             //cmd += "string $name[] = ;\n";
             cmd += "select(duplicate());\n";
             cmd += "parent((ls(\"-selection\")), \"legoLayout\");";
-            MString x = "";
-            x += brickPos[0];
-            MString y = "";
-            y += brickPos[1];
-            MString z = "";
-            z += brickPos[2];
-            cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
-            cmd += "polyColorPerVertex -r 0.789 -g 0.5768 -b 0.5768 -cdo;";
+            //            MString x = "";
+            //            x += brickPos[0];
+            //            MString y = "";
+            //            y += brickPos[1];
+            //            MString z = "";
+            //            z += brickPos[2];
+            //            cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
+            //            MString r = "";
+            //            r += col[0];
+            //            MString g = "";
+            //            g += col[1];
+            //            MString b = "";
+            //            b += col[2];
+            //            cmd += "polyColorPerVertex -r " + r + " -g " + g + "  -b " + b  + "  -cdo;";
+            cmd += "polyColorPerVertex -r .1 -g .2  -b .3 -cdo;";
 
             cmd += "select(\"legoLayout\");";
             cmd += "showHidden -a -b";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
+            //MGlobal::displayInfo(cmd);
 
 
         }
     }
     MStatus returnStatus;
-        /*
+    /*
     // MGlobal::displayInfo("SET UP DATA HANDLES");
     // STEP 1: GET OUTPUT HANDLES
     MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);

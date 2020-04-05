@@ -1,6 +1,10 @@
 #include "voxelizer.h"
 #include "brick.h"
-#include "maya/MObject.h"
+#include "maya/MPlugArray.h"
+#include "maya/MPlug.h"
+#include "maya/MDoubleArray.h"
+#include "maya/MSelectionList.h"
+#include "maya/MDagPath.h"
 
 Voxelizer::Voxelizer() : defaultVoxelWidth(1.f), defaultVoxelDistance(1.f) {}
 
@@ -31,6 +35,95 @@ MBoundingBox Voxelizer::getBoundingBox(const MObject& pMeshObj) const
     return boundingBox;
 }
 
+MObject Voxelizer::findShader( const MObject& obj )
+//
+//  Description:
+//      Find the shading node for the given mesh.
+//
+{
+    MStatus status;
+    MObjectArray sets;
+    MIntArray indices;
+
+    ((MFnMesh)obj).getConnectedShaders(0, sets, indices);
+    MString i="";
+    i += sets.length();
+    MGlobal::displayInfo("SETS SIZE:" + i);
+    MGlobal::displayInfo(obj.apiTypeStr());
+    MFnDependencyNode fnNode(obj);
+    MGlobal::displayInfo(fnNode.name());
+
+//    MSelectionList selList = MSelectionList();
+//    selList.add(obj);
+//    MDagPath path;
+//    selList.getDagPath(0, path);
+//    path.extendToShape();
+//    MFnDependencyNode pathNode(path.node());
+//    MObject pathObj = path.node();
+//    MString type = pathObj.apiTypeStr();
+//    MGlobal::displayInfo("dag path node: " + type);
+
+
+    if (sets.length() > 0) {
+        MFnDependencyNode fnNode(obj);
+        MPlug shaderPlug = fnNode.findPlug("surfaceShader");
+        MGlobal::displayInfo("got shader plug?");
+        return MObject::kNullObj;
+        if (!shaderPlug.isNull()) {
+            MPlugArray connectedPlugs;
+            bool asSrc = false;
+            bool asDst = true;
+            shaderPlug.connectedTo( connectedPlugs, asDst, asSrc );
+
+            if (connectedPlugs.length() != 1)
+                cerr << "Error getting shader\n";
+            else
+                return connectedPlugs[0].node();
+        }
+
+    }
+    return MObject::kNullObj;
+}
+
+MString getTextureFileCmd(MFnMesh& mesh) {
+    MString nodeName = mesh.name();
+    MString fileName = "";
+    MString cmd1 = "def getTextureFile(): \n";
+    //    cmd1 += "shadeEng = cmds.listConnections("+ nodeName + ", type=\"shadingEngine\") \n";
+    //    cmd1 += "materials = cmds.ls(cmds.listConnections(shadeEng), materials=True) \n";
+    //    cmd1 += "fileNode = cmds.listConnections('%s.baseColor' % (materials[0]), type='file') \n";
+    //    cmd1 += "return cmds.getAttr('%s.fileTextureName' % fileNode[0]) \n";
+    cmd1 += "return \"/Users/kathrynmiller/Documents/Alpaca_obj/txtr.jpg\"";
+    MGlobal::executePythonCommand(cmd1);
+
+    MString cmd2;
+    cmd2 = "getTextureFile()";
+    MGlobal::executePythonCommand(cmd2, fileName);
+
+    MGlobal::displayInfo(cmd1);
+    MGlobal::displayInfo("VAL " + fileName);
+    return fileName;
+}
+
+MColor getColorAt(MString fileName, MFloatPoint uv) {
+    MDoubleArray col;
+    return MColor(.2, .1, .4);
+    MString u = "";
+    u += uv[0];
+    MString v = "";
+    v += uv[1];
+    MString cmd1 = "";//"def getColorAtPoint(): \n";
+    cmd1 += "cmds.colorAtPoint( " + fileName + ", o='RGB', u=" + u + ", v=" + v + ")";
+    MGlobal::executePythonCommand(cmd1, col);
+    MGlobal::displayInfo(cmd1);
+    return MColor(col[0], col[1], col[2]);
+
+    MString cmd2;
+    cmd2 = "getColorAtPoint()";
+    MGlobal::executePythonCommand(cmd2, col);
+    return MColor(.2, .1, .4);
+    return MColor(col[0], col[1], col[2]);
+}
 
 /**
 Obtain a list of voxels as a set of (x,y,z) coordinates in the mesh local space.
@@ -41,22 +134,19 @@ mesh bounding box, and test whether or not these points are contained within the
 A point is contained within a closed mesh if the ray shot from the point intersects an odd
 number of times with the surface of the mesh.
 **/
-std::vector<MFloatPoint> Voxelizer::getVoxels(const MObject& pMeshObj, const MBoundingBox& pBoundingBox) const
+void Voxelizer::getVoxels(const MObject& pMeshObj, const MBoundingBox& pBoundingBox, std::vector<MFloatPoint> &voxels, std::vector<MColor> &colors)
 {
 
     // Initialize a list of voxels contained within the mesh.
-    std::vector<MFloatPoint> voxels;
+    //std::vector<MFloatPoint> voxels;
 
     // Get a reference to the MFnMesh function set, and use it on the given mesh object.
     MFnMesh meshFn(pMeshObj);
     // get the texture associated with this mesh
-    MStringArray uvSetNames;
-    meshFn.getUVSetNames(uvSetNames);
-    if(uvSetNames.length() > 0) {
-        MGlobal::displayInfo("UV SET NAME: " + uvSetNames[0]);
-    } else {
-        MGlobal::displayInfo("NO UV SET FOUND");
-    }
+    //MString texture = getTextureFileCmd(meshFn);
+    MObject shader = findShader(pMeshObj);
+    //    MFnDependencyNode node(shader);
+    //    MGlobal::displayInfo("SHADER NAME: " + node.name());
 
     // Compute an offset which we will apply to the min and max corners of the bounding box.
     float halfVoxelDist = 0.5f * defaultVoxelDistance;
@@ -126,18 +216,29 @@ std::vector<MFloatPoint> Voxelizer::getVoxels(const MObject& pMeshObj, const MBo
                 // the point lies outside the mesh. We are only concerned with voxels whose centerpoint lies within the mesh
                 if(hit && hitPoints.length() % 2 == 1) {
                     voxels.push_back(raySource);
-
+                    // get color from texture on mesh TODO: handle case with no texture
+                    float2 uv;
+                    MPoint pos = MPoint(raySource[0], raySource[1], raySource[2]);
+//                    meshFn.getUVAtPoint(pos, uv);
+//                    MString u = "";
+//                    u += uv[0];
+//                    MString v = "";
+//                    v += uv[1];
+//                    MGlobal::displayInfo("uv: " + u + " " + v);
+                    //MColor color = getColorAt(texture, MFloatPoint(uv[0], uv[1]));
+                    MColor color = MColor(.1, .2, .3);
+                    colors.push_back(color);
                 }
             }
         }
     }
 
     // return the list of voxel coordinates which lie within the mesh
-    return voxels;
+    //return voxels;
 }
 
 
-void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions, MObject& pOutMeshData, Grid& grid)
+void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions, const std::vector<MColor>& colors, MObject& pOutMeshData, Grid& grid)
 {
     // Create a mesh containing one cubic polygon for each voxel in the pVoxelPositions list.
     unsigned int numVoxels = pVoxelPositions.size();
@@ -171,6 +272,7 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
         float halfWidth = float( defaultVoxelWidth / 2.f );
         MFloatPoint pos(-halfWidth + voxelPosition.x, -halfWidth + voxelPosition.y, -halfWidth + voxelPosition.z);
         Brick brick = Brick(glm::vec3(pos.x, pos.y, pos.z), BRICK, glm::vec2(1));
+        brick.setColor(colors[i]);
         grid.initializeBrick(brick);
 
         MFloatPoint shiftedVoxelPos = MFloatPoint(voxelPosition.x + grid.getShift().x,
@@ -178,9 +280,9 @@ void Voxelizer::createVoxelMesh(const std::vector<MFloatPoint>& pVoxelPositions,
                                                   voxelPosition.z + grid.getShift().z);
 
         // Add a new cube to the arrays
-//        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
-//                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
-//                   polygonConnects, polygonConnectsIndexOffset);
+        //        createCube(shiftedVoxelPos, vertexArray, vertexIndexOffset, numVerticesPerVoxel,
+        //                   polygonCounts, polygonCountsIndexOffset, numPolygonsPerVoxel, numVerticesPerPolygon,
+        //                   polygonConnects, polygonConnectsIndexOffset);
 
 
         // Increment the respective index offsets

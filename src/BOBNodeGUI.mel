@@ -16,6 +16,33 @@ global proc importBrick(string $node, string $brickObj, string $attrArr, string 
   }
 }
 
+global proc setTextureAttr(string $bob, string $mesh) {
+    // get texture file name if any and set attr on node
+    string $shapes[] = listRelatives("-shapes", $mesh);
+    string $shape = $shapes[0];
+    string $shadeEng1[] = listConnections("-type", "shadingEngine", $shape);
+    string $materials[] = ls("-materials", "true", listConnections($shadeEng1[0]));
+      
+    // check if this is an arnold or maya node
+    if(attributeExists("baseColor", $materials[0])) {
+      string $fileNode[] = listConnections("-type", "file", $materials[0] + ".baseColor");
+        if(size($fileNode) > 0) {
+          string $currentFile = getAttr($fileNode[0] + ".fileTextureName");
+          setAttr ($bob + ".meshTexture") -type "string" -lock "true" $currentFile;  
+        } else {
+            print "no texture file";
+        }   
+    } else {
+        string $fileNode[] = listConnections("-type", "file", $materials[0] + ".color");
+        if(size($fileNode) > 0) {
+            string $currentFile = getAttr($fileNode[0] + ".fileTextureName");
+            setAttr ($bob + ".meshTexture") -type "string" -lock "true" $currentFile;  
+        } else {
+            print "no texture file";
+        }  
+    }
+}
+
 global proc createBOBNode() {
     string $selected[] = `ls -sl`;
     if (size($selected) == 1)
@@ -34,7 +61,12 @@ global proc createBOBNode() {
         // Connect the attributes.
         connectAttr ($mesh + ".outMesh") ($bob + ".inputMesh");
         connectAttr( $bob + ".outputMesh") ($targetMesh + ".inMesh");
-      
+
+        // set name of mesh to be input mesh name
+        setAttr ($bob + ".inputMeshName") -type "string" -lock "true" $mesh ;
+
+        // set texture file path
+        setTextureAttr($bob, $mesh);
         
         // import base bricks and attach to data arr attr of the node for visualization
         importBrick($bob, "1x1.obj", "oneXone", $parentGrp, $instGrp);
