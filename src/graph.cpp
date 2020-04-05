@@ -76,25 +76,25 @@ void Graph::connectedComponentsHelper(Brick& v, map<int, bool> &visited, const i
     // Set the compId of current vertex
     v.setCompId(numComponents);
 
-    int x = v.getPos().x;
-    int y = v.getPos().y;
-    int z = v.getPos().z;
-    MString idstring = "ID: ";
-    MGlobal::displayInfo(idstring + v.getId());
-    MString coord = "x Neighbor: ";
-    MGlobal::displayInfo(coord + x);
-    coord = "y Neighbor: ";
-    MGlobal::displayInfo(coord + y);
-    coord = "z Neighbor: ";
-    MGlobal::displayInfo(coord + z);
-    int xScale = v.getScale().x;
-    int yScale = v.getScale().y;
-    MString scale = "Scale x: ";
-    MGlobal::displayInfo(scale + xScale);
-    scale = "Scale y: ";
-    MGlobal::displayInfo(scale + yScale);
-    MString space = "**********";
-    MGlobal::displayInfo(space);
+//    int x = v.getPos().x;
+//    int y = v.getPos().y;
+//    int z = v.getPos().z;
+//    MString idstring = "ID: ";
+//    MGlobal::displayInfo(idstring + v.getId());
+//    MString coord = "x Neighbor: ";
+//    MGlobal::displayInfo(coord + x);
+//    coord = "y Neighbor: ";
+//    MGlobal::displayInfo(coord + y);
+//    coord = "z Neighbor: ";
+//    MGlobal::displayInfo(coord + z);
+//    int xScale = v.getScale().x;
+//    int yScale = v.getScale().y;
+//    MString scale = "Scale x: ";
+//    MGlobal::displayInfo(scale + xScale);
+//    scale = "Scale y: ";
+//    MGlobal::displayInfo(scale + yScale);
+//    MString space = "**********";
+//    MGlobal::displayInfo(space);
 
     // Mark all neighboring nodes to this vertices as visited (recursively)
     for(int i = 0; i < adjList[v.getId()].size(); i++)
@@ -111,16 +111,21 @@ int Graph::countConnectedComponents() {
     for(auto& brick : vertices) {
         visited[brick->getId()] = false;
     }
-    int numComponents = 0;
+    int numComponents = 1;
     for(int i = 0; i < vertices.size(); i++) {
         if(!visited[vertices[i]->getId()]) {
-            MString startNewComp = "---------Starting new component----------";
+//            MString startNewComp = "---------Starting new component----------";
             MGlobal::displayInfo(startNewComp);
             connectedComponentsHelper(*vertices[i], visited, numComponents);
             numComponents++;
         }
     }
     return numComponents;
+}
+
+int Graph::countNumDistinctComponents(const Brick& b) {
+    // TODO: Count the number of distinctive component IDS in the 1-ring neighbors of b that are different from b
+    return 0;
 }
 
 

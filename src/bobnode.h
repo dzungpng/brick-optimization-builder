@@ -50,6 +50,11 @@ private:
 
     /// function: fill out a graph with the initial maximal layout
     void generateGraphFromMaximalLayout();
+
+    /// function: create a single connected component
+    /// input: a brick layout
+    /// output: structure metric sIL (aka number of connected components), critical portion wIL
+    void componentAnalysis();
 public:
     BobNode() {}
     ~BobNode() override {}

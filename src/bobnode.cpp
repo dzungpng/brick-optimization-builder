@@ -422,9 +422,21 @@ void BobNode::generateGraphFromMaximalLayout() {
     for(auto& brick: graph.vertices) {
         graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
     }
-    int numCC = graph.countConnectedComponents();
+}
+
+void BobNode::componentAnalysis() {
+    map<int, bool> visited;
+    for(const auto& brick : graph.vertices) {
+        visited[brick->getId()] = false;
+    }
+    /// Lines 5 to 22 in Algorithm 6
+    generateGraphFromMaximalLayout();
+    int sIL = graph.countConnectedComponents();
     MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
-    MGlobal::displayInfo(info + numCC);
+    MGlobal::displayInfo(info + sIL);
+    for(const auto& brick: graph.vertices) {
+        int numDistinctComponents = graph.countNumDistinctComponents(*brick);
+    }
 }
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
@@ -506,7 +518,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             returnStatus = setupBrickDataHandles(data);
 
             // 6. TODO: Create a single connected component
-            generateGraphFromMaximalLayout();
+            componentAnalysis();
 
             /// code for updating node gui
             // set status to "Initialized"
