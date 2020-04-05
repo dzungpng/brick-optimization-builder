@@ -13,7 +13,8 @@ class Graph
 {
 public:
     Graph(const int);
-    ~Graph();
+    Graph() {}
+    ~Graph() {}
 
     vector<shared_ptr<Brick>> vertices;
 

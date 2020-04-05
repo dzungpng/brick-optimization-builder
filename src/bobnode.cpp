@@ -261,7 +261,6 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         }
 
 
-
         if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
             glm::vec2 leftScale = left.getScale();
             if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
@@ -307,7 +306,6 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             adjList.erase(brick);
         }
     }
-
 }
 
 void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick) {
@@ -410,8 +408,26 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
     }
 }
 
-MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
+void BobNode::generateGraphFromMaximalLayout() {
+    Brick::id = 0;
+    graph = Graph(grid.allBricks.size());
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        if(it->second.type != EMPTY) {
+            it->second.setBrickId(Brick::id);
+            grid.setBrickId(Brick::id, it->second);
+            Brick::id++;
+            graph.addVertex(it->second);
+        }
+    }
+    for(auto& brick: graph.vertices) {
+        graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
+    }
+    int numCC = graph.countConnectedComponents();
+    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
+    MGlobal::displayInfo(info + numCC);
+}
 
+MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 {
     MStatus returnStatus;
     // MGlobal::displayInfo("COMPUTE NODE!");
@@ -478,84 +494,19 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             // TEST: uncomment this if we want to test voxels
             // outputMeshHandle.setMObject(newOutputMeshData);
 
-            /// TEST CODE FOR DIFFERENT BRICK TYPES
-            ///
-            ///
-
-            //            MBoundingBox boundingBox = MBoundingBox(MPoint(0, 0, 0), MPoint(15, 4, 15));
-            //            grid.initialize(boundingBox);
-            //            Brick brick1 = Brick(glm::vec3(0, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick2 = Brick(glm::vec3(1, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick3 = Brick(glm::vec3(0, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick4 = Brick(glm::vec3(1, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick5 = Brick(glm::vec3(0, 4, 2), BRICK, glm::vec2(1, 1));
-            //            Brick brick6 = Brick(glm::vec3(1, 4, 2), BRICK, glm::vec2(1, 1));
-            //            grid.initializeBrick(brick1);
-            //            grid.initializeBrick(brick2);
-            //            grid.initializeBrick(brick3);
-            //            grid.initializeBrick(brick4);
-            //            grid.initializeBrick(brick5);
-            //            grid.initializeBrick(brick6);
-
-            //            Brick brick7 = Brick(glm::vec3(0, 4, 3), BRICK, glm::vec2(1, 1));
-            //            Brick brick8 = Brick(glm::vec3(1, 4, 3), BRICK, glm::vec2(1, 1));
-            //            Brick brick9 = Brick(glm::vec3(2, 4, 0), BRICK, glm::vec2(1, 1));
-            //            Brick brick10 = Brick(glm::vec3(2, 4, 1), BRICK, glm::vec2(1, 1));
-            //            Brick brick11 = Brick(glm::vec3(2, 4, 2), BRICK, glm::vec2(1, 1));
-            //            Brick brick12 = Brick(glm::vec3(2, 4, 3), BRICK, glm::vec2(1, 1));
-            //            grid.initializeBrick(brick7);
-            //            grid.initializeBrick(brick8);
-            //            grid.setBrick(brick9);
-            //            grid.setBrick(brick10);
-            //            grid.setBrick(brick11);
-            //            grid.setBrick(brick12);
-            ///
-            ///
-            //            print("BRICK1:", brick1.getId());
-            //            print("POS X:", brick1.getPos()[0]);
-            //            print("POS Z:", brick1.getPos()[2]);
-
-            //            print("BRICK2:", brick2.getId());
-            //            print("POS X:", brick2.getPos()[0]);
-            //            print("POS Z:", brick2.getPos()[2]);
-
-            //            print("BRICK3:", brick3.getId());
-            //            print("POS X:", brick3.getPos()[0]);
-            //            print("POS Z:", brick3.getPos()[2]);
-
-            //            print("BRICK4:", brick4.getId());
-            //            print("POS X:", brick4.getPos()[0]);
-            //            print("POS Z:", brick4.getPos()[2]);
-
-            //            print("BRICK5:", brick5.getId());
-            //            print("POS X:", brick5.getPos()[0]);
-            //            print("POS Z:", brick5.getPos()[2]);
-
-            //            print("BRICK6:", brick6.getId());
-            //            print("POS X:", brick6.getPos()[0]);
-            //            print("POS Z:", brick6.getPos()[2]);
-
-            //            print("BRICK7:", brick9.getId());
-            //            print("POS X:", brick9.getPos()[0]);
-            //            print("POS Z:", brick9.getPos()[2]);
-
-            //            print("BRICK8:", brick10.getId());
-            //            print("POS X:", brick10.getPos()[0]);
-            //            print("POS Z:", brick10.getPos()[2]);
-
-            //            print("BRICK9:", brick11.getId());
-            //            print("POS X:", brick11.getPos()[0]);
-            //            print("POS Z:", brick11.getPos()[2]);
-
+            // 5. Generate initial maximal layout
             // inefficient. may need to rework data structure usage
             std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
             for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            //            // MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
+            // MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
             generateInitialMaximalLayout(brickSet);
             returnStatus = setupBrickDataHandles(data);
+
+            // 6. TODO: Create a single connected component
+            generateGraphFromMaximalLayout();
 
             /// code for updating node gui
             // set status to "Initialized"
@@ -834,7 +785,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             else if (brickScale[0] == 2 && brickScale[1] == 2) {
                 twoXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
                 twoXtwoIdArray.append(b.getId());
-            } else if ((brickScale[0] == 2 && brickScale[1] == 3) ||(brickScale[0] == 3 && brickScale[1] == 2)) {
+            } else if ((brickScale[0] == 2 && brickScale[1] == 3) || (brickScale[0] == 3 && brickScale[1] == 2)) {
                 twoXthreePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
                 twoXthreeIdArray.append(b.getId());
                 if (brickScale[1] == 2) {

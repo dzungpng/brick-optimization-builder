@@ -1,14 +1,11 @@
 #pragma once
 #include <maya/MPxNode.h>
 #include <maya/MGlobal.h>
-
 #include <maya/MFnMeshData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MFnStringData.h>
-
-#include "grid.h"
 
 #include <iostream>
 #include <fstream>
@@ -16,6 +13,8 @@
 #include <set>
 
 #include "voxelizer.h"
+#include "grid.h"
+#include "graph.h"
 
 #define MNoVersionString
 
@@ -48,6 +47,9 @@ private:
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
     void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet);
+
+    /// function: fill out a graph with the initial maximal layout
+    void generateGraphFromMaximalLayout();
 public:
     BobNode() {}
     ~BobNode() override {}
@@ -57,6 +59,7 @@ public:
 
     static MTypeId id;
     Grid grid;
+    Graph graph;
 
     /// inputs
     static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)

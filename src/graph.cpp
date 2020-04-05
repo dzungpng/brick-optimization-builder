@@ -6,8 +6,6 @@ Graph::Graph(const int numVertices)
     adjList = vector<vector<shared_ptr<Brick>>>(numVertices, vector<shared_ptr<Brick>>(0));
 }
 
-Graph::~Graph() {}
-
 void Graph::addVertex(Brick& b) {
     if(b.getId() >= vertices.size()) {
         MGlobal::displayError("out of range in Graph::addVertex!!");
@@ -25,8 +23,6 @@ void Graph::addVertex(Brick& b) {
 void Graph::iterateBrickNeighborsAndAddEdges(const Brick& brick, Grid& grid) {
     glm::vec3 pos = brick.getPos();
     glm::vec2 scale = brick.getScale();
-    int numTop = 0;
-    int numBottom = 0;
     vector<int> addedBricks = vector<int>();
     for(int x = pos.x; x < pos.x + scale[0]; x++) {
         for(int z = pos.z; z < pos.z + scale[1]; z++) {
@@ -47,7 +43,6 @@ void Graph::iterateBrickNeighborsAndAddEdges(const Brick& brick, Grid& grid) {
                             return;
                         }
                         adjList[brick.getId()].push_back(vertices[neighborTop.getId()]);
-                        numTop++;
                     }
                 }
             }
@@ -68,7 +63,6 @@ void Graph::iterateBrickNeighborsAndAddEdges(const Brick& brick, Grid& grid) {
                             return;
                         }
                         adjList[brick.getId()].push_back(vertices[neighborBottom.getId()]);
-                        numBottom++;
                     }
                 }
             }
@@ -81,6 +75,27 @@ void Graph::connectedComponentsHelper(Brick& v, map<int, bool> &visited, const i
     visited[v.getId()] = true;
     // Set the compId of current vertex
     v.setCompId(numComponents);
+
+    int x = v.getPos().x;
+    int y = v.getPos().y;
+    int z = v.getPos().z;
+    MString idstring = "ID: ";
+    MGlobal::displayInfo(idstring + v.getId());
+    MString coord = "x Neighbor: ";
+    MGlobal::displayInfo(coord + x);
+    coord = "y Neighbor: ";
+    MGlobal::displayInfo(coord + y);
+    coord = "z Neighbor: ";
+    MGlobal::displayInfo(coord + z);
+    int xScale = v.getScale().x;
+    int yScale = v.getScale().y;
+    MString scale = "Scale x: ";
+    MGlobal::displayInfo(scale + xScale);
+    scale = "Scale y: ";
+    MGlobal::displayInfo(scale + yScale);
+    MString space = "**********";
+    MGlobal::displayInfo(space);
+
     // Mark all neighboring nodes to this vertices as visited (recursively)
     for(int i = 0; i < adjList[v.getId()].size(); i++)
     {
@@ -99,6 +114,8 @@ int Graph::countConnectedComponents() {
     int numComponents = 0;
     for(int i = 0; i < vertices.size(); i++) {
         if(!visited[vertices[i]->getId()]) {
+            MString startNewComp = "---------Starting new component----------";
+            MGlobal::displayInfo(startNewComp);
             connectedComponentsHelper(*vertices[i], visited, numComponents);
             numComponents++;
         }
