@@ -17,15 +17,13 @@ private:
     // the amount of shifting needed to "move" the grid to 0,0,0 so that we can index into our flattened baseGrid
     glm::vec3 shift;
 
-    std::vector<Brick> baseGrid;
-
-    // flattens 3d coordinates to become grid index
 public:
     Grid(glm::vec3 dim, glm::vec3 origin);
     Grid();
     ~Grid();
 
     std::map<int, Brick> allBricks = std::map<int, Brick>();
+    std::vector<Brick> baseGrid;
 
     void setBrick(Brick& brick);
     // same as setBrick except used when first filling grid. shifts positions such that our layout is at (0, 0, 0)
@@ -34,6 +32,7 @@ public:
     void setBaseGridSize() { baseGrid = std::vector<Brick>(dim.x * dim.y * dim.z); }
     void setOrigin(const glm::vec3 newOrigin) { origin = newOrigin; }
     void setShift() { shift = glm::vec3(0) - origin; }
+    void setBrickId(const int newId, const Brick& b);
 
     glm::vec3 getDim() const { return dim; }
     glm::vec3 getOrigin() const { return origin; }
@@ -41,10 +40,11 @@ public:
     void setBrick(Brick* brick);
     const Brick getBrick(const glm::vec3 brickPos) const;
     glm::vec3 getShift() const { return shift; }
-    const Brick getBrickWithIndex(const int index) const { baseGrid[index]; }
+    const Brick getBrickWithIndex(const int index) const;
     const std::vector<Brick> getBaseGrid() const { return baseGrid; }
 
+    // flattens 3d coordinates to become grid index
     int flat(int x, int y, int z) const;
     void initialize(const MBoundingBox&);
-    bool isBrickInBounds(glm::vec3 brickPos) const;
+    bool isBrickInBounds(glm::vec3 brickPos) const; // check if the position of the brick is in bounds
 };

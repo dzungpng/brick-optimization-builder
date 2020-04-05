@@ -7,8 +7,6 @@ enum BrickType {EMPTY, BRICK};
 class Brick
 {
 private:
-    // unique identifier for each individual brick
-    static int id;
     int brickId;
     // id of the connected component this brick is associated with
     int compId;
@@ -27,6 +25,9 @@ public:
     Brick(glm::vec3 pos, BrickType type, glm::vec2 scale);
     ~Brick();
 
+    // unique identifier for each individual brick
+    static int id;
+
     // shape identifier - just used to tell us if a grid cell is empty or a real brick
     BrickType type;
 
@@ -36,6 +37,7 @@ public:
     void setColor(glm::vec3 c) {color = c;}
     void setCompId(int i) {compId = i;}
     void setType(BrickType bt) {type = bt;}
+    void setBrickId(const int newId) { brickId = newId; }
 
     glm::vec3 getPos() const {return pos;}
     glm::vec3 getRot() const {return rot;}
