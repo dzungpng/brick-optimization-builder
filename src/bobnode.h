@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <set>
+#include "maya/MFloatPoint.h"
 
 #include "voxelizer.h"
 
@@ -22,8 +23,8 @@
 /// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
     if (MS::kSuccess != stat) { \
-        cerr << msg; \
-        return MS::kFailure; \
+    cerr << msg; \
+    return MS::kFailure; \
     }
 
 struct cmpBrickIds {
@@ -48,6 +49,10 @@ private:
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
     void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet);
+
+    /// helper that populates colors based on mesh given a list of uvs
+    void getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors);
+
 public:
     BobNode() {}
     ~BobNode() override {}

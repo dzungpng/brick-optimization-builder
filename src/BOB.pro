@@ -26,7 +26,8 @@ DEFINES+=REQUIRE_IOSTREAM \
 # upon which maya framework we use, just add them to the end of
 # this list as required and they will be added to the build
 MAYALIBS=-lOpenMaya \
-        -lFoundation
+        -lFoundation \
+        -lOpenMayaRender
 
 # tell maya we're building for Mac
 macx:DEFINES+=OSMac_

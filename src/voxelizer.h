@@ -35,10 +35,9 @@ public:
 
 
     MBoundingBox getBoundingBox(const MObject&) const;
-    void getVoxels(const MObject&, const MBoundingBox&, std::vector<MFloatPoint>&, std::vector<MColor>&);
+    void getVoxels(const MObject&, const MBoundingBox&, std::vector<MFloatPoint>&, std::vector<glm::vec2> &uvs);
     void createVoxelMesh(const std::vector<MFloatPoint>&, const std::vector<MColor> &colors, MObject&, Grid&);
 
-    MObject findShader(const Autodesk::Maya::OpenMaya20180000::MObject &mesh);
 private:
 
 

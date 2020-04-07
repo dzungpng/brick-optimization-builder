@@ -3,6 +3,11 @@
 #include <maya/MFnArrayAttrsData.h>
 #include <maya/MPlugArray.h>
 #include <maya/MFnMesh.h>
+#include <maya/MRenderUtil.h>
+#include <maya/MFloatVectorArray.h>
+#include <maya/MFloatMatrix.h>
+#include <maya/MFloatArray.h>
+#include <maya/MRenderUtilities.h>
 
 //// helpers for printing
 static void print(MString label, int i) {
@@ -399,9 +404,76 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
     }
 }
 
-MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
+void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
+    //    for(int i = 0; i < 1; i++) {
+    //    //for(int i = 0; i < uvs.size(); i++) {
+    //        MString u = "";
+    //        u += uvs[i][0];
+    //        MString v = "";
+    //        v += uvs[i][1];
 
-{
+    //        MDoubleArray result;
+    //        MString cmd = "";
+    //        cmd += "return colorAtPoint(\"-o\", \"RGB\", \"-u\", " + u + ", \"-v\",  " + v + ", \"" + texture + "\");";
+
+    //        MGlobal::executeCommand(cmd, result);
+    //        MColor col = MColor(result[0], result[1], result[2]);
+    ////        MColor col = MColor(.7, .5, .5);
+    //        colors.push_back(col);
+    //        MGlobal::displayInfo(cmd);
+    //    }
+    //    for(int i = 1; i < uvs.size(); i++) {
+    //        MColor col = MColor(.7, .5, .5);
+    //        colors.push_back(col);
+    //    }
+
+    int numSamples = uvs.size();
+
+    MFloatPointArray pointArray;
+    MFloatPointArray refPointArray;
+    pointArray.setLength(numSamples);
+
+
+    MFloatArray uCoords;
+    MFloatArray vCoords;
+    refPointArray.setLength(numSamples);
+    for(int i = 0; i < points.size(); i++) {
+        MFloatPoint point = points[i];
+        pointArray.set(point, i);
+        refPointArray.set(point, i);
+        uCoords.append(float(uvs[i][0]));
+        vCoords.append(float(uvs[i][1]));
+    }
+
+    // create return args
+
+    MFloatVectorArray resultColors;
+    MFloatVectorArray resultTransparencies;
+
+    MFloatMatrix cam;
+    MRenderUtil::sampleShadingNetwork(texture,
+                                      numSamples,
+                                      false, // use shadow map
+                                      false, // reuse map
+                                      cam, // camera matrix
+                                      &pointArray,
+                                      &uCoords,
+                                      &vCoords,
+                                      NULL, // normals
+                                      &refPointArray,
+                                      NULL, // tan us
+                                      NULL, // tan vs
+                                      NULL, // filter sizes
+                                      resultColors,
+                                      resultTransparencies);
+
+    for(int i = 0; i < resultColors.length(); i++) {
+        MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
+        colors.push_back(col);
+    }
+}
+
+MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
     MStatus returnStatus;
     // MGlobal::displayInfo("COMPUTE NODE!");
     MDataHandle meshNameHandle = data.inputValue(BobNode::inputMeshName, &returnStatus);
@@ -466,22 +538,23 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 
             // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = std::vector<MFloatPoint>();
+            std::vector<glm::vec2> uvs = std::vector<glm::vec2>();
             std::vector<MColor> colors = std::vector<MColor>();
-            voxelizer.getVoxels(inputMeshObj, boundingBox, voxels, colors);
+            voxelizer.getVoxels(inputMeshObj, boundingBox, voxels, uvs);
 
             // 3. Create a mesh data container, which will store our new voxelized mesh
             MFnMeshData meshDataFn;
             MObject newOutputMeshData = meshDataFn.create(&returnStatus);
             McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
+            // get colors associated with uvs by running mel script
+            getMeshColors(uvs, voxels, meshTexture, colors);
+
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
 
             // TEST: uncomment this if we want to test voxels
             outputMeshHandle.setMObject(newOutputMeshData);
-
-
-            /// TESTING COLORS ///
 
 
             // inefficient. may need to rework data structure usage
@@ -529,27 +602,28 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         if(b.type != EMPTY) {
             glm::vec3 brickPos = b.getPos();
             glm::vec2 brickScale = b.getScale();
-            //MColor col = b.getColor();
+            MColor col = b.getColor();
 
             MString cmd = "select \"bricks|b_1x1\";\n";
             //cmd += "string $name[] = ;\n";
             cmd += "select(duplicate());\n";
             cmd += "parent((ls(\"-selection\")), \"legoLayout\");";
-            //            MString x = "";
-            //            x += brickPos[0];
-            //            MString y = "";
-            //            y += brickPos[1];
-            //            MString z = "";
-            //            z += brickPos[2];
-            //            cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
-            //            MString r = "";
-            //            r += col[0];
-            //            MString g = "";
-            //            g += col[1];
-            //            MString b = "";
-            //            b += col[2];
-            //            cmd += "polyColorPerVertex -r " + r + " -g " + g + "  -b " + b  + "  -cdo;";
-            cmd += "polyColorPerVertex -r .1 -g .2  -b .3 -cdo;";
+            MString x = "";
+            x += brickPos[0];
+            MString y = "";
+            y += brickPos[1];
+            MString z = "";
+            z += brickPos[2];
+            cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
+
+            MString r = "";
+            r += col[0];
+            MString g = "";
+            g += col[1];
+            MString b = "";
+            b += col[2];
+            cmd += "polyColorPerVertex -r " + r + " -g " + g + "  -b " + b  + "  -cdo;";
+            //cmd += "polyColorPerVertex -r .1 -g .2  -b .3 -cdo;";
 
             cmd += "select(\"legoLayout\");";
             cmd += "showHidden -a -b";
