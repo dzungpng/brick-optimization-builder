@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <set>
+#include <random>
 
 #include "voxelizer.h"
 #include "grid.h"
@@ -54,7 +55,7 @@ private:
     /// function: create a single connected component
     /// input: a brick layout
     /// output: structure metric sIL (aka number of connected components), critical portion wIL
-    void componentAnalysis();
+    void componentAnalysis(int&, Brick&);
 public:
     BobNode() {}
     ~BobNode() override {}

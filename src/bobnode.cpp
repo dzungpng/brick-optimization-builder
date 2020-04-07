@@ -7,16 +7,16 @@
 static void print(MString label, int i) {
     MString s = "";
     s += i;
-    // MGlobal::displayInfo(label + " " + i);
+    MGlobal::displayInfo(label + " " + i);
 }
 
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
-    print("ADJ LIST SIZE:", adjList.size());
+    // print("ADJ LIST SIZE:", adjList.size());
     for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
         Brick b = it->first;
-        print("Brick", b.getId());
+        // print("Brick", b.getId());
         for (Brick n: adjList[b]) {
-            print("neighbor:", n.getId());
+            // print("neighbor:", n.getId());
         }
         // MGlobal::displayInfo("\n");
     }
@@ -221,8 +221,8 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
         if(left.getPos()[1] != pos[1] && left.type != EMPTY) {
             // MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("LEFT HEIGHT:", left.getPos()[1]);
+            // print("BRICK HEIGHT:", pos[1]);
+            // print("LEFT HEIGHT:", left.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
@@ -231,8 +231,8 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         }
         if(right.getPos()[1] != pos[1] && right.type != EMPTY) {
             // MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("RIGHT HEIGHT:", right.getPos()[1]);
+            // print("BRICK HEIGHT:", pos[1]);
+            // print("RIGHT HEIGHT:", right.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
@@ -241,8 +241,8 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         }
         if(front.getPos()[1] != pos[1] && front.type != EMPTY) {
             // MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("LEFT HEIGHT:", front.getPos()[1]);
+            // print("BRICK HEIGHT:", pos[1]);
+            // print("LEFT HEIGHT:", front.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
@@ -251,8 +251,8 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         }
         if(back.getPos()[1] != pos[1] && back.type != EMPTY) {
             // MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("BACK HEIGHT:", back.getPos()[1]);
+            // print("BRICK HEIGHT:", pos[1]);
+            // print("BACK HEIGHT:", back.getPos()[1]);
             if(grid.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
@@ -323,30 +323,31 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
     // MGlobal::displayInfo("MERGE BRICKS");
-    print("BRICK1:", brick1.getId());
-    print("BRICK2:", brick2.getId());
-    print("NEW BRICK:", newBrick.getId());
+    // print("BRICK1:", brick1.getId());
+    // print("BRICK2:", brick2.getId());
+    // print("NEW BRICK:", newBrick.getId());
     // MGlobal::displayInfo("BRICK1 POS: ");
-    print("X:", pos1[0]);
-    print("Y:", pos1[1]);
-    print("Z:", pos1[2]);
+    // print("X:", pos1[0]);
+    // print("Y:", pos1[1]);
+    // print("Z:", pos1[2]);
     // MGlobal::displayInfo("BRICK1 SCALE: ");
-    print("X:", brick1.getScale()[0]);
-    print("Z:", brick1.getScale()[1]);
+    // print("X:", brick1.getScale()[0]);
+    // print("Z:", brick1.getScale()[1]);
     // MGlobal::displayInfo("BRICK2 POS: ");
-    print("X:", pos2[0]);
-    print("Y:", pos2[1]);
-    print("Z:", pos2[2]);
+    // print("X:", pos2[0]);
+    // print("Y:", pos2[1]);
+    // print("Z:", pos2[2]);
     // MGlobal::displayInfo("BRICK2 SCALE: ");
-    print("X:", brick2.getScale()[0]);
-    print("Z:", brick2.getScale()[1]);
+    // print("X:", brick2.getScale()[0]);
+    // print("Z:", brick2.getScale()[1]);
     // MGlobal::displayInfo("NEW POS: ");
-    print("X:", newPos[0]);
-    print("Y:", newPos[1]);
-    print("Z:", newPos[2]);
+    // print("X:", newPos[0]);
+    // print("Y:", newPos[1]);
+    // print("Z:", newPos[2]);
     // MGlobal::displayInfo("NEW SCALE: ");
-    print("X:", newScale[0]);
-    print("Z:", newScale[1]);
+    // print("X:", newScale[0]);
+    // print("Z:", newScale[1]);
+
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
@@ -391,7 +392,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
                 if (neighbor.getId() != brick2.getId()) {
                     newBrickSet.insert(neighbor);
                 }
-
             }
             for(Brick neighbor: adjList[brick2]) {
                 if (neighbor.getId() != brick1.getId()) {
@@ -424,18 +424,65 @@ void BobNode::generateGraphFromMaximalLayout() {
     }
 }
 
-void BobNode::componentAnalysis() {
+void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
     map<int, bool> visited;
     for(const auto& brick : graph.vertices) {
         visited[brick->getId()] = false;
     }
-    /// Lines 5 to 22 in Algorithm 6
+    // Lines 5 to 22 in Algorithm 6
     generateGraphFromMaximalLayout();
-    int sIL = graph.countConnectedComponents();
+    sIL = graph.countConnectedComponents();
     MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
     MGlobal::displayInfo(info + sIL);
-    for(const auto& brick: graph.vertices) {
-        int numDistinctComponents = graph.countNumDistinctComponents(*brick);
+
+    grid.setbaseGridCompIds(graph);
+
+//    map<int, int> comps;
+//    for(int i = 0; i < graph.vertices.size(); i++) {
+//        comps[i] = false;
+//    }
+//    for(const auto& brick : grid.baseGrid) {
+//        if(brick.getType() != EMPTY && !comps[brick.getId()]) {
+//            MString info = "Brick id: ---------------";
+//            MGlobal::displayInfo(info + brick.getId());
+//            info = "Component Id: ";
+//            MGlobal::displayInfo(info + brick.getCompId());
+//            comps[brick.getId()] = true;
+//        }
+
+//    }
+
+    map<int, int> brickIdToNumCompIdMap;
+    int sumNi = 0;
+    for(const auto& brick : graph.vertices) {
+        int n_i = graph.countNumDistinctComponents(*brick, grid, sIL) - 1;
+        if(n_i > 0) {
+            sumNi+=n_i;
+            brickIdToNumCompIdMap[brick->getId()] = n_i;
+        }
+    }
+    // Select a random brick based on probability
+    vector<float> probabilities = vector<float>(graph.vertices.size(), 0);
+    // compute the probabilities
+    for(const auto& brick : graph.vertices) {
+        probabilities[brick->getId()] = float(brickIdToNumCompIdMap[brick->getId()])/float(sumNi);
+    }
+    // compute the accumulated probabilities
+    for(int i = 1; i < probabilities.size(); i++) {
+        probabilities[i] += probabilities[i-1];
+    }
+    // generate a random number between 0 and the sum of the probabilities of all items
+    float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
+    for(int i = 1; i < probabilities.size(); i++) {
+        //Iterate the array until found an entry with a weight larger than or equal to the random number
+        if(probabilities[i] >= r) {
+            wIL = *graph.getBrickWithId(i);
+            info = "wIL: ";
+            MGlobal::displayInfo(info + i);
+            info = "Num comp ids: ";
+            MGlobal::displayInfo(info + brickIdToNumCompIdMap[i]);
+            break;
+        }
     }
 }
 
@@ -518,7 +565,9 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             returnStatus = setupBrickDataHandles(data);
 
             // 6. TODO: Create a single connected component
-            componentAnalysis();
+            Brick wIL;
+            int sIL = 0; // if remains 0 after componentAnalysis then already singly-connected
+            componentAnalysis(sIL, wIL);
 
             /// code for updating node gui
             // set status to "Initialized"
@@ -841,7 +890,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         }
     }
 
-    print("ALL BRICKS SIZE:", grid.allBricks.size());
+    // print("ALL BRICKS SIZE:", grid.allBricks.size());
 
     oneXoneDataHandle.setMObject(oneXoneObject);
     oneXtwoDataHandle.setMObject(oneXtwoObject);

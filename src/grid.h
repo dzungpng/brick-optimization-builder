@@ -1,11 +1,14 @@
 #pragma once
-#pragma once
 #include <vector>
 #include <include/glm/vec3.hpp>
 #include <brick.h>
 #include <maya/MGlobal.h>
 #include <maya/MBoundingBox.h>
 #include <map>
+
+#include "graph.h"
+
+class Graph;
 
 class Grid
 {
@@ -37,7 +40,6 @@ public:
     glm::vec3 getDim() const { return dim; }
     glm::vec3 getOrigin() const { return origin; }
     int getBaseGridLength() const { return baseGrid.size(); }
-    void setBrick(Brick* brick);
     const Brick getBrick(const glm::vec3 brickPos) const;
     glm::vec3 getShift() const { return shift; }
     const Brick getBrickWithIndex(const int index) const;
@@ -47,4 +49,5 @@ public:
     int flat(int x, int y, int z) const;
     void initialize(const MBoundingBox&);
     bool isBrickInBounds(glm::vec3 brickPos) const; // check if the position of the brick is in bounds
+    void setbaseGridCompIds(const Graph&); // set comp ids for all the bricks in baseGrid
 };

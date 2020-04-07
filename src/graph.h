@@ -9,6 +9,9 @@
 
 using namespace std;
 
+
+class Grid;
+
 class Graph
 {
 public:
@@ -22,11 +25,13 @@ public:
                                     // Two bricks are in the same comp if they have the same id
     void iterateBrickNeighborsAndAddEdges(const Brick&, Grid&);
     void addVertex(Brick&);
-    int countNumDistinctComponents(const Brick&); // Count the number of distinctive component IDS in the 1-ring neighbors
-                                                  //  of b that are different from b
+    int countNumDistinctComponents(const Brick&, const Grid&, const int); // Count the number of distinctive component
+                                                                          // IDS in the 1-ring neighbors
+                                                                          // of b that are different from b
 
     int getNumVertices() { return vertices.size(); }
     int getAdjListSize() { return adjList.size(); }
+    shared_ptr<Brick> getBrickWithId(const int id) { return vertices[id]; }
 
 private:
     vector<vector<shared_ptr<Brick>>> adjList;

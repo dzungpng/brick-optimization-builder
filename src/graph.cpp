@@ -111,11 +111,11 @@ int Graph::countConnectedComponents() {
     for(auto& brick : vertices) {
         visited[brick->getId()] = false;
     }
-    int numComponents = 1;
+    int numComponents = 0;
     for(int i = 0; i < vertices.size(); i++) {
         if(!visited[vertices[i]->getId()]) {
 //            MString startNewComp = "---------Starting new component----------";
-            MGlobal::displayInfo(startNewComp);
+//            MGlobal::displayInfo(startNewComp);
             connectedComponentsHelper(*vertices[i], visited, numComponents);
             numComponents++;
         }
@@ -123,9 +123,32 @@ int Graph::countConnectedComponents() {
     return numComponents;
 }
 
-int Graph::countNumDistinctComponents(const Brick& b) {
-    // TODO: Count the number of distinctive component IDS in the 1-ring neighbors of b that are different from b
-    return 0;
+int Graph::countNumDistinctComponents(const Brick& b, const Grid& grid, const int totalCompIds) {
+    glm::vec3 pos = b.getPos();
+    glm::vec2 scale = b.getScale();
+    int numCompIds = 1;
+    map<int, bool> seenCompId;
+    for(int i = 0; i < totalCompIds; i++) {
+        seenCompId[i] = false;
+    }
+    for(int x = pos.x - 1; x < pos.x + scale[0] + 1; x++) {
+        for(int y = pos.y - 1; y <= pos.y + 1; y++) {
+            for(int z = pos.z - 1; z < pos.z + scale[1] + 1; z++) {
+                glm::vec3 neighborCoords(x, y, z);
+                if(grid.isBrickInBounds(neighborCoords)) {
+                    Brick neighbor = grid.getBrick(neighborCoords);
+                    if(neighbor.getType() != EMPTY) {
+                        int neighborCompId = neighbor.getCompId();
+                        if (neighborCompId != b.getCompId() && !seenCompId[neighborCompId]) {
+                            numCompIds++;
+                            seenCompId[neighborCompId] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return numCompIds;
 }
 
 
