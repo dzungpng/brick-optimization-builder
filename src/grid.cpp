@@ -125,3 +125,20 @@ void Grid::setBrickId(const int newId, const Brick& b) {
     }
 }
 
+void Grid::setbaseGridCompIds(const Graph& graph) {
+    for (const auto& brick : graph.vertices) {
+        glm::vec3 pos = brick->getPos();
+        glm::vec2 scale = brick->getScale();
+        for(int x = pos.x; x < pos.x + scale[0]; x++) {
+            for(int z = pos.z; z < pos.z + scale[1]; z++) {
+                if(!isBrickInBounds(glm::vec3(x, pos.y, z))) {
+                    MGlobal::displayError("Out of bounds in Grid::setBrickId!");
+                    return;
+                }
+                int index = flat(x, pos.y, z);
+                baseGrid[index].setCompId(brick->getCompId());
+            }
+        }
+    }
+}
+

@@ -76,25 +76,25 @@ void Graph::connectedComponentsHelper(Brick& v, map<int, bool> &visited, const i
     // Set the compId of current vertex
     v.setCompId(numComponents);
 
-    int x = v.getPos().x;
-    int y = v.getPos().y;
-    int z = v.getPos().z;
-    MString idstring = "ID: ";
-    MGlobal::displayInfo(idstring + v.getId());
-    MString coord = "x Neighbor: ";
-    MGlobal::displayInfo(coord + x);
-    coord = "y Neighbor: ";
-    MGlobal::displayInfo(coord + y);
-    coord = "z Neighbor: ";
-    MGlobal::displayInfo(coord + z);
-    int xScale = v.getScale().x;
-    int yScale = v.getScale().y;
-    MString scale = "Scale x: ";
-    MGlobal::displayInfo(scale + xScale);
-    scale = "Scale y: ";
-    MGlobal::displayInfo(scale + yScale);
-    MString space = "**********";
-    MGlobal::displayInfo(space);
+//    int x = v.getPos().x;
+//    int y = v.getPos().y;
+//    int z = v.getPos().z;
+//    MString idstring = "ID: ";
+//    MGlobal::displayInfo(idstring + v.getId());
+//    MString coord = "x Neighbor: ";
+//    MGlobal::displayInfo(coord + x);
+//    coord = "y Neighbor: ";
+//    MGlobal::displayInfo(coord + y);
+//    coord = "z Neighbor: ";
+//    MGlobal::displayInfo(coord + z);
+//    int xScale = v.getScale().x;
+//    int yScale = v.getScale().y;
+//    MString scale = "Scale x: ";
+//    MGlobal::displayInfo(scale + xScale);
+//    scale = "Scale y: ";
+//    MGlobal::displayInfo(scale + yScale);
+//    MString space = "**********";
+//    MGlobal::displayInfo(space);
 
     // Mark all neighboring nodes to this vertices as visited (recursively)
     for(int i = 0; i < adjList[v.getId()].size(); i++)
@@ -114,13 +114,41 @@ int Graph::countConnectedComponents() {
     int numComponents = 0;
     for(int i = 0; i < vertices.size(); i++) {
         if(!visited[vertices[i]->getId()]) {
-            MString startNewComp = "---------Starting new component----------";
-            MGlobal::displayInfo(startNewComp);
+//            MString startNewComp = "---------Starting new component----------";
+//            MGlobal::displayInfo(startNewComp);
             connectedComponentsHelper(*vertices[i], visited, numComponents);
             numComponents++;
         }
     }
     return numComponents;
+}
+
+int Graph::countNumDistinctComponents(const Brick& b, const Grid& grid, const int totalCompIds) {
+    glm::vec3 pos = b.getPos();
+    glm::vec2 scale = b.getScale();
+    int numCompIds = 1;
+    map<int, bool> seenCompId;
+    for(int i = 0; i < totalCompIds; i++) {
+        seenCompId[i] = false;
+    }
+    for(int x = pos.x - 1; x < pos.x + scale[0] + 1; x++) {
+        for(int y = pos.y - 1; y <= pos.y + 1; y++) {
+            for(int z = pos.z - 1; z < pos.z + scale[1] + 1; z++) {
+                glm::vec3 neighborCoords(x, y, z);
+                if(grid.isBrickInBounds(neighborCoords)) {
+                    Brick neighbor = grid.getBrick(neighborCoords);
+                    if(neighbor.getType() != EMPTY) {
+                        int neighborCompId = neighbor.getCompId();
+                        if (neighborCompId != b.getCompId() && !seenCompId[neighborCompId]) {
+                            numCompIds++;
+                            seenCompId[neighborCompId] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return numCompIds;
 }
 
 
