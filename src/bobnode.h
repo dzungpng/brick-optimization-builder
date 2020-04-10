@@ -18,6 +18,7 @@
 #include "graph.h"
 
 #define MNoVersionString
+#define F_MAX 100
 
 /// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
@@ -52,10 +53,16 @@ private:
     /// function: fill out a graph with the initial maximal layout
     void generateGraphFromMaximalLayout();
 
-    /// function: create a single connected component
     /// input: a brick layout
     /// output: structure metric sIL (aka number of connected components), critical portion wIL
     void componentAnalysis(int&, Brick&);
+
+    void layoutReconfiguration(const Brick&, const float);
+
+    /// function: create a single connected component
+    /// intput: the initial maximal layout
+    void generateSingleConnectedComponent();
+
 public:
     BobNode() {}
     ~BobNode() override {}

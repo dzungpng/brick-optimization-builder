@@ -411,7 +411,7 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 void BobNode::generateGraphFromMaximalLayout() {
     Brick::id = 0;
     graph = Graph(grid.allBricks.size());
-    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+    for (map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
         if(it->second.type != EMPTY) {
             it->second.setBrickId(Brick::id);
             grid.setBrickId(Brick::id, it->second);
@@ -419,6 +419,14 @@ void BobNode::generateGraphFromMaximalLayout() {
             graph.addVertex(it->second);
         }
     }
+    // Reset ids for allBricks
+    map<int, Brick> newAllBricks = map<int, Brick>();
+    for (map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        newAllBricks[it->second.getId()] = it->second;
+    }
+    grid.allBricks.clear();
+    grid.allBricks = newAllBricks;
+
     for(auto& brick: graph.vertices) {
         graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
     }
@@ -437,21 +445,6 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
 
     grid.setbaseGridCompIds(graph);
 
-//    map<int, int> comps;
-//    for(int i = 0; i < graph.vertices.size(); i++) {
-//        comps[i] = false;
-//    }
-//    for(const auto& brick : grid.baseGrid) {
-//        if(brick.getType() != EMPTY && !comps[brick.getId()]) {
-//            MString info = "Brick id: ---------------";
-//            MGlobal::displayInfo(info + brick.getId());
-//            info = "Component Id: ";
-//            MGlobal::displayInfo(info + brick.getCompId());
-//            comps[brick.getId()] = true;
-//        }
-
-//    }
-
     map<int, int> brickIdToNumCompIdMap;
     int sumNi = 0;
     for(const auto& brick : graph.vertices) {
@@ -468,22 +461,43 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
         probabilities[brick->getId()] = float(brickIdToNumCompIdMap[brick->getId()])/float(sumNi);
     }
     // compute the accumulated probabilities
-    for(int i = 1; i < probabilities.size(); i++) {
+    for(unsigned long i = 1; i < probabilities.size(); i++) {
         probabilities[i] += probabilities[i-1];
     }
     // generate a random number between 0 and the sum of the probabilities of all items
     float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
-    for(int i = 1; i < probabilities.size(); i++) {
+    for(unsigned long i = 1; i < probabilities.size(); i++) {
         //Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
+//#define DEBUG
+#ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
-            info = "Num comp ids: ";
+            info = "Num comp id around this brick: ";
             MGlobal::displayInfo(info + brickIdToNumCompIdMap[i]);
+#endif
             break;
         }
     }
+}
+
+void BobNode::layoutReconfiguration(const Brick& wIL, const float f) {
+
+}
+
+void BobNode::generateSingleConnectedComponent() {
+    Brick wIL; // Critical portion (with largest number of connected components in its surrounding)
+    int sIL = 0; // number of connected components
+    componentAnalysis(sIL, wIL);
+    // if sIL remains 0 after componentAnalysis then already singly-connected
+    if(sIL == 0) {
+        return;
+    }
+    float f = 0; // fail count
+//    while(sIL > 1 && f < F_MAX) {
+
+//    }
 }
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
@@ -564,10 +578,8 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
             generateInitialMaximalLayout(brickSet);
             returnStatus = setupBrickDataHandles(data);
 
-            // 6. TODO: Create a single connected component
-            Brick wIL;
-            int sIL = 0; // if remains 0 after componentAnalysis then already singly-connected
-            componentAnalysis(sIL, wIL);
+            // 6. Create a single connected component
+            generateSingleConnectedComponent();
 
             /// code for updating node gui
             // set status to "Initialized"

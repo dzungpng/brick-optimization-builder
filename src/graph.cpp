@@ -76,6 +76,8 @@ void Graph::connectedComponentsHelper(Brick& v, map<int, bool> &visited, const i
     // Set the compId of current vertex
     v.setCompId(numComponents);
 
+//#define DEBUG
+#ifdef DEBUG
 //    int x = v.getPos().x;
 //    int y = v.getPos().y;
 //    int z = v.getPos().z;
@@ -95,6 +97,7 @@ void Graph::connectedComponentsHelper(Brick& v, map<int, bool> &visited, const i
 //    MGlobal::displayInfo(scale + yScale);
 //    MString space = "**********";
 //    MGlobal::displayInfo(space);
+#endif
 
     // Mark all neighboring nodes to this vertices as visited (recursively)
     for(int i = 0; i < adjList[v.getId()].size(); i++)
@@ -137,7 +140,7 @@ int Graph::countNumDistinctComponents(const Brick& b, const Grid& grid, const in
                 glm::vec3 neighborCoords(x, y, z);
                 if(grid.isBrickInBounds(neighborCoords)) {
                     Brick neighbor = grid.getBrick(neighborCoords);
-                    if(neighbor.getType() != EMPTY) {
+                    if(neighbor.getType() == BRICK) {
                         int neighborCompId = neighbor.getCompId();
                         if (neighborCompId != b.getCompId() && !seenCompId[neighborCompId]) {
                             numCompIds++;
