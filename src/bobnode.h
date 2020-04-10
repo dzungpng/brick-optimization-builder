@@ -19,6 +19,7 @@
 
 #define MNoVersionString
 #define F_MAX 100
+#define N 10
 
 /// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
@@ -51,17 +52,17 @@ private:
     void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet);
 
     /// function: fill out a graph with the initial maximal layout
-    void generateGraphFromMaximalLayout();
+    void generateGraphFromMaximalLayout(Grid&);
 
     /// input: a brick layout
     /// output: structure metric sIL (aka number of connected components), critical portion wIL
-    void componentAnalysis(int&, Brick&);
+    void componentAnalysis(int&, Brick&, Grid&);
 
-    void layoutReconfiguration(const Brick&, const float);
+    Grid layoutReconfiguration(const Grid&, const Brick&, const float);
 
     /// function: create a single connected component
     /// intput: the initial maximal layout
-    void generateSingleConnectedComponent();
+    void generateSingleConnectedComponent(Grid&);
 
 public:
     BobNode() {}

@@ -46,5 +46,4 @@ public:
     int getId() const {return brickId;}
     int getCompId() const {return compId;}
     BrickType getType() const {return type;}
-
 };

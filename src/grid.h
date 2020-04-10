@@ -7,8 +7,14 @@
 #include <map>
 
 #include "graph.h"
-
+using namespace std;
 class Graph;
+
+struct cmpVec3 {
+    bool operator()(const glm::vec3& a, const glm::vec3& b) const {
+        return a.x < b.x || a.y < b.y || a.z < b.z;
+    }
+};
 
 class Grid
 {
@@ -20,8 +26,10 @@ private:
     // the amount of shifting needed to "move" the grid to 0,0,0 so that we can index into our flattened baseGrid
     glm::vec3 shift;
 
+    void splitBrick(const Brick&, map<glm::vec3, bool, cmpVec3>&);
 public:
     Grid(glm::vec3 dim, glm::vec3 origin);
+    Grid(const Grid&);
     Grid();
     ~Grid();
 
@@ -50,4 +58,13 @@ public:
     void initialize(const MBoundingBox&);
     bool isBrickInBounds(glm::vec3 brickPos) const; // check if the position of the brick is in bounds
     void setbaseGridCompIds(const Graph&); // set comp ids for all the bricks in baseGrid
+
+    // Layout reconfiguration helpers
+    Grid splitBricks(const Brick&, const int) const; // Split the bricks within k-ring of input brick into 1x1 blocks
+                                               // Returns a new grid where all of the bricks in k-ring neighbor
+                                               // of input brick are splitted
+    void randomRepeatedRemerge(const Brick&, const int);
+
+
+//    Grid& operator=(const Grid &other);
 };

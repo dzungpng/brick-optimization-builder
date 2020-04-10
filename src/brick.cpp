@@ -14,4 +14,3 @@ Brick::Brick(glm::vec3 pos, BrickType type, glm::vec2 scale): type(type), pos(po
 
 Brick::~Brick() {}
 
-

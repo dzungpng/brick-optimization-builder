@@ -408,47 +408,48 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
     }
 }
 
-void BobNode::generateGraphFromMaximalLayout() {
+void BobNode::generateGraphFromMaximalLayout(Grid& L) {
     Brick::id = 0;
-    graph = Graph(grid.allBricks.size());
-    for (map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+    graph = Graph(L.allBricks.size());
+    for (map<int, Brick>::iterator it=L.allBricks.begin(); it!=L.allBricks.end(); ++it) {
         if(it->second.type != EMPTY) {
             it->second.setBrickId(Brick::id);
-            grid.setBrickId(Brick::id, it->second);
+            L.setBrickId(Brick::id, it->second);
             Brick::id++;
             graph.addVertex(it->second);
         }
     }
     // Reset ids for allBricks
     map<int, Brick> newAllBricks = map<int, Brick>();
-    for (map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+    for (map<int, Brick>::iterator it=L.allBricks.begin(); it!=L.allBricks.end(); ++it) {
         newAllBricks[it->second.getId()] = it->second;
     }
-    grid.allBricks.clear();
-    grid.allBricks = newAllBricks;
+    L.allBricks.clear();
+    L.allBricks = newAllBricks;
 
     for(auto& brick: graph.vertices) {
-        graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
+        graph.iterateBrickNeighborsAndAddEdges(*brick, L);
     }
 }
 
-void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
+void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
     map<int, bool> visited;
     for(const auto& brick : graph.vertices) {
         visited[brick->getId()] = false;
     }
     // Lines 5 to 22 in Algorithm 6
-    generateGraphFromMaximalLayout();
+    generateGraphFromMaximalLayout(L);
     sIL = graph.countConnectedComponents();
+
     MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
     MGlobal::displayInfo(info + sIL);
 
-    grid.setbaseGridCompIds(graph);
-
+    L.setbaseGridCompIds(graph);
+    // Count number of distinct connected components in each brick's 1-ring neighborhood
     map<int, int> brickIdToNumCompIdMap;
     int sumNi = 0;
     for(const auto& brick : graph.vertices) {
-        int n_i = graph.countNumDistinctComponents(*brick, grid, sIL) - 1;
+        int n_i = graph.countNumDistinctComponents(*brick, L, sIL) - 1;
         if(n_i > 0) {
             sumNi+=n_i;
             brickIdToNumCompIdMap[brick->getId()] = n_i;
@@ -460,17 +461,17 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
     for(const auto& brick : graph.vertices) {
         probabilities[brick->getId()] = float(brickIdToNumCompIdMap[brick->getId()])/float(sumNi);
     }
-    // compute the accumulated probabilities
+    /// compute the accumulated probabilities
     for(unsigned long i = 1; i < probabilities.size(); i++) {
         probabilities[i] += probabilities[i-1];
     }
-    // generate a random number between 0 and the sum of the probabilities of all items
+    /// generate a random number between 0 and the sum of the probabilities of all items
     float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
     for(unsigned long i = 1; i < probabilities.size(); i++) {
         //Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
@@ -482,21 +483,31 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
     }
 }
 
-void BobNode::layoutReconfiguration(const Brick& wIL, const float f) {
-
+Grid BobNode::layoutReconfiguration(const Grid& L, const Brick& wL, const float f) {
+    int k = floor(f/N) + 1.f;
+    Grid L_p = L.splitBricks(wL, k);
+//    L_p.randomRepeatedRemerge(wL, k);
+    return L_p;
 }
 
-void BobNode::generateSingleConnectedComponent() {
+void BobNode::generateSingleConnectedComponent(Grid& L) {
     Brick wIL; // Critical portion (with largest number of connected components in its surrounding)
     int sIL = 0; // number of connected components
-    componentAnalysis(sIL, wIL);
-    // if sIL remains 0 after componentAnalysis then already singly-connected
-    if(sIL == 0) {
+    componentAnalysis(sIL, wIL, L);
+    // if sIL remains 1 after componentAnalysis then already singly-connected
+    if(sIL == 1) {
         return;
     }
     float f = 0; // fail count
 //    while(sIL > 1 && f < F_MAX) {
+    Grid L_p = layoutReconfiguration(L, wIL, f);
+    this->grid = L_p;
+//        Brick wIL_p;
+//        int sIL_p = 0;
+//        componentAnalysis(sIL_p, wIL_p, L_p);
+//        if(sIL_p < sIL) {
 
+//        }
 //    }
 }
 
@@ -574,12 +585,13 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            // MGlobal::displayInfo("BEGIN GEN INITIAL LAYOUT: \n");
             generateInitialMaximalLayout(brickSet);
-            returnStatus = setupBrickDataHandles(data);
 
             // 6. Create a single connected component
-            generateSingleConnectedComponent();
+            generateSingleConnectedComponent(this->grid);
+
+            // 7. Display the instances
+            returnStatus = setupBrickDataHandles(data);
 
             /// code for updating node gui
             // set status to "Initialized"
