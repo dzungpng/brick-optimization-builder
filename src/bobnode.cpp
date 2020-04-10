@@ -13,7 +13,13 @@
 static void print(MString label, int i) {
     MString s = "";
     s += i;
-    // MGlobal::displayInfo(label + " " + i);
+    MGlobal::displayInfo(label + " " + i);
+}
+
+static void printF(MString label, float i) {
+    MString s = "";
+    s += i;
+    MGlobal::displayInfo(label + " " + i);
 }
 
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
@@ -405,72 +411,86 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 }
 
 void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
-    //    for(int i = 0; i < 1; i++) {
-    //    //for(int i = 0; i < uvs.size(); i++) {
-    //        MString u = "";
-    //        u += uvs[i][0];
-    //        MString v = "";
-    //        v += uvs[i][1];
-
-    //        MDoubleArray result;
-    //        MString cmd = "";
-    //        cmd += "return colorAtPoint(\"-o\", \"RGB\", \"-u\", " + u + ", \"-v\",  " + v + ", \"" + texture + "\");";
-
-    //        MGlobal::executeCommand(cmd, result);
-    //        MColor col = MColor(result[0], result[1], result[2]);
-    ////        MColor col = MColor(.7, .5, .5);
-    //        colors.push_back(col);
-    //        MGlobal::displayInfo(cmd);
-    //    }
-    //    for(int i = 1; i < uvs.size(); i++) {
-    //        MColor col = MColor(.7, .5, .5);
-    //        colors.push_back(col);
-    //    }
-
-    int numSamples = uvs.size();
-
-    MFloatPointArray pointArray;
-    MFloatPointArray refPointArray;
-    pointArray.setLength(numSamples);
-
-
-    MFloatArray uCoords;
-    MFloatArray vCoords;
-    refPointArray.setLength(numSamples);
-    for(int i = 0; i < points.size(); i++) {
-        MFloatPoint point = points[i];
-        pointArray.set(point, i);
-        refPointArray.set(point, i);
-        uCoords.append(float(uvs[i][0]));
-        vCoords.append(float(uvs[i][1]));
-    }
-
-    // create return args
-
-    MFloatVectorArray resultColors;
-    MFloatVectorArray resultTransparencies;
-
-    MFloatMatrix cam;
-    MRenderUtil::sampleShadingNetwork(texture,
-                                      numSamples,
-                                      false, // use shadow map
-                                      false, // reuse map
-                                      cam, // camera matrix
-                                      &pointArray,
-                                      &uCoords,
-                                      &vCoords,
-                                      NULL, // normals
-                                      &refPointArray,
-                                      NULL, // tan us
-                                      NULL, // tan vs
-                                      NULL, // filter sizes
-                                      resultColors,
-                                      resultTransparencies);
-
-    for(int i = 0; i < resultColors.length(); i++) {
-        MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
+    std::string t = texture.asChar();
+    if (t.find(".color") != std::string::npos || t.find(".baseColor") != std::string::npos) { // sample color
+        MString cmd = "";
+        cmd += "getAttr(\"" + texture + "\");";
+        MDoubleArray result;
+        MGlobal::executeCommand(cmd, result);
+        MColor col = MColor(result[0], result[1], result[2]);
         colors.push_back(col);
+    } else {
+        for(int i = 0; i < uvs.size(); i++) {
+            MString u = "";
+            u += uvs[i][0];
+            MString v = "";
+            v += uvs[i][1];
+
+            MDoubleArray result;
+            MString cmd = "";
+            cmd += "colorAtPoint(\"-o\", \"RGB\", \"-u\", " + u + ", \"-v\",  " + v + ", \"" + texture + "\");";
+
+            MGlobal::executeCommand(cmd, result);
+            MColor col = MColor(result[0], result[1], result[2]);
+            colors.push_back(col);
+        }
     }
+
+    //    int numSamples = uvs.size();
+
+    //    MFloatPointArray pointArray;
+    //    MFloatPointArray refPointArray;
+    //    MFloatVectorArray normalArray;
+    //    pointArray.setLength(numSamples);
+
+
+    //    MFloatArray uCoords;
+    //    MFloatArray vCoords;
+    //    refPointArray.setLength(numSamples);
+    //    for(int i = 0; i < points.size(); i++) {
+    //        MFloatPoint point = points[i];
+    //        pointArray.set(point, i);
+    //        refPointArray.set(point, i);
+    //    }
+
+    //    // create return args
+
+    //    MFloatVectorArray resultColors;
+    //    MFloatVectorArray resultTransparencies;
+
+    //    MFloatMatrix cam;
+    //    MStatus status = MRenderUtil::sampleShadingNetwork(texture,
+    //                                                       numSamples,
+    //                                                       false, // use shadow map
+    //                                                       false, // reuse map
+    //                                                       cam, // camera matrix
+    //                                                       &pointArray,
+    //                                                       &uCoords,
+    //                                                       &vCoords,
+    //                                                       &normalArray, // normals
+    //                                                       &refPointArray,
+    //                                                       NULL, // tan us
+    //                                                       NULL, // tan vs
+    //                                                       NULL, // filter sizes
+    //                                                       resultColors,
+    //                                                       resultTransparencies);
+
+    //    print("colors size:", resultColors.length());
+    //    MGlobal::displayInfo("status of sample: " + status);
+
+    //    for(int i = 0; i < resultColors.length(); i++) {
+    //        MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
+    //        colors.push_back(col);
+    //        printF("R", col[0]);
+    //        printF("G", col[1]);
+    //        printF("B", col[2]);
+
+    //        if (i < uvs.size()) {
+    //            printF("u: ", uvs[i][0]);
+    //            printF("v: ", uvs[i][1]);
+    //        }
+
+    //    }
 }
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
@@ -605,7 +625,6 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             MColor col = b.getColor();
 
             MString cmd = "select \"bricks|b_1x1\";\n";
-            //cmd += "string $name[] = ;\n";
             cmd += "select(duplicate());\n";
             cmd += "parent((ls(\"-selection\")), \"legoLayout\");";
             MString x = "";
@@ -629,8 +648,6 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             cmd += "showHidden -a -b";
             MGlobal::executeCommand(cmd);
             //MGlobal::displayInfo(cmd);
-
-
         }
     }
     MStatus returnStatus;

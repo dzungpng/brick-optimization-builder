@@ -26,19 +26,21 @@ global proc setTextureAttr(string $bob, string $mesh) {
     // check if this is an arnold or maya node
     if(attributeExists("baseColor", $materials[0])) {
       string $fileNode[] = listConnections("-type", "file", $materials[0] + ".baseColor");
+      setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".baseColor"); 
         if(size($fileNode) > 0) {
           //string $currentFile = getAttr($fileNode[0] + ".fileTextureName");
-          //setAttr ($bob + ".meshTexture") -type "string" $fileNode[0]; 
-          setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".baseColor"); 
+          setAttr ($bob + ".meshTexture") -type "string" $fileNode[0]; 
+          //setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".baseColor"); 
         } else {
             print "no texture file";
         }   
     } else {
         string $fileNode[] = listConnections("-type", "file", $materials[0] + ".color");
+        setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".color"); 
         if(size($fileNode) > 0) {
             //string $currentFile = getAttr($fileNode[0] + ".fileTextureName");
-            //setAttr ($bob + ".meshTexture") -type "string" $fileNode[0];  
-            setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".color");  
+            setAttr ($bob + ".meshTexture") -type "string" $fileNode[0];  
+            //setAttr ($bob + ".meshTexture") -type "string" ($materials[0] + ".color");  
         } else {
             print "no texture file";
         }  
