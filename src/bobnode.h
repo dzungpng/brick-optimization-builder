@@ -1,22 +1,22 @@
 #pragma once
 #include <maya/MPxNode.h>
 #include <maya/MGlobal.h>
-
 #include <maya/MFnMeshData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MFnStringData.h>
 
-#include "grid.h"
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <set>
 #include "maya/MFloatPoint.h"
+#include <random>
 
 #include "voxelizer.h"
+#include "grid.h"
+#include "graph.h"
 
 #define MNoVersionString
 
@@ -52,10 +52,20 @@ private:
     void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, MString &colorConstraintInput);
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
-    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, Autodesk::Maya::OpenMaya20180000::MString colorConstraintInput);
+
+    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput);
 
     /// helper that populates colors based on mesh given a list of uvs
     void getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors);
+
+    /// function: fill out a graph with the initial maximal layout
+    void generateGraphFromMaximalLayout();
+
+    /// function: create a single connected component
+    /// input: a brick layout
+    /// output: structure metric sIL (aka number of connected components), critical portion wIL
+    void componentAnalysis(int&, Brick&);
+
 public:
     BobNode() {}
     ~BobNode() override {}
@@ -65,6 +75,7 @@ public:
 
     static MTypeId id;
     Grid grid;
+    Graph graph;
 
     /// inputs
     static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)

@@ -51,11 +51,15 @@ HEADERS += \
     brick.h \
     grid.h \
     voxelizer.h \
-    voxelizer.h
+    voxelizer.h \
+    graph.h
 
 SOURCES += \
     bobnode.cpp \
     brick.cpp \
     grid.cpp \
     pluginmain.cpp \
-    voxelizer.cpp
+    voxelizer.cpp \
+    graph.cpp
+
+QMAKE_CXXFLAGS += -Wsign-compare

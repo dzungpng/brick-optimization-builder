@@ -23,12 +23,12 @@ static void printF(MString label, float i) {
 }
 
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
-    print("ADJ LIST SIZE:", adjList.size());
+    // print("ADJ LIST SIZE:", adjList.size());
     for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
         Brick b = it->first;
-        print("Brick", b.getId());
+        // print("Brick", b.getId());
         for (Brick n: adjList[b]) {
-            print("neighbor:", n.getId());
+            // print("neighbor:", n.getId());
         }
         // MGlobal::displayInfo("\n");
     }
@@ -300,7 +300,6 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             adjList.erase(brick);
         }
     }
-
 }
 
 void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick) {
@@ -360,7 +359,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
                 if (neighbor.getId() != brick2.getId()) {
                     newBrickSet.insert(neighbor);
                 }
-
             }
             for(Brick neighbor: adjList[brick2]) {
                 if (neighbor.getId() != brick1.getId()) {
@@ -459,6 +457,84 @@ void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector
     //    }
 }
 
+void BobNode::generateGraphFromMaximalLayout() {
+    Brick::id = 0;
+    graph = Graph(grid.allBricks.size());
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        if(it->second.type != EMPTY) {
+            it->second.setBrickId(Brick::id);
+            grid.setBrickId(Brick::id, it->second);
+            Brick::id++;
+            graph.addVertex(it->second);
+        }
+    }
+    for(auto& brick: graph.vertices) {
+        graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
+    }
+}
+
+void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
+    map<int, bool> visited;
+    for(const auto& brick : graph.vertices) {
+        visited[brick->getId()] = false;
+    }
+    // Lines 5 to 22 in Algorithm 6
+    generateGraphFromMaximalLayout();
+    sIL = graph.countConnectedComponents();
+    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
+    MGlobal::displayInfo(info + sIL);
+
+    grid.setbaseGridCompIds(graph);
+
+//    map<int, int> comps;
+//    for(int i = 0; i < graph.vertices.size(); i++) {
+//        comps[i] = false;
+//    }
+//    for(const auto& brick : grid.baseGrid) {
+//        if(brick.getType() != EMPTY && !comps[brick.getId()]) {
+//            MString info = "Brick id: ---------------";
+//            MGlobal::displayInfo(info + brick.getId());
+//            info = "Component Id: ";
+//            MGlobal::displayInfo(info + brick.getCompId());
+//            comps[brick.getId()] = true;
+//        }
+
+//    }
+
+    map<int, int> brickIdToNumCompIdMap;
+    int sumNi = 0;
+    for(const auto& brick : graph.vertices) {
+        int n_i = graph.countNumDistinctComponents(*brick, grid, sIL) - 1;
+        if(n_i > 0) {
+            sumNi+=n_i;
+            brickIdToNumCompIdMap[brick->getId()] = n_i;
+        }
+    }
+    // Select a random brick based on probability
+    vector<float> probabilities = vector<float>(graph.vertices.size(), 0);
+    // compute the probabilities
+    for(const auto& brick : graph.vertices) {
+        probabilities[brick->getId()] = float(brickIdToNumCompIdMap[brick->getId()])/float(sumNi);
+    }
+    // compute the accumulated probabilities
+    for(int i = 1; i < probabilities.size(); i++) {
+        probabilities[i] += probabilities[i-1];
+    }
+    // generate a random number between 0 and the sum of the probabilities of all items
+    float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
+    for(int i = 1; i < probabilities.size(); i++) {
+        //Iterate the array until found an entry with a weight larger than or equal to the random number
+        if(probabilities[i] >= r) {
+            wIL = *graph.getBrickWithId(i);
+            info = "wIL: ";
+            MGlobal::displayInfo(info + i);
+            info = "Num comp ids: ";
+            MGlobal::displayInfo(info + brickIdToNumCompIdMap[i]);
+            break;
+        }
+    }
+}
+
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
     MStatus returnStatus;
 
@@ -539,6 +615,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // TEST: uncomment this if we want to test voxels
             //outputMeshHandle.setMObject(newOutputMeshData);
 
+            // 5. Generate initial maximal layout
 
             // inefficient. may need to rework data structure usage
             std::set<Brick, cmpBrickIds> brickSet = std::set<Brick, cmpBrickIds>();
@@ -554,6 +631,10 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 returnStatus = setupBrickDataHandles(data);
             }
 
+            // 6. TODO: Create a single connected component
+            Brick wIL;
+            int sIL = 0; // if remains 0 after componentAnalysis then already singly-connected
+            componentAnalysis(sIL, wIL);
 
             /// code for updating node gui
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
@@ -891,7 +972,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             else if (brickScale[0] == 2 && brickScale[1] == 2) {
                 twoXtwoPositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
                 twoXtwoIdArray.append(b.getId());
-            } else if ((brickScale[0] == 2 && brickScale[1] == 3) ||(brickScale[0] == 3 && brickScale[1] == 2)) {
+            } else if ((brickScale[0] == 2 && brickScale[1] == 3) || (brickScale[0] == 3 && brickScale[1] == 2)) {
                 twoXthreePositionArray.append(MVector(brickPos.x, brickPos.y, brickPos.z));
                 twoXthreeIdArray.append(b.getId());
                 if (brickScale[1] == 2) {
@@ -935,7 +1016,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         }
     }
 
-    print("ALL BRICKS SIZE:", grid.allBricks.size());
+    // print("ALL BRICKS SIZE:", grid.allBricks.size());
 
     oneXoneDataHandle.setMObject(oneXoneObject);
     oneXtwoDataHandle.setMObject(oneXtwoObject);
