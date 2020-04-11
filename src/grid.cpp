@@ -69,9 +69,7 @@ void Grid::setBrick(Brick& brick) {
             int gridPos = flat(pos.x + i, pos.y, pos.z + j);
 
             if(gridPos < 0 || gridPos >= baseGrid.size() || !isBrickInBounds(glm::vec3(pos.x + i, pos.y, pos.z + j))) {
-                MString info = "index out of range in Grid::getBrick: ";
-                 MGlobal::displayInfo(info + gridPos);
-                 MGlobal::displayError("ERROR: index out of range in Grid::getBrick!");
+                 MGlobal::displayError("ERROR: index out of range in Grid::setBrick!");
                 return;
             }
 
@@ -154,7 +152,7 @@ void Grid::splitBrick(const Brick& b, map<glm::vec3, bool, cmpVec3>& seenBricks)
     if(scale[0] == 1 && scale[1] == 1) {
         return;
     }
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     MString info = "Splitting brick id: -----------------";
     MGlobal::displayInfo(info + b.getId());
@@ -180,12 +178,11 @@ void Grid::splitBrick(const Brick& b, map<glm::vec3, bool, cmpVec3>& seenBricks)
 }
 
 
-Grid Grid::splitBricks(const Brick& wL, const int k) const {
+Grid Grid::splitBricks(const Brick& wL, const int k, map<glm::vec3, bool, cmpVec3>& seenBrickPos) const {
     glm::vec3 pos = wL.getPos();
     glm::vec2 scale = wL.getScale();
     Grid L_p(*this);
 
-    map<glm::vec3, bool, cmpVec3> seenBrickPos;
     for(auto& pair : L_p.allBricks) {
         glm::vec3 bPos = pair.second.getPos();
         glm::vec2 bScale = pair.second.getScale();
@@ -207,7 +204,10 @@ Grid Grid::splitBricks(const Brick& wL, const int k) const {
                     Brick neighbor = L_p.getBrick(neighborCoords);
                     // Only split a brick if it's not wL, not empty,
                     // and we haven't seen the coordinates of all of its parts
-                    if(neighbor.getId() != wL.getId() && neighbor.getType() != EMPTY && !seenBrickPos[neighborCoords]) {
+                    if(neighbor.getId() != wL.getId() &&
+                            neighbor.getType() != EMPTY &&
+                            !seenBrickPos[neighborCoords])
+                    {
                         L_p.splitBrick(neighbor, seenBrickPos);
                     }
                 }
@@ -215,17 +215,4 @@ Grid Grid::splitBricks(const Brick& wL, const int k) const {
         }
     }
     return L_p;
-}
-
-//Grid& Grid::operator=(const Grid &other) {
-//    std::memcpy(&allBricks, other.allBricks, sizeof allBricks);
-//    std::memcpy(&baseGrid, other.baseGrid, sizeof baseGrid);
-//    std::memcpy(&shift, other.shift, sizeof shift);
-//    std::memcpy(&origin, other.origin, sizeof origin);
-//    std::memcpy(&dim, other.dim, sizeof dim);
-//    return (*this);
-//}
-
-void Grid::randomRepeatedRemerge(const Brick& wL, const int k) {
-
 }

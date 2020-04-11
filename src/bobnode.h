@@ -60,6 +60,9 @@ private:
 
     Grid layoutReconfiguration(const Grid&, const Brick&, const float);
 
+    /// Randomly merge bricks in a neighborhood set
+    void randomRepeatedRemerge(map<glm::vec3, bool, cmpVec3>&, Grid&);
+
     /// function: create a single connected component
     /// intput: the initial maximal layout
     void generateSingleConnectedComponent(Grid&);
@@ -120,6 +123,15 @@ MObject BobNode::twoXthreeArr;
 MObject BobNode::twoXfourArr;
 MObject BobNode::twoXsixArr;
 MObject BobNode::twoXeightArr;
+
+
+//static void shuffleVector(vector<glm::vec3>& v) {
+//    int size = v.size();
+//    for (int i = 0; i < size - 1; i++) {
+//        int j = i + rand() % (size - i);
+//        swap(v[i], v[j]);
+//    }
+//}
 
 
 

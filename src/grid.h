@@ -60,11 +60,7 @@ public:
     void setbaseGridCompIds(const Graph&); // set comp ids for all the bricks in baseGrid
 
     // Layout reconfiguration helpers
-    Grid splitBricks(const Brick&, const int) const; // Split the bricks within k-ring of input brick into 1x1 blocks
+    Grid splitBricks(const Brick&, const int, map<glm::vec3, bool, cmpVec3>&) const; // Split the bricks within k-ring of input brick into 1x1 blocks
                                                // Returns a new grid where all of the bricks in k-ring neighbor
                                                // of input brick are splitted
-    void randomRepeatedRemerge(const Brick&, const int);
-
-
-//    Grid& operator=(const Grid &other);
 };

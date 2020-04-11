@@ -468,7 +468,7 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
     /// generate a random number between 0 and the sum of the probabilities of all items
     float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
     for(unsigned long i = 1; i < probabilities.size(); i++) {
-        //Iterate the array until found an entry with a weight larger than or equal to the random number
+        /// Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
 #define DEBUG
@@ -483,10 +483,22 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
     }
 }
 
+void BobNode::randomRepeatedRemerge(map<glm::vec3, bool, cmpVec3>& Sk, Grid& L) {
+    /// Copy map into a set
+    set<Brick, cmpBrickIds> brickSet = set<Brick, cmpBrickIds>();
+    for(auto& pair : Sk) {
+        Brick brick = L.getBrick(pair.first);
+        brickSet.insert(brick);
+    }
+    generateInitialMaximalLayout(brickSet);
+}
+
+
 Grid BobNode::layoutReconfiguration(const Grid& L, const Brick& wL, const float f) {
     int k = floor(f/N) + 1.f;
-    Grid L_p = L.splitBricks(wL, k);
-//    L_p.randomRepeatedRemerge(wL, k);
+    map<glm::vec3, bool, cmpVec3> Sk;
+    Grid L_p = L.splitBricks(wL, k, Sk);
+    randomRepeatedRemerge(Sk, L_p);
     return L_p;
 }
 
@@ -502,6 +514,13 @@ void BobNode::generateSingleConnectedComponent(Grid& L) {
 //    while(sIL > 1 && f < F_MAX) {
     Grid L_p = layoutReconfiguration(L, wIL, f);
     this->grid = L_p;
+
+    Brick wIL_p;
+    int sIL_p = 0;
+    componentAnalysis(sIL_p, wIL_p, L);
+    MString info = "POST NUM CONNECTED COMPONENTS: ";
+    MGlobal::displayInfo(info + sIL_p);
+
 //        Brick wIL_p;
 //        int sIL_p = 0;
 //        componentAnalysis(sIL_p, wIL_p, L_p);
