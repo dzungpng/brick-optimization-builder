@@ -41,15 +41,17 @@ private:
 
     /// function: helper to take two bricks and replace them in the grid with a new brick
     /// newBrick: brick that will replace brick1 and brick2 in grid and have its pos, scale, and type updated
-    void mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick);
+    void mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick, Grid& L);
 
     /// function: modifies an adjacency list of bricks that are mergeable, given an input set of bricks
-    // bricks: input set to check adjacency on
-    // adjList: adjacency list to modify given input bricks
-    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList);
+    /// bricks: input set to check adjacency on
+    /// adjList: adjacency list to modify given input bricks
+    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
+                         std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList,
+                         Grid& L);
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
-    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet);
+    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, Grid& L);
 
     /// function: fill out a graph with the initial maximal layout
     void generateGraphFromMaximalLayout(Grid&);
@@ -123,15 +125,6 @@ MObject BobNode::twoXthreeArr;
 MObject BobNode::twoXfourArr;
 MObject BobNode::twoXsixArr;
 MObject BobNode::twoXeightArr;
-
-
-//static void shuffleVector(vector<glm::vec3>& v) {
-//    int size = v.size();
-//    for (int i = 0; i < size - 1; i++) {
-//        int j = i + rand() % (size - i);
-//        swap(v[i], v[j]);
-//    }
-//}
 
 
 

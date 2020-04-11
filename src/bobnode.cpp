@@ -14,13 +14,13 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
     // print("ADJ LIST SIZE:", adjList.size());
     for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
         Brick b = it->first;
-        // print("Brick", b.getId());
+        print("Brick", b.getId());
         for (Brick n: adjList[b]) {
-            // print("neighbor:", n.getId());
+            print("neighbor:", n.getId());
         }
-        // MGlobal::displayInfo("\n");
+        MGlobal::displayInfo("\n");
     }
-    // MGlobal::displayInfo("\n END ADJ LIST ");
+    MGlobal::displayInfo("\n END ADJ LIST ");
 }
 
 
@@ -202,7 +202,10 @@ static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBr
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
+                              std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList,
+                              Grid& L)
+{
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
@@ -215,15 +218,15 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         glm::vec3 pos = brick.getPos();
         glm::vec2 scale = brick.getScale();
 
-        Brick left = grid.getBrick(glm::vec3(pos[0] - 1,         pos[1], pos[2]));
-        Brick right = grid.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
-        Brick front = grid.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
-        Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
+        Brick left = L.getBrick(glm::vec3(pos[0] - 1,         pos[1], pos[2]));
+        Brick right = L.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
+        Brick front = L.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
+        Brick back = L.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
         if(left.getPos()[1] != pos[1] && left.type != EMPTY) {
             // MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
             // print("BRICK HEIGHT:", pos[1]);
             // print("LEFT HEIGHT:", left.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
+            if(L.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
                 // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
@@ -233,7 +236,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             // MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
             // print("BRICK HEIGHT:", pos[1]);
             // print("RIGHT HEIGHT:", right.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
+            if(L.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
                 // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
@@ -243,7 +246,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             // MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
             // print("BRICK HEIGHT:", pos[1]);
             // print("LEFT HEIGHT:", front.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
+            if(L.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
                 // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
@@ -253,7 +256,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             // MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
             // print("BRICK HEIGHT:", pos[1]);
             // print("BACK HEIGHT:", back.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
+            if(L.getBrick(pos).getId() == brick.getId()) {
                 // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
             }else {
                 // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
@@ -308,7 +311,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
     }
 }
 
-void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick) {
+void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick, Grid& L) {
     glm::vec3 pos1 = brick1.getPos();
     glm::vec3 pos2 = brick2.getPos();
     glm::vec3 newPos = glm::vec3();
@@ -322,46 +325,50 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
-    // MGlobal::displayInfo("MERGE BRICKS");
-    // print("BRICK1:", brick1.getId());
-    // print("BRICK2:", brick2.getId());
-    // print("NEW BRICK:", newBrick.getId());
-    // MGlobal::displayInfo("BRICK1 POS: ");
-    // print("X:", pos1[0]);
-    // print("Y:", pos1[1]);
-    // print("Z:", pos1[2]);
-    // MGlobal::displayInfo("BRICK1 SCALE: ");
-    // print("X:", brick1.getScale()[0]);
-    // print("Z:", brick1.getScale()[1]);
-    // MGlobal::displayInfo("BRICK2 POS: ");
-    // print("X:", pos2[0]);
-    // print("Y:", pos2[1]);
-    // print("Z:", pos2[2]);
-    // MGlobal::displayInfo("BRICK2 SCALE: ");
-    // print("X:", brick2.getScale()[0]);
-    // print("Z:", brick2.getScale()[1]);
-    // MGlobal::displayInfo("NEW POS: ");
-    // print("X:", newPos[0]);
-    // print("Y:", newPos[1]);
-    // print("Z:", newPos[2]);
-    // MGlobal::displayInfo("NEW SCALE: ");
-    // print("X:", newScale[0]);
-    // print("Z:", newScale[1]);
+
+//#define DEBUG
+#ifdef DEBUG
+     MGlobal::displayInfo("MERGE BRICKS");
+     print("BRICK1:", brick1.getId());
+     print("BRICK2:", brick2.getId());
+     print("NEW BRICK:", newBrick.getId());
+     MGlobal::displayInfo("BRICK1 POS: ");
+     print("X:", pos1[0]);
+     print("Y:", pos1[1]);
+     print("Z:", pos1[2]);
+     MGlobal::displayInfo("BRICK1 SCALE: ");
+     print("X:", brick1.getScale()[0]);
+     print("Z:", brick1.getScale()[1]);
+     MGlobal::displayInfo("BRICK2 POS: ");
+     print("X:", pos2[0]);
+     print("Y:", pos2[1]);
+     print("Z:", pos2[2]);
+     MGlobal::displayInfo("BRICK2 SCALE: ");
+     print("X:", brick2.getScale()[0]);
+     print("Z:", brick2.getScale()[1]);
+     MGlobal::displayInfo("NEW POS: ");
+     print("X:", newPos[0]);
+     print("Y:", newPos[1]);
+     print("Z:", newPos[2]);
+     MGlobal::displayInfo("NEW SCALE: ");
+     print("X:", newScale[0]);
+     print("Z:", newScale[1]);
+#endif
 
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
-    grid.setBrick(newBrick);
+    L.setBrick(newBrick);
 }
 
-void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet) {
+void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, Grid& L) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
 
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
-    updateAdjBricks(brickSet, adjList);
+    updateAdjBricks(brickSet, adjList, L);
     //for(int i=0; i < 1; i++) {
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
@@ -381,7 +388,7 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             // add new brick to grid
             Brick newBrick = Brick();
             // MGlobal::displayInfo("MERGE TO FORM NEW BRICK \n");
-            mergeBricks(brick1, brick2, newBrick);
+            mergeBricks(brick1, brick2, newBrick, L);
 
             // MGlobal::displayInfo("ADD NEW BRICK TO ADJ LIST \n");
 
@@ -402,8 +409,8 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             adjList.erase(brick1);
             adjList.erase(brick2);
 
-            updateAdjBricks(newBrickSet, adjList);
-            printAdjList(adjList);
+            updateAdjBricks(newBrickSet, adjList, L);
+            // printAdjList(adjList);
         }
     }
 }
@@ -426,24 +433,15 @@ void BobNode::generateGraphFromMaximalLayout(Grid& L) {
     }
     L.allBricks.clear();
     L.allBricks = newAllBricks;
-
     for(auto& brick: graph.vertices) {
         graph.iterateBrickNeighborsAndAddEdges(*brick, L);
     }
 }
 
 void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
-    map<int, bool> visited;
-    for(const auto& brick : graph.vertices) {
-        visited[brick->getId()] = false;
-    }
     // Lines 5 to 22 in Algorithm 6
     generateGraphFromMaximalLayout(L);
     sIL = graph.countConnectedComponents();
-
-    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
-    MGlobal::displayInfo(info + sIL);
-
     L.setbaseGridCompIds(graph);
     // Count number of distinct connected components in each brick's 1-ring neighborhood
     map<int, int> brickIdToNumCompIdMap;
@@ -471,7 +469,7 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
         /// Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
@@ -490,7 +488,7 @@ void BobNode::randomRepeatedRemerge(map<glm::vec3, bool, cmpVec3>& Sk, Grid& L) 
         Brick brick = L.getBrick(pair.first);
         brickSet.insert(brick);
     }
-    generateInitialMaximalLayout(brickSet);
+    generateInitialMaximalLayout(brickSet, L);
 }
 
 
@@ -506,39 +504,57 @@ void BobNode::generateSingleConnectedComponent(Grid& L) {
     Brick wIL; // Critical portion (with largest number of connected components in its surrounding)
     int sIL = 0; // number of connected components
     componentAnalysis(sIL, wIL, L);
+
+    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
+    MGlobal::displayInfo(info + sIL);
+
     // if sIL remains 1 after componentAnalysis then already singly-connected
     if(sIL == 1) {
         return;
     }
     float f = 0; // fail count
-//    while(sIL > 1 && f < F_MAX) {
-    Grid L_p = layoutReconfiguration(L, wIL, f);
-    this->grid = L_p;
+#define WHILE
+#ifdef WHILE
+    while(sIL > 1 && f < F_MAX) {
+        Grid L_p = layoutReconfiguration(L, wIL, f);
+        Brick wIL_p;
+        int sIL_p = 0;
+        componentAnalysis(sIL_p, wIL_p, L_p);
 
+        info = "POST NUM CONNECTED COMPONENTS: ";
+        MGlobal::displayInfo(info + sIL_p);
+
+        if(sIL_p < sIL) {
+            L = L_p;
+            sIL = sIL_p;
+            wIL = wIL_p;
+            f = 0;
+        } else {
+            f++;
+        }
+    }
+    if(f >= F_MAX) {
+        MGlobal::displayError("No solution!");
+        return;
+    }
+    this->grid = L;
+#else
+    Grid L_p = layoutReconfiguration(L, wIL, f);
     Brick wIL_p;
     int sIL_p = 0;
-    componentAnalysis(sIL_p, wIL_p, L);
-    MString info = "POST NUM CONNECTED COMPONENTS: ";
+    componentAnalysis(sIL_p, wIL_p, L_p);
+
+    info = "POST NUM CONNECTED COMPONENTS in L_p: ";
     MGlobal::displayInfo(info + sIL_p);
-
-//        Brick wIL_p;
-//        int sIL_p = 0;
-//        componentAnalysis(sIL_p, wIL_p, L_p);
-//        if(sIL_p < sIL) {
-
-//        }
-//    }
+    info = "POST NUM CONNECTED COMPONENTS in L (should remain the same): ";
+    componentAnalysis(sIL, wIL, L);
+    MGlobal::displayInfo(info + sIL);
+#endif
 }
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
 {
     MStatus returnStatus;
-    // MGlobal::displayInfo("COMPUTE NODE!");
-
-    //    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
-    //            || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
-    //            || plug == BobNode::twoXthreeArr || plug == BobNode::twoXfourArr || plug == BobNode::twoXsixArr
-    //            || plug == BobNode::twoXeightArr || plug == BobNode::outputMesh ) {
     if(plug == BobNode::outputMesh) {
 
         // MGlobal::displayInfo("OUTPUT MESH AFFECTED");
@@ -604,7 +620,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data)
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            generateInitialMaximalLayout(brickSet);
+            generateInitialMaximalLayout(brickSet, this->grid);
 
             // 6. Create a single connected component
             generateSingleConnectedComponent(this->grid);
