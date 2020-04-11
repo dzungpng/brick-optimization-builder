@@ -401,7 +401,7 @@ void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector
             colors.push_back(col);
         }
     }
-
+    /// TODO: test this with plain lambert shaders since above doesn't work when there aren't textures
     //    int numSamples = uvs.size();
 
     //    MFloatPointArray pointArray;
@@ -592,6 +592,16 @@ MStatus BobNode::createBricksWithColor() {
             MColor col = b.getColor();
             MString cmd;
 
+            // get layer folder name
+            MString height = "";
+            height += brickPos[1];
+            MString layerStr = "layer" + height;
+            // create folder for layer if there isn't one
+            cmd += "if(!exists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
+            MGlobal::executeCommand(cmd);
+            MGlobal::displayInfo(cmd);
+            cmd = "";
+
             // create name of brick to duplicate
             MString brickStr = "b_";
             int minDim = std::min(brickScale[0], brickScale[1]);
@@ -604,7 +614,7 @@ MStatus BobNode::createBricksWithColor() {
 
             cmd = "select \"bricks|" + brickStr + " \";\n";
             cmd += "select(duplicate());\n";
-            cmd += "parent((ls(\"-selection\")), \"legoLayout\");\n";
+            cmd += "parent((ls(\"-selection\")), \"legoLayout|" + layerStr + "\");\n";
             MString x = "";
             x += brickPos[0];
             MString y = "";
