@@ -539,6 +539,7 @@ void BobNode::generateSingleConnectedComponent(Grid& L) {
     }
     this->grid = L;
 #else
+    //This is for testing with single iteration of layout reconfiguration
     Grid L_p = layoutReconfiguration(L, wIL, f);
     Brick wIL_p;
     int sIL_p = 0;
@@ -990,7 +991,8 @@ MStatus initializePlugin( MObject obj )
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
-    MString addNodeCmd = MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
+    MString addNodeCmd =
+            MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
 
     MString createMenu = eval + "\n" + menu + "\n" + addNodeCmd;
 
