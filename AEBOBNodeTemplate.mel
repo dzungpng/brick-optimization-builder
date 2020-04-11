@@ -216,8 +216,9 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -addSeparator;
 
 	editorTemplate -beginLayout "Layout Settings" -collapse false;
-		editorTemplate -addControl "iterateUntilStable";
+		editorTemplate -addControl "useMeshColors";
 		editorTemplate -callCustom "AEColorConstraintBuild" "AEColorConstraintUpdate" $nodeName;
+
 		
 		
 	editorTemplate -endLayout;

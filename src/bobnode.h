@@ -36,7 +36,11 @@ struct cmpBrickIds {
 class BobNode: public MPxNode
 {
 private:
+    /// creates bricks through instancing with default colors
     MStatus setupBrickDataHandles(MDataBlock& data);
+
+    /// creates bricks through duplication with mesh colors
+    MStatus createBricksWithColor();
 
     /// function: helper to take two bricks and replace them in the grid with a new brick
     /// newBrick: brick that will replace brick1 and brick2 in grid and have its pos, scale, and type updated
@@ -45,14 +49,13 @@ private:
     /// function: modifies an adjacency list of bricks that are mergeable, given an input set of bricks
     // bricks: input set to check adjacency on
     // adjList: adjacency list to modify given input bricks
-    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList);
+    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, MString &colorConstraintInput);
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
-    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet);
+    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, Autodesk::Maya::OpenMaya20180000::MString colorConstraintInput);
 
     /// helper that populates colors based on mesh given a list of uvs
     void getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors);
-
 public:
     BobNode() {}
     ~BobNode() override {}
@@ -69,7 +72,7 @@ public:
     static MObject meshTexture; /// path to the mesh texture file
     static MObject iteration; /// Iterations until stable
     static MObject colorConstraint; /// HARD or SOFT
-    static MObject iterateUntilStable; // if true, iterate until max iterations or stable. otherwise, iterate once
+    static MObject useMeshColors; // if true, iterate until max iterations or stable. otherwise, iterate once
 
     // array attrs data for instanced bricks
     static MObject oneXoneArr;
@@ -99,7 +102,7 @@ MObject BobNode::iteration;
 MObject BobNode::colorConstraint;
 MObject BobNode::outputMesh;
 MObject BobNode::stabilityStatus;
-MObject BobNode::iterateUntilStable;
+MObject BobNode::useMeshColors;
 
 MObject BobNode::oneXoneArr;
 MObject BobNode::oneXtwoArr;

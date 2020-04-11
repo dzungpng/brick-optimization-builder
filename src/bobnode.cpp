@@ -86,8 +86,8 @@ MStatus BobNode::initialize()
     BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
-    BobNode::iterateUntilStable = untilStableAttr.create("iterateUntilStable", "itrSt", MFnNumericData::kBoolean, 0, &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating iterate until stable attribute!\n");
+    BobNode::useMeshColors = untilStableAttr.create("useMeshColors", "umc", MFnNumericData::kBoolean, 0, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating use mesh colors attribute!\n");
 
     MString defaultStatus = "Uninitialized";
     //MString defaultStatus = "Initializing...";
@@ -139,7 +139,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::iteration);
     McheckErr(returnStatus, "ERROR in adding iteration attribute!\n");
 
-    returnStatus = addAttribute(BobNode::iterateUntilStable);
+    returnStatus = addAttribute(BobNode::useMeshColors);
     McheckErr(returnStatus, "ERROR in adding iterate until stable attribute!\n");
 
     returnStatus = addAttribute(BobNode::stabilityStatus);
@@ -202,7 +202,13 @@ MStatus BobNode::initialize()
     return MS::kSuccess;
 }
 
-static bool isValidBrick(glm::vec2 scale) {
+static bool isValidMerge(glm::vec2 scale, MColor col1, MColor col2, MString colorConstraintInput) {
+    if (colorConstraintInput == "HARD") { // check that colors are equivalent first
+        if (abs(col1[0] - col2[0]) > .001 || abs(col1[1] - col2[1]) > .001 || abs(col1[2] - col2[2]) > .001) {
+            return false;
+        }
+    }
+
     if (scale[0] == 1 || scale[0] == 2) {
         if (scale[1] >= 1 && scale[1] <= 8 && scale[1] != 7 && scale[1] != 5) {
             return true;
@@ -231,7 +237,7 @@ static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBr
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
+void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, MString &colorConstraintInput) {
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
@@ -248,55 +254,13 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         Brick right = grid.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
         Brick front = grid.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
         Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
-        if(left.getPos()[1] != pos[1] && left.type != EMPTY) {
-            // MGlobal::displayInfo("LEFT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("LEFT HEIGHT:", left.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
-                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
-            }else {
-                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
-            }
-        }
-        if(right.getPos()[1] != pos[1] && right.type != EMPTY) {
-            // MGlobal::displayInfo("RIGHT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("RIGHT HEIGHT:", right.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
-                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
-            }else {
-                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
-            }
-        }
-        if(front.getPos()[1] != pos[1] && front.type != EMPTY) {
-            // MGlobal::displayInfo("FRONT HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("LEFT HEIGHT:", front.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
-                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
-            }else {
-                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
-            }
-        }
-        if(back.getPos()[1] != pos[1] && back.type != EMPTY) {
-            // MGlobal::displayInfo("BACK HEIGHT != HEIGHT");
-            print("BRICK HEIGHT:", pos[1]);
-            print("BACK HEIGHT:", back.getPos()[1]);
-            if(grid.getBrick(pos).getId() == brick.getId()) {
-                // MGlobal::displayInfo("CORRECT GRID POS FOR BRICK");
-            }else {
-                // MGlobal::displayInfo("INCORRECT GRID POS FOR BRICK");
-            }
-        }
-
-
 
         if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
             glm::vec2 leftScale = left.getScale();
             if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(leftScale[0] + scale[0], scale[1]);
-                if(isValidBrick(newScale)) {
+                if(isValidMerge(newScale, left.getColor(), brick.getColor(), colorConstraintInput)) {
                     addBricksAdjList(adjList, left, brick);
                 }
             }
@@ -306,7 +270,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             if (rightScale[1] == scale[1] && right.getPos()[2] == pos[2]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(rightScale[0] + scale[0], scale[1]);
-                if(isValidBrick(newScale)) {
+                if(isValidMerge(newScale, right.getColor(), brick.getColor(), colorConstraintInput)) {
                     addBricksAdjList(adjList, right, brick);
                 }
             }
@@ -316,7 +280,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             if (frontScale[0] == scale[0] && front.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], frontScale[1] + scale[1]);
-                if(isValidBrick(newScale)) {
+                if(isValidMerge(newScale, front.getColor(), brick.getColor(), colorConstraintInput)) {
                     addBricksAdjList(adjList, front, brick);
                 }
             }
@@ -326,7 +290,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
             if (backScale[0] == scale[0] && back.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], backScale[1] + scale[1]);
-                if(isValidBrick(newScale)) {
+                if(isValidMerge(newScale, back.getColor(), brick.getColor(), colorConstraintInput)) {
                     addBricksAdjList(adjList, back, brick);
                 }
             }
@@ -357,16 +321,17 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
+    newBrick.setColor(brick1.getColor());
     grid.setBrick(newBrick);
 }
 
-void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet) {
+void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
 
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
-    updateAdjBricks(brickSet, adjList);
+    updateAdjBricks(brickSet, adjList, colorConstraintInput);
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -384,6 +349,8 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
             // add new brick to grid
             Brick newBrick = Brick();
+
+
             mergeBricks(brick1, brick2, newBrick);
 
             // add newBrick to adjList and update all neighbors of merged bricks
@@ -404,8 +371,7 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             adjList.erase(brick1);
             adjList.erase(brick2);
 
-            updateAdjBricks(newBrickSet, adjList);
-            printAdjList(adjList);
+            updateAdjBricks(newBrickSet, adjList, colorConstraintInput);
         }
     }
 }
@@ -495,29 +461,27 @@ void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
     MStatus returnStatus;
-    // MGlobal::displayInfo("COMPUTE NODE!");
+
     MDataHandle meshNameHandle = data.inputValue(BobNode::inputMeshName, &returnStatus);
     MString meshName = meshNameHandle.asString();
     MDataHandle meshTextureHandle = data.inputValue(BobNode::meshTexture, &returnStatus);
     MString meshTexture = meshTextureHandle.asString();
-
-    MGlobal::displayInfo("MESH NAME: " + meshName);
-    MGlobal::displayInfo("MESH TEXTURE: " + meshTexture);
-
 
     //    if(plug == BobNode::oneXoneArr || plug == BobNode::oneXtwoArr || plug == BobNode::oneXthreeArr || plug == BobNode::oneXfourArr
     //            || plug == BobNode::oneXsixArr || plug == BobNode::oneXeightArr || plug == BobNode::twoXtwoArr
     //            || plug == BobNode::twoXthreeArr || plug == BobNode::twoXfourArr || plug == BobNode::twoXsixArr
     //            || plug == BobNode::twoXeightArr || plug == BobNode::outputMesh ) {
     if(plug == BobNode::outputMesh) {
-
-        // MGlobal::displayInfo("OUTPUT MESH AFFECTED");
         // GET INPUT HANDLES
         MDataHandle inputMeshHandle = data.inputValue(BobNode::inputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting input mesh handle!\n");
 
         MDataHandle colorContraintHandle = data.inputValue(BobNode::colorConstraint, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting color contraint handle!\n");
+
+        MDataHandle useMeshColorsHandle = data.inputValue(BobNode::useMeshColors, &returnStatus);
+        McheckErr(returnStatus, "ERROR in getting useMeshColors handle!\n");
+        bool useMeshColors = useMeshColorsHandle.asBool();
 
         MDataHandle iterationHandle = data.inputValue(BobNode::iteration, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
@@ -539,7 +503,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
-        // MGlobal::displayInfo("STATUS: " + stabStatus);
 
         MObject thisNode = thisMObject();
         MFnDependencyNode fnNode(thisNode);
@@ -574,7 +537,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
 
             // TEST: uncomment this if we want to test voxels
-            outputMeshHandle.setMObject(newOutputMeshData);
+            //outputMeshHandle.setMObject(newOutputMeshData);
 
 
             // inefficient. may need to rework data structure usage
@@ -583,8 +546,14 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 Brick b = it->second;
                 brickSet.insert(b);
             }
-            //generateInitialMaximalLayout(brickSet);
-            returnStatus = setupBrickDataHandles(data);
+
+            generateInitialMaximalLayout(brickSet, colorContraintInput);
+            if(useMeshColors) {
+                createBricksWithColor();
+            } else {
+                returnStatus = setupBrickDataHandles(data);
+            }
+
 
             /// code for updating node gui
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
@@ -593,7 +562,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 
         } else if (stabStatus == MString("Computing...")) {
             // MGlobal::displayInfo("ITERATING");
-            // computing code - num iterations based on iterateUntilStable attr
             // set status to "Stable" or "Unstable" based on analysis
             // lock iterate button if mesh is stable
             // NOTE; do we want to also keep track of a number to just show us how many iterations we've performed?
@@ -614,8 +582,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
     return MS::kFailure;
 }
 
-
-MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
+MStatus BobNode::createBricksWithColor() {
     MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\");");
     for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
         Brick b = it->second;
@@ -623,10 +590,21 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             glm::vec3 brickPos = b.getPos();
             glm::vec2 brickScale = b.getScale();
             MColor col = b.getColor();
+            MString cmd;
 
-            MString cmd = "select \"bricks|b_1x1\";\n";
+            // create name of brick to duplicate
+            MString brickStr = "b_";
+            int minDim = std::min(brickScale[0], brickScale[1]);
+            brickStr += minDim;
+            brickStr += "x";
+            int maxDim = std::max(brickScale[0], brickScale[1]);
+            brickStr += maxDim;
+
+            MGlobal::displayInfo("brick str: " + brickStr);
+
+            cmd = "select \"bricks|" + brickStr + " \";\n";
             cmd += "select(duplicate());\n";
-            cmd += "parent((ls(\"-selection\")), \"legoLayout\");";
+            cmd += "parent((ls(\"-selection\")), \"legoLayout\");\n";
             MString x = "";
             x += brickPos[0];
             MString y = "";
@@ -634,6 +612,11 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             MString z = "";
             z += brickPos[2];
             cmd += "move -a "+ x + " " + y + " " + z + " ;\n";
+
+            // extra transform for inverse bricks
+            if (brickScale[1] < brickScale[0]) {
+                cmd += "xform -ro 0 90 0 -s -1 1 1;";
+            }
 
             MString r = "";
             r += col[0];
@@ -647,12 +630,15 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
             cmd += "select(\"legoLayout\");";
             cmd += "showHidden -a -b";
             MGlobal::executeCommand(cmd);
-            //MGlobal::displayInfo(cmd);
+            MGlobal::displayInfo(cmd);
         }
     }
+}
+
+MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
+
     MStatus returnStatus;
-    /*
-    // MGlobal::displayInfo("SET UP DATA HANDLES");
+
     // STEP 1: GET OUTPUT HANDLES
     MDataHandle oneXoneDataHandle = data.outputValue(BobNode::oneXoneArr, &returnStatus);
     McheckErr(returnStatus, "ERROR in getting oneXone handle");
@@ -953,9 +939,8 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
     twoXfourDataHandle.setMObject(twoXfourObject);
     twoXsixDataHandle.setMObject(twoXsixObject);
     twoXeightDataHandle.setMObject(twoXeightObject);
-    */
-    return returnStatus;
 
+    return returnStatus;
 }
 
 // code to initialize the plugin //
