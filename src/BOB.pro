@@ -62,4 +62,4 @@ SOURCES += \
     voxelizer.cpp \
     graph.cpp
 
-QMAKE_CXXFLAGS += -Wsign-compare
+QMAKE_CXXFLAGS += -Wno-sign-compare

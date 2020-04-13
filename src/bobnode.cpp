@@ -26,13 +26,13 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
     // print("ADJ LIST SIZE:", adjList.size());
     for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
         Brick b = it->first;
-        // print("Brick", b.getId());
+        print("Brick", b.getId());
         for (Brick n: adjList[b]) {
-            // print("neighbor:", n.getId());
+            print("neighbor:", n.getId());
         }
-        // MGlobal::displayInfo("\n");
+        MGlobal::displayInfo("\n");
     }
-    // MGlobal::displayInfo("\n END ADJ LIST ");
+    MGlobal::displayInfo("\n END ADJ LIST ");
 }
 
 
@@ -237,7 +237,11 @@ static void addBricksAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBr
     adjList[brick2].insert(brick1);
 }
 
-void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, MString &colorConstraintInput) {
+
+void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
+                              std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList,
+                              MString &colorConstraintInput, Grid& L)
+{
     for (Brick brick: bricks) {
         if (adjList.count(brick) == 0) {
             // add brick as key to adjacency list
@@ -250,10 +254,10 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
         glm::vec3 pos = brick.getPos();
         glm::vec2 scale = brick.getScale();
 
-        Brick left = grid.getBrick(glm::vec3(pos[0] - 1,         pos[1], pos[2]));
-        Brick right = grid.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
-        Brick front = grid.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
-        Brick back = grid.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
+        Brick left = L.getBrick(glm::vec3(pos[0] - 1,         pos[1], pos[2]));
+        Brick right = L.getBrick(glm::vec3(pos[0] + scale[0], pos[1], pos[2]));
+        Brick front = L.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
+        Brick back = L.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
 
         if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
             glm::vec2 leftScale = left.getScale();
@@ -302,7 +306,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::m
     }
 }
 
-void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick) {
+void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick, Grid& L) {
     glm::vec3 pos1 = brick1.getPos();
     glm::vec3 pos2 = brick2.getPos();
     glm::vec3 newPos = glm::vec3();
@@ -321,16 +325,16 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
     newBrick.setColor(brick1.getColor());
-    grid.setBrick(newBrick);
+    L.setBrick(newBrick);
 }
 
-void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput) {
+void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput, Grid& L) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
 
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
-    updateAdjBricks(brickSet, adjList, colorConstraintInput);
+    updateAdjBricks(brickSet, adjList, colorConstraintInput, L);
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -350,7 +354,7 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             Brick newBrick = Brick();
 
 
-            mergeBricks(brick1, brick2, newBrick);
+            mergeBricks(brick1, brick2, newBrick, L);
 
             // add newBrick to adjList and update all neighbors of merged bricks
             std::set<Brick, cmpBrickIds> newBrickSet = std::set<Brick, cmpBrickIds>();
@@ -369,10 +373,11 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             adjList.erase(brick1);
             adjList.erase(brick2);
 
-            updateAdjBricks(newBrickSet, adjList, colorConstraintInput);
+            updateAdjBricks(newBrickSet, adjList, colorConstraintInput, L);
         }
     }
 }
+
 
 void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
     std::string t = texture.asChar();
@@ -457,54 +462,39 @@ void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector
     //    }
 }
 
-void BobNode::generateGraphFromMaximalLayout() {
+void BobNode::generateGraphFromMaximalLayout(Grid& L) {
     Brick::id = 0;
-    graph = Graph(grid.allBricks.size());
-    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+    graph = Graph(L.allBricks.size());
+    for (map<int, Brick>::iterator it=L.allBricks.begin(); it!=L.allBricks.end(); ++it) {
         if(it->second.type != EMPTY) {
             it->second.setBrickId(Brick::id);
-            grid.setBrickId(Brick::id, it->second);
+            L.setBrickId(Brick::id, it->second);
             Brick::id++;
             graph.addVertex(it->second);
         }
     }
+    // Reset ids for allBricks
+    map<int, Brick> newAllBricks = map<int, Brick>();
+    for (map<int, Brick>::iterator it=L.allBricks.begin(); it!=L.allBricks.end(); ++it) {
+        newAllBricks[it->second.getId()] = it->second;
+    }
+    L.allBricks.clear();
+    L.allBricks = newAllBricks;
     for(auto& brick: graph.vertices) {
-        graph.iterateBrickNeighborsAndAddEdges(*brick, grid);
+        graph.iterateBrickNeighborsAndAddEdges(*brick, L);
     }
 }
 
-void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
-    map<int, bool> visited;
-    for(const auto& brick : graph.vertices) {
-        visited[brick->getId()] = false;
-    }
+void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
     // Lines 5 to 22 in Algorithm 6
-    generateGraphFromMaximalLayout();
+    generateGraphFromMaximalLayout(L);
     sIL = graph.countConnectedComponents();
-    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
-    MGlobal::displayInfo(info + sIL);
-
-    grid.setbaseGridCompIds(graph);
-
-//    map<int, int> comps;
-//    for(int i = 0; i < graph.vertices.size(); i++) {
-//        comps[i] = false;
-//    }
-//    for(const auto& brick : grid.baseGrid) {
-//        if(brick.getType() != EMPTY && !comps[brick.getId()]) {
-//            MString info = "Brick id: ---------------";
-//            MGlobal::displayInfo(info + brick.getId());
-//            info = "Component Id: ";
-//            MGlobal::displayInfo(info + brick.getCompId());
-//            comps[brick.getId()] = true;
-//        }
-
-//    }
-
+    L.setbaseGridCompIds(graph);
+    // Count number of distinct connected components in each brick's 1-ring neighborhood
     map<int, int> brickIdToNumCompIdMap;
     int sumNi = 0;
     for(const auto& brick : graph.vertices) {
-        int n_i = graph.countNumDistinctComponents(*brick, grid, sIL) - 1;
+        int n_i = graph.countNumDistinctComponents(*brick, L, sIL) - 1;
         if(n_i > 0) {
             sumNi+=n_i;
             brickIdToNumCompIdMap[brick->getId()] = n_i;
@@ -516,23 +506,98 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL) {
     for(const auto& brick : graph.vertices) {
         probabilities[brick->getId()] = float(brickIdToNumCompIdMap[brick->getId()])/float(sumNi);
     }
-    // compute the accumulated probabilities
-    for(int i = 1; i < probabilities.size(); i++) {
+    /// compute the accumulated probabilities
+    for(unsigned long i = 1; i < probabilities.size(); i++) {
         probabilities[i] += probabilities[i-1];
     }
-    // generate a random number between 0 and the sum of the probabilities of all items
+    /// generate a random number between 0 and the sum of the probabilities of all items
     float r = float(rand()) / float(RAND_MAX/probabilities[probabilities.size()-1]);
-    for(int i = 1; i < probabilities.size(); i++) {
-        //Iterate the array until found an entry with a weight larger than or equal to the random number
+    for(unsigned long i = 1; i < probabilities.size(); i++) {
+        /// Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
+//#define DEBUG
+#ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
-            info = "Num comp ids: ";
+            info = "Num comp id around this brick: ";
             MGlobal::displayInfo(info + brickIdToNumCompIdMap[i]);
+#endif
             break;
         }
     }
+}
+
+void BobNode::randomRepeatedRemerge(map<glm::vec3, bool, cmpVec3>& Sk, Grid& L, MString colorConstraintInput) {
+    /// Copy map into a set
+    set<Brick, cmpBrickIds> brickSet = set<Brick, cmpBrickIds>();
+    for(auto& pair : Sk) {
+        Brick brick = L.getBrick(pair.first);
+        brickSet.insert(brick);
+    }
+    generateInitialMaximalLayout(brickSet, colorConstraintInput, L);
+}
+
+
+Grid BobNode::layoutReconfiguration(const Grid& L, const Brick& wL, const float f, MString colorConstraintInput) {
+    int k = floor(f/N) + 1.f;
+    map<glm::vec3, bool, cmpVec3> Sk;
+    Grid L_p = L.splitBricks(wL, k, Sk);
+    randomRepeatedRemerge(Sk, L_p, colorConstraintInput);
+    return L_p;
+}
+
+void BobNode::generateSingleConnectedComponent(MString colorConstraintInput, Grid& L) {
+    Brick wIL; // Critical portion (with largest number of connected components in its surrounding)
+    int sIL = 0; // number of connected components
+    componentAnalysis(sIL, wIL, L);
+
+    MString info = "INITIAL NUM CONNECTED COMPONENTS: ";
+    MGlobal::displayInfo(info + sIL);
+
+    // if sIL remains 1 after componentAnalysis then already singly-connected
+    if(sIL == 1) {
+        return;
+    }
+    float f = 0; // fail count
+#define WHILE
+#ifdef WHILE
+    while(sIL > 1 && f < F_MAX) {
+        Grid L_p = layoutReconfiguration(L, wIL, f, colorConstraintInput);
+        Brick wIL_p;
+        int sIL_p = 0;
+        componentAnalysis(sIL_p, wIL_p, L_p);
+
+        info = "POST NUM CONNECTED COMPONENTS: ";
+        MGlobal::displayInfo(info + sIL_p);
+
+        if(sIL_p < sIL) {
+            L = L_p;
+            sIL = sIL_p;
+            wIL = wIL_p;
+            f = 0;
+        } else {
+            f++;
+        }
+    }
+    if(f >= F_MAX) {
+        MGlobal::displayError("No solution!");
+        return;
+    }
+    this->grid = L;
+#else
+    //This is for testing with single iteration of layout reconfiguration
+    Grid L_p = layoutReconfiguration(L, wIL, f);
+    Brick wIL_p;
+    int sIL_p = 0;
+    componentAnalysis(sIL_p, wIL_p, L_p);
+
+    info = "POST NUM CONNECTED COMPONENTS in L_p: ";
+    MGlobal::displayInfo(info + sIL_p);
+    info = "POST NUM CONNECTED COMPONENTS in L (should remain the same): ";
+    componentAnalysis(sIL, wIL, L);
+    MGlobal::displayInfo(info + sIL);
+#endif
 }
 
 MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
@@ -624,17 +689,18 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 brickSet.insert(b);
             }
 
-            generateInitialMaximalLayout(brickSet, colorContraintInput);
+            generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
+
+            // 6. Create a single connected component
+            generateSingleConnectedComponent(colorContraintInput, this->grid);
+
+
             if(useMeshColors) {
                 createBricksWithColor();
             } else {
                 returnStatus = setupBrickDataHandles(data);
             }
 
-            // 6. TODO: Create a single connected component
-            Brick wIL;
-            int sIL = 0; // if remains 0 after componentAnalysis then already singly-connected
-            componentAnalysis(sIL, wIL);
 
             /// code for updating node gui
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
@@ -1057,7 +1123,8 @@ MStatus initializePlugin( MObject obj )
     MString quoteInStr = "\\\"";
     MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
-    MString addNodeCmd = MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
+    MString addNodeCmd =
+            MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
 
     MString createMenu = eval + "\n" + menu + "\n" + addNodeCmd;
 
