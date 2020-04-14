@@ -22,6 +22,14 @@ static void printF(MString label, float i) {
     MGlobal::displayInfo(label + " " + i);
 }
 
+static void printVec3(MString label, glm::vec3 v) {
+    MGlobal::displayInfo(label);
+    printF("X:", v[0]);
+    printF("Y", v[1]);
+    printF("Z:", v[2]);
+    MGlobal::displayInfo("");
+}
+
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
     // print("ADJ LIST SIZE:", adjList.size());
     for (std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>::iterator it=adjList.begin(); it!=adjList.end(); ++it) {
@@ -33,6 +41,20 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
         MGlobal::displayInfo("\n");
     }
     MGlobal::displayInfo("\n END ADJ LIST ");
+}
+
+static void printBaseGrid(Grid &grid) {
+    MGlobal::displayInfo("ALL BRICKS IN GRID");
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        Brick b = it->second;
+        print("ID:", b.getId());
+        MGlobal::displayInfo("BRICK POS:");
+        print("X:", b.getPos()[0]);
+        print("Y:", b.getPos()[1]);
+        print("Z:", b.getPos()[2]);
+        MGlobal::displayInfo("\n");
+    }
+    MGlobal::displayInfo("\n");
 }
 
 
@@ -78,7 +100,7 @@ MStatus BobNode::initialize()
     BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
 
-    MString defaultColorConstraint = "HARD";
+    MString defaultColorConstraint = "SOFT";
     BobNode::colorConstraint = colorContraintAttr.create(
                 "colorConstraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
@@ -203,8 +225,12 @@ MStatus BobNode::initialize()
 }
 
 static bool isValidMerge(glm::vec2 scale, MColor col1, MColor col2, MString colorConstraintInput) {
+    float epsilon = .01;
     if (colorConstraintInput == "HARD") { // check that colors are equivalent first
-        if (abs(col1[0] - col2[0]) > .001 || abs(col1[1] - col2[1]) > .001 || abs(col1[2] - col2[2]) > .001) {
+        if (col1 != col2) {
+            MGlobal::displayInfo("COLORS AREN'T EQUAL");
+            printVec3("color1:", glm::vec3(col1[0], col1[1], col1[2]));
+            printVec3("color2:", glm::vec3(col2[0], col2[1], col2[2]));
             return false;
         }
     }
@@ -259,7 +285,9 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
         Brick front = L.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
         Brick back = L.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
 
+        print("brick ID:", brick.getId());
         if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
+            print("left id:", left.getId());
             glm::vec2 leftScale = left.getScale();
             if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -270,6 +298,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
             }
         }
         if (right.type != EMPTY && right.getPos()[1] == pos[1]) {
+            print("right id:", right.getId());
             glm::vec2 rightScale = right.getScale();
             if (rightScale[1] == scale[1] && right.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -280,16 +309,21 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
             }
         }
         if (front.type != EMPTY && front.getPos()[1] == pos[1]) {
+            print("front id:", front.getId());
             glm::vec2 frontScale = front.getScale();
             if (frontScale[0] == scale[0] && front.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], frontScale[1] + scale[1]);
+                MGlobal::displayInfo("check if front is mergeable");
+                printVec3("newScale:", glm::vec3(newScale, 0));
                 if(isValidMerge(newScale, front.getColor(), brick.getColor(), colorConstraintInput)) {
+                    MGlobal::displayInfo("add front brick to list");
                     addBricksAdjList(adjList, front, brick);
                 }
             }
         }
         if (back.type != EMPTY && back.getPos()[1] == pos[1]) {
+            print("back id:", back.getId());
             glm::vec2 backScale = back.getScale();
             if (backScale[0] == scale[0] && back.getPos()[0] == pos[0]) {
                 // check if mergeable
@@ -301,8 +335,11 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
         }
         // if no neighbors are mergeable, erase this brick
         if (adjList[brick].size() == 0) {
+            print("ERASE: none mergeable for brick", brick.getId());
             adjList.erase(brick);
         }
+        print("after update for brick:", brick.getId());
+        printAdjList(adjList);
     }
 }
 
@@ -320,21 +357,55 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
+
+    MGlobal::displayInfo("MERGE BRICKS:");
+    print("brick1 id:", brick1.getId());
+    print("brick2 id:", brick2.getId());
+    //    MGlobal::displayInfo("brick1 pos:");
+    //    print("X:", pos1[0]);
+    //    print("Y:", pos1[1]);
+    //    print("Z:", pos1[2]);
+
+    //    MGlobal::displayInfo("brick1 scale:");
+    //    print("X:", brick1.getScale()[0]);
+    //    print("Z:", brick1.getScale()[1]);
+
+    //    MGlobal::displayInfo("brick2 pos:");
+    //    print("X:", pos2[0]);
+    //    print("Y:", pos2[1]);
+    //    print("Z:", pos2[2]);
+
+    //    MGlobal::displayInfo("brick2 scale:");
+    //    print("X:", brick2.getScale()[0]);
+    //    print("Z:", brick2.getScale()[1]);
+
+    //    MGlobal::displayInfo("new pos:");
+    //    print("X:", newPos[0]);
+    //    print("Y:", newPos[1]);
+    //    print("Z:", newPos[2]);
+
+    //    MGlobal::displayInfo("new scale:");
+    //    print("X:", newScale[0]);
+    //    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
     newBrick.setColor(brick1.getColor());
     L.setBrick(newBrick);
+
+    print("new brick id:", newBrick.getId());
+    MGlobal::displayInfo("");
 }
 
 void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput, Grid& L) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
-
+    printBaseGrid(L);
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList, colorConstraintInput, L);
+    printAdjList(adjList);
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -352,7 +423,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
             // add new brick to grid
             Brick newBrick = Brick();
-
 
             mergeBricks(brick1, brick2, newBrick, L);
 
@@ -374,6 +444,8 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             adjList.erase(brick2);
 
             updateAdjBricks(newBrickSet, adjList, colorConstraintInput, L);
+
+            printAdjList(adjList);
         }
     }
 }
@@ -516,7 +588,7 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
         /// Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
@@ -672,7 +744,13 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
             // get colors associated with uvs by running mel script
-            getMeshColors(uvs, voxels, meshTexture, colors);
+            if(useMeshColors) {
+                getMeshColors(uvs, voxels, meshTexture, colors);
+            } else {
+                // fill colors with (0, 0, 0)
+                colors.resize(uvs.size(), MColor());
+            }
+
 
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
@@ -692,7 +770,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
-            generateSingleConnectedComponent(colorContraintInput, this->grid);
+            //generateSingleConnectedComponent(colorContraintInput, this->grid);
 
 
             if(useMeshColors) {
@@ -1117,7 +1195,7 @@ MStatus initializePlugin( MObject obj )
     // code for setting up the menu items
     //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
     MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-   // MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
+    // MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
     // MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
