@@ -228,9 +228,6 @@ static bool isValidMerge(glm::vec2 scale, MColor col1, MColor col2, MString colo
     float epsilon = .01;
     if (colorConstraintInput == "HARD") { // check that colors are equivalent first
         if (col1 != col2) {
-            MGlobal::displayInfo("COLORS AREN'T EQUAL");
-            printVec3("color1:", glm::vec3(col1[0], col1[1], col1[2]));
-            printVec3("color2:", glm::vec3(col2[0], col2[1], col2[2]));
             return false;
         }
     }
@@ -285,9 +282,7 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
         Brick front = L.getBrick(glm::vec3(pos[0],            pos[1], pos[2] + scale[1]));
         Brick back = L.getBrick(glm::vec3(pos[0],             pos[1], pos[2] - 1));
 
-        print("brick ID:", brick.getId());
         if (left.type != EMPTY && left.getPos()[1] == pos[1]) {
-            print("left id:", left.getId());
             glm::vec2 leftScale = left.getScale();
             if (leftScale[1] == scale[1] && left.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -298,7 +293,6 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
             }
         }
         if (right.type != EMPTY && right.getPos()[1] == pos[1]) {
-            print("right id:", right.getId());
             glm::vec2 rightScale = right.getScale();
             if (rightScale[1] == scale[1] && right.getPos()[2] == pos[2]) {
                 // check if mergeable
@@ -309,21 +303,16 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
             }
         }
         if (front.type != EMPTY && front.getPos()[1] == pos[1]) {
-            print("front id:", front.getId());
             glm::vec2 frontScale = front.getScale();
             if (frontScale[0] == scale[0] && front.getPos()[0] == pos[0]) {
                 // check if mergeable
                 glm::vec2 newScale = glm::vec2(scale[0], frontScale[1] + scale[1]);
-                MGlobal::displayInfo("check if front is mergeable");
-                printVec3("newScale:", glm::vec3(newScale, 0));
                 if(isValidMerge(newScale, front.getColor(), brick.getColor(), colorConstraintInput)) {
-                    MGlobal::displayInfo("add front brick to list");
                     addBricksAdjList(adjList, front, brick);
                 }
             }
         }
         if (back.type != EMPTY && back.getPos()[1] == pos[1]) {
-            print("back id:", back.getId());
             glm::vec2 backScale = back.getScale();
             if (backScale[0] == scale[0] && back.getPos()[0] == pos[0]) {
                 // check if mergeable
@@ -335,11 +324,8 @@ void BobNode::updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
         }
         // if no neighbors are mergeable, erase this brick
         if (adjList[brick].size() == 0) {
-            print("ERASE: none mergeable for brick", brick.getId());
             adjList.erase(brick);
         }
-        print("after update for brick:", brick.getId());
-        printAdjList(adjList);
     }
 }
 
@@ -358,9 +344,9 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
 
-    MGlobal::displayInfo("MERGE BRICKS:");
-    print("brick1 id:", brick1.getId());
-    print("brick2 id:", brick2.getId());
+//    MGlobal::displayInfo("MERGE BRICKS:");
+//    print("brick1 id:", brick1.getId());
+//    print("brick2 id:", brick2.getId());
     //    MGlobal::displayInfo("brick1 pos:");
     //    print("X:", pos1[0]);
     //    print("Y:", pos1[1]);
@@ -394,7 +380,7 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     newBrick.setColor(brick1.getColor());
     L.setBrick(newBrick);
 
-    print("new brick id:", newBrick.getId());
+//    print("new brick id:", newBrick.getId());
     MGlobal::displayInfo("");
 }
 
@@ -402,10 +388,9 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
-    printBaseGrid(L);
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList, colorConstraintInput, L);
-    printAdjList(adjList);
+
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -444,8 +429,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
             adjList.erase(brick2);
 
             updateAdjBricks(newBrickSet, adjList, colorConstraintInput, L);
-
-            printAdjList(adjList);
         }
     }
 }
@@ -767,7 +750,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 brickSet.insert(b);
             }
 
-            generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
+           // generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
             //generateSingleConnectedComponent(colorContraintInput, this->grid);
@@ -819,12 +802,11 @@ MStatus BobNode::createBricksWithColor() {
 
             // get layer folder name
             MString height = "";
-            height += brickPos[1];
+            height += int(brickPos[1]);
             MString layerStr = "layer" + height;
             // create folder for layer if there isn't one
             cmd += "if(!exists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
             cmd = "";
 
             // create name of brick to duplicate
@@ -834,8 +816,6 @@ MStatus BobNode::createBricksWithColor() {
             brickStr += "x";
             int maxDim = std::max(brickScale[0], brickScale[1]);
             brickStr += maxDim;
-
-            MGlobal::displayInfo("brick str: " + brickStr);
 
             cmd = "select \"bricks|" + brickStr + " \";\n";
             cmd += "select(duplicate());\n";
@@ -865,7 +845,6 @@ MStatus BobNode::createBricksWithColor() {
             cmd += "select(\"legoLayout\");";
             cmd += "showHidden -a -b";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
         }
     }
 }
@@ -1160,7 +1139,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         }
     }
 
-    // print("ALL BRICKS SIZE:", grid.allBricks.size());
+
 
     oneXoneDataHandle.setMObject(oneXoneObject);
     oneXtwoDataHandle.setMObject(oneXtwoObject);
