@@ -97,7 +97,7 @@ global proc AEExportBuild (string $nodeNameArr) {
 		text -l "Export LEGO layout as a PDF";
 		separator -style none;
 
-	string $exportCmd = "openFileDialog(" + $nodeName + ");";
+	string $exportCmd = "openFileDialog(\"" + $nodeName + "\");";
 
 	button -label "Export Layout" -enable false -c $exportCmd ExportButton;
 }
