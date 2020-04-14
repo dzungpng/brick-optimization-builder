@@ -19,6 +19,8 @@
 #include "graph.h"
 
 #define MNoVersionString
+#define F_MAX 100
+#define N 10
 
 /// A quick function to check for maya errors
 #define McheckErr(stat, msg) \
@@ -44,28 +46,39 @@ private:
 
     /// function: helper to take two bricks and replace them in the grid with a new brick
     /// newBrick: brick that will replace brick1 and brick2 in grid and have its pos, scale, and type updated
-    void mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick);
+    void mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBrick, Grid& L);
 
     /// function: modifies an adjacency list of bricks that are mergeable, given an input set of bricks
     // bricks: input set to check adjacency on
     // adjList: adjacency list to modify given input bricks
-    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks, std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList, MString &colorConstraintInput);
+    void updateAdjBricks(const std::set<Brick, cmpBrickIds> &bricks,
+                         std::map<Brick, std::set<Brick, cmpBrickIds>,
+                         cmpBrickIds> &adjList, MString &colorConstraintInput,
+                         Grid&);
 
     /// function: merge bricks on grid until the current grid is maximal (no more bricks can merge)
 
-    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput);
+    void generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput, Grid&);
 
     /// helper that populates colors based on mesh given a list of uvs
     void getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors);
 
-    /// function: fill out a graph with the initial maximal layout
-    void generateGraphFromMaximalLayout();
 
-    /// function: create a single connected component
+    /// function: fill out a graph with the initial maximal layout
+    void generateGraphFromMaximalLayout(Grid&);
+
     /// input: a brick layout
     /// output: structure metric sIL (aka number of connected components), critical portion wIL
-    void componentAnalysis(int&, Brick&);
+    void componentAnalysis(int&, Brick&, Grid&);
 
+    Grid layoutReconfiguration(const Grid&, const Brick&, const float, MString);
+
+    /// Randomly merge bricks in a neighborhood set
+    void randomRepeatedRemerge(map<glm::vec3, bool, cmpVec3>&, Grid&, MString);
+
+    /// function: create a single connected component
+    /// intput: the initial maximal layout
+    void generateSingleConnectedComponent(MString, Grid&);
 public:
     BobNode() {}
     ~BobNode() override {}
