@@ -70,7 +70,6 @@ MStatus BobNode::initialize()
     MFnTypedAttribute stringAttr; // use for input mesh name and file name
     MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
-    MFnNumericAttribute iterAttr; // max Iterations or until stable
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
 
 
@@ -83,7 +82,6 @@ MStatus BobNode::initialize()
     outputMeshAttr.setStorable(false);
     outputMeshAttr.setHidden(true);
     colorContraintAttr.setHidden(false);
-    iterAttr.setHidden(true);
     inputMeshAttr.setHidden(true);
 
     MStatus returnStatus;
@@ -104,9 +102,6 @@ MStatus BobNode::initialize()
     BobNode::colorConstraint = colorContraintAttr.create(
                 "colorConstraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
-
-    BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
     BobNode::useMeshColors = untilStableAttr.create("useMeshColors", "umc", MFnNumericData::kBoolean, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating use mesh colors attribute!\n");
@@ -157,9 +152,6 @@ MStatus BobNode::initialize()
 
     returnStatus = addAttribute(BobNode::colorConstraint);
     McheckErr(returnStatus, "ERROR in adding color constraint attribute!\n");
-
-    returnStatus = addAttribute(BobNode::iteration);
-    McheckErr(returnStatus, "ERROR in adding iteration attribute!\n");
 
     returnStatus = addAttribute(BobNode::useMeshColors);
     McheckErr(returnStatus, "ERROR in adding iterate until stable attribute!\n");
@@ -679,9 +671,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
         McheckErr(returnStatus, "ERROR in getting useMeshColors handle!\n");
         bool useMeshColors = useMeshColorsHandle.asBool();
 
-        MDataHandle iterationHandle = data.inputValue(BobNode::iteration, &returnStatus);
-        McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
-
         // GET OUTPUT HANDLES
         MDataHandle outputMeshHandle = data.outputValue(BobNode::outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
@@ -691,7 +680,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 
         // INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
-        int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
         MString type = inputMeshObj.apiTypeStr();
@@ -750,7 +738,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 brickSet.insert(b);
             }
 
-           // generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
+            generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
             //generateSingleConnectedComponent(colorContraintInput, this->grid);
@@ -772,7 +760,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // MGlobal::displayInfo("ITERATING");
             // set status to "Stable" or "Unstable" based on analysis
             // lock iterate button if mesh is stable
-            // NOTE; do we want to also keep track of a number to just show us how many iterations we've performed?
 
             MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
             stabilityPlug.setString("Stable");

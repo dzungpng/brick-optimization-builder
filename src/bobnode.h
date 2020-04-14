@@ -94,7 +94,6 @@ public:
     static MObject inputMesh; /// Input mesh (already voxelized by the voxelizerNode)
     static MObject inputMeshName; /// name of the input mesh for display and use in MEL scripts
     static MObject meshTexture; /// path to the mesh texture file
-    static MObject iteration; /// Iterations until stable
     static MObject colorConstraint; /// HARD or SOFT
     static MObject useMeshColors; // if true, iterate until max iterations or stable. otherwise, iterate once
 
@@ -122,7 +121,6 @@ MTypeId BobNode::id(0x80000);
 MObject BobNode::inputMesh;
 MObject BobNode::inputMeshName;
 MObject BobNode::meshTexture;
-MObject BobNode::iteration;
 MObject BobNode::colorConstraint;
 MObject BobNode::outputMesh;
 MObject BobNode::stabilityStatus;

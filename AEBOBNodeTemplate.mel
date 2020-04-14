@@ -68,6 +68,16 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 //
 //=====================================================================================================================//
 
+global proc openFileDialog(string $nodeName) {
+	
+	string $filename1 = fileDialog("-dm", "*.pdf", "-mode", 1);
+	if ($filename1 != "")
+	{
+	    setAttr -type "string" ($nodeName + ".stabilityStatus") "Exporting...";
+	}
+
+}
+
 global proc AEExportBuild (string $nodeNameArr) {
 
 	// get node name
@@ -87,10 +97,7 @@ global proc AEExportBuild (string $nodeNameArr) {
 		text -l "Export LEGO layout as a PDF";
 		separator -style none;
 
-	string $exportCmd = "editorTemplate -dimControl " + $nodeName + " ExportButton true; \
-					     button -e -enable false InitializeButton; \
-					     editorTemplate -dimControl " + $nodeName + " InitializeButton true; \
-					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Exporting...\";";
+	string $exportCmd = "openFileDialog(" + $nodeName + ");";
 
 	button -label "Export Layout" -enable false -c $exportCmd ExportButton;
 }
@@ -153,7 +160,6 @@ global proc AEIterateUpdate (string $nodeNameArr) {
 
 //=====================================================================================================================//
 // Constraint Dropdown 																			
-//
 //=====================================================================================================================//
 
 global proc string switchColorVal(string $nodeName) {
@@ -177,14 +183,11 @@ global proc AEColorConstraintBuild (string $nodeNameArr) {
 	// Attribute controls and buttons																				
 	//
 	//-----------------------------------------------------------------------------------------------------------------//
-	
-	intSliderGrp -label "Max Iterations" -value 5 -min 1 -max 20 maxIter;
-	connectControl maxIter ($nodeName+".iterations");
 
     string $onChange = "setAttr -type \"string\" " + $nodeName + ".colorConstraint " + switchColorVal($nodeName);
 	optionMenuGrp -label "Color Constraint" -cc $onChange colorMenu;
+	menuItem -label "SOFT"; 
 	menuItem -label "HARD";  
-	menuItem -label "SOFT";  
 
 
 }
@@ -200,11 +203,6 @@ global proc AEColorConstraintUpdate (string $nodeNameArr) {
 	// Attribute controls and buttons																				
 	//
 	//-----------------------------------------------------------------------------------------------------------------//
-
-
-	int $val = getAttr($nodeName + ".iterations");
-	intSliderGrp -e -value $val maxIter;
-	connectControl maxIter ($nodeName+".iterations");
 
 	string $stage = `getAttr ($nodeName + ".colorConstraint")`;
 	if ($stage == "HARD") {
@@ -223,8 +221,6 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "frozen";
 	editorTemplate -suppress "nodeState";
 	editorTemplate -suppress "colorConstraint";
-	editorTemplate -suppress "iterations";
-	editorTemplate -suppress "iterateUntilStable";
 	editorTemplate -suppress "outputMesh";
 	editorTemplate -suppress "inputMesh";
 	editorTemplate -suppress "oneXone";
