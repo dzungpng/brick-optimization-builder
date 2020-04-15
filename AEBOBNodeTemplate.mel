@@ -70,9 +70,10 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 
 global proc openFileDialog(string $nodeName) {
 	
-	string $filename1 = fileDialog("-dm", "*.pdf", "-mode", 1);
-	if ($filename1 != "")
+	string $filename = fileDialog("-dm", "*.pdf", "-mode", 1);
+	if ($filename != "")
 	{
+		setAttr -type "string" ($nodeName + ".exportPath") $filename;
 	    setAttr -type "string" ($nodeName + ".stabilityStatus") "Exporting...";
 	}
 
@@ -221,6 +222,7 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "frozen";
 	editorTemplate -suppress "nodeState";
 	editorTemplate -suppress "colorConstraint";
+	editorTemplate -suppress "exportPath";
 	editorTemplate -suppress "outputMesh";
 	editorTemplate -suppress "inputMesh";
 	editorTemplate -suppress "oneXone";

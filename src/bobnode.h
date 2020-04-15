@@ -95,7 +95,8 @@ public:
     static MObject inputMeshName; /// name of the input mesh for display and use in MEL scripts
     static MObject meshTexture; /// path to the mesh texture file
     static MObject colorConstraint; /// HARD or SOFT
-    static MObject useMeshColors; // if true, iterate until max iterations or stable. otherwise, iterate once
+    static MObject useMeshColors; /// if true, iterate until max iterations or stable. otherwise, iterate once
+    static MObject exportPath;
 
     // array attrs data for instanced bricks
     static MObject oneXoneArr;
@@ -125,6 +126,7 @@ MObject BobNode::colorConstraint;
 MObject BobNode::outputMesh;
 MObject BobNode::stabilityStatus;
 MObject BobNode::useMeshColors;
+MObject BobNode::exportPath;
 
 MObject BobNode::oneXoneArr;
 MObject BobNode::oneXtwoArr;

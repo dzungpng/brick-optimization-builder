@@ -68,6 +68,7 @@ MStatus BobNode::initialize()
 
     // INPUT ATTRIBUTES
     MFnTypedAttribute stringAttr; // use for input mesh name and file name
+    MFnTypedAttribute exportStrAttr;
     MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
@@ -83,6 +84,7 @@ MStatus BobNode::initialize()
     outputMeshAttr.setHidden(true);
     colorContraintAttr.setHidden(false);
     inputMeshAttr.setHidden(true);
+    exportStrAttr.setHidden(true);
 
     MStatus returnStatus;
 
@@ -90,6 +92,10 @@ MStatus BobNode::initialize()
     BobNode::inputMeshName = stringAttr.create(
                 "inputMeshName", "ipn", MFnData::kString, MFnStringData().create(""), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh name attribute!\n");
+
+    BobNode::exportPath = exportStrAttr.create(
+                "exportPath", "exp", MFnData::kString, MFnStringData().create(""), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating export Path attribute!\n");
 
     BobNode::meshTexture = stringAttr.create(
                 "meshTexture", "mt", MFnData::kString, MFnStringData().create("None"), &returnStatus);
@@ -143,6 +149,9 @@ MStatus BobNode::initialize()
     // ADD ATTRIBUTES
     returnStatus = addAttribute(BobNode::inputMeshName);
     McheckErr(returnStatus, "ERROR in adding input mesh nameattribute!\n");
+
+    returnStatus = addAttribute(BobNode::exportPath);
+    McheckErr(returnStatus, "ERROR in adding export path nameattribute!\n");
 
     returnStatus = addAttribute(BobNode::meshTexture);
     McheckErr(returnStatus, "ERROR in adding mesh texture attribute!\n");
