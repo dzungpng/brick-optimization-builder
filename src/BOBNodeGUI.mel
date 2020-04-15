@@ -86,3 +86,10 @@ global proc createBOBNode() {
         error "Please select exactly one mesh"; 
     }
 }
+
+global proc callPythonExport(string $exportPath, string $currPath) {
+  python("import sys");
+  python("sys.path.append('" + $currPath + "')"); 
+  python("import exportScript as es");
+  python("es.exportToPDF(\"" + $exportPath + "\")");
+}

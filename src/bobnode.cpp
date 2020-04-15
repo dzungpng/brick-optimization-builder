@@ -9,6 +9,9 @@
 #include <maya/MFloatArray.h>
 #include <maya/MRenderUtilities.h>
 
+MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
+// MString projPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src");
+
 //// helpers for printing
 static void print(MString label, int i) {
     MString s = "";
@@ -345,9 +348,9 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
 
-//    MGlobal::displayInfo("MERGE BRICKS:");
-//    print("brick1 id:", brick1.getId());
-//    print("brick2 id:", brick2.getId());
+    //    MGlobal::displayInfo("MERGE BRICKS:");
+    //    print("brick1 id:", brick1.getId());
+    //    print("brick2 id:", brick2.getId());
     //    MGlobal::displayInfo("brick1 pos:");
     //    print("X:", pos1[0]);
     //    print("Y:", pos1[1]);
@@ -381,7 +384,7 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
     newBrick.setColor(brick1.getColor());
     L.setBrick(newBrick);
 
-//    print("new brick id:", newBrick.getId());
+    //    print("new brick id:", newBrick.getId());
     MGlobal::displayInfo("");
 }
 
@@ -765,15 +768,17 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             stabilityPlug.setString("Initialized");
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
-        } else if (stabStatus == MString("Computing...")) {
-            // MGlobal::displayInfo("ITERATING");
-            // set status to "Stable" or "Unstable" based on analysis
-            // lock iterate button if mesh is stable
+        } else if (stabStatus == MString("Exporting...")) {
+            // call MEL function that passes data to python script (how to do this directly with python????)
+            MDataHandle exportPathHandle = data.inputValue(BobNode::exportPath, &returnStatus);
+            MString exportPath = exportPathHandle.asString();
 
-            MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
-            stabilityPlug.setString("Stable");
-            // re-enable the iterate button - UNLESS layout is already stable
-            MGlobal::executeCommand("button -e -enable true IterateButton;");
+            MGlobal::displayInfo(exportPath);
+
+            MString cmd = "source \"" + projPath + "/BOBNodeGUI.mel" + "\";\n";
+            cmd += "callPythonExport(\"" + exportPath + "\", \"" + projPath + "\");";;
+            MGlobal::executeCommand(cmd);
+
         } else {
             // MGlobal::displayInfo("OTHER STABILITY STATUS");
             // MGlobal::displayInfo(stabStatus);
@@ -1168,13 +1173,9 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-    //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-    // MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
-    // MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
-    MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
+    MString eval = MString("eval(\"source " + quoteInStr + projPath + "/BOBNodeGUI.mel" + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
     MString addNodeCmd =
             MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
