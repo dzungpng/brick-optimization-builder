@@ -87,9 +87,9 @@ global proc createBOBNode() {
     }
 }
 
-global proc callPythonExport(string $exportPath, string $currPath) {
+global proc callPythonExport(string $exportPath, string $imagePath, string $currPath) {
   python("import sys");
   python("sys.path.append('" + $currPath + "')"); 
   python("import exportScript as es");
-  python("es.exportToPDF(\"" + $exportPath + "\")");
+  python("es.exportToPDF(\"" + $exportPath + "\", \"" + $imagePath + "\")");
 }

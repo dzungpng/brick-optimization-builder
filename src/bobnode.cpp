@@ -772,11 +772,12 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // call MEL function that passes data to python script (how to do this directly with python????)
             MDataHandle exportPathHandle = data.inputValue(BobNode::exportPath, &returnStatus);
             MString exportPath = exportPathHandle.asString();
-
+            // directory storing the rendered layers
+            MString imagePath = "TESTING";
             MGlobal::displayInfo(exportPath);
 
             MString cmd = "source \"" + projPath + "/BOBNodeGUI.mel" + "\";\n";
-            cmd += "callPythonExport(\"" + exportPath + "\", \"" + projPath + "\");";;
+            cmd += "callPythonExport(\"" + exportPath + "\", \"" + imagePath + "\", \"" + projPath + "\");";;
             MGlobal::executeCommand(cmd);
 
         } else {
