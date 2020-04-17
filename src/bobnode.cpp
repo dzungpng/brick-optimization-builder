@@ -773,7 +773,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             MDataHandle exportPathHandle = data.inputValue(BobNode::exportPath, &returnStatus);
             MString exportPath = exportPathHandle.asString();
             // directory storing the rendered layers
-            MString imagePath = "TESTING";
+            MString imagePath = "/Users/kathrynmiller/Desktop/test_renders";
             MGlobal::displayInfo(exportPath);
 
             MString cmd = "source \"" + projPath + "/BOBNodeGUI.mel" + "\";\n";
