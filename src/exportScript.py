@@ -3,14 +3,13 @@ import os, os.path
 import math
 
 def exportToPDF(exportPath="", imagePath=""):
-    print "in export function\n"
     doc = fitz.open()
     buffer = 30
     width = 842
     height = 595
     picWidth = (width - (3 * buffer)) / 2.0
     picHeight = (height - (3 * buffer)) / 2.0
-
+    print os.listdir(imagePath)
     numLayers = len([name for name in os.listdir(imagePath) if (name.split('.')[-1] in ["png", "jpg", "jpeg"])])
     numPages = math.ceil(numLayers / 4.0)
 
@@ -27,7 +26,7 @@ def exportToPDF(exportPath="", imagePath=""):
 
                     rect = fitz.Rect(posX, posY, posX + picWidth, posY + picHeight)
                         
-                    pix = fitz.Pixmap(imagePath + "/layer" + str(currImg) + ".png")
+                    pix = fitz.Pixmap(imagePath + "layer" + str(currImg) + ".png")
                     page.insertImage(rect, pixmap=pix, overlay=False)
                     
                     # insert text

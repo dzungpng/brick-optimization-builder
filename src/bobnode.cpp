@@ -769,13 +769,14 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
         } else if (stabStatus == MString("Exporting...")) {
-            // call MEL function that passes data to python script (how to do this directly with python????)
+            // get path for exported pdf
             MDataHandle exportPathHandle = data.inputValue(BobNode::exportPath, &returnStatus);
             MString exportPath = exportPathHandle.asString();
-            // directory storing the rendered layers
-            MString imagePath = "/Users/kathrynmiller/Desktop/test_renders";
-            MGlobal::displayInfo(exportPath);
 
+            // directory storing the rendered layers
+            MString imagePath = "/Users/kathrynmiller/Desktop/test_renders/";
+
+            // call the script to export pdf
             MString cmd = "source \"" + projPath + "/BOBNodeGUI.mel" + "\";\n";
             cmd += "callPythonExport(\"" + exportPath + "\", \"" + imagePath + "\", \"" + projPath + "\");";;
             MGlobal::executeCommand(cmd);
@@ -788,12 +789,12 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 
         return MS::kSuccess;
     }
-    // MGlobal::displayInfo("FINISH COMPUTE");
     return MS::kFailure;
 }
 
 MStatus BobNode::createBricksWithColor() {
-    MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\");");
+    // create legoLayout folder and sort outliner alphabetically
+    MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\"); outlinerEditor -edit -sortOrder dagName outlinerPanel1;");
     for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
         Brick b = it->second;
         if(b.type != EMPTY) {
@@ -806,9 +807,11 @@ MStatus BobNode::createBricksWithColor() {
             MString height = "";
             height += int(brickPos[1]);
             MString layerStr = "layer" + height;
+            MGlobal::displayInfo(layerStr);
             // create folder for layer if there isn't one
-            cmd += "if(!exists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
+            cmd += "if(!objExists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
             MGlobal::executeCommand(cmd);
+            MGlobal::displayInfo(cmd);
             cmd = "";
 
             // create name of brick to duplicate
