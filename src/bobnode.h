@@ -97,6 +97,7 @@ public:
     static MObject colorConstraint; /// HARD or SOFT
     static MObject useMeshColors; /// if true, iterate until max iterations or stable. otherwise, iterate once
     static MObject exportPath;
+    static MObject maxLayer;
 
     // array attrs data for instanced bricks
     static MObject oneXoneArr;
@@ -127,6 +128,7 @@ MObject BobNode::outputMesh;
 MObject BobNode::stabilityStatus;
 MObject BobNode::useMeshColors;
 MObject BobNode::exportPath;
+MObject BobNode::maxLayer;
 
 MObject BobNode::oneXoneArr;
 MObject BobNode::oneXtwoArr;

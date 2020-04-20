@@ -75,7 +75,7 @@ MStatus BobNode::initialize()
     MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
-
+    MFnNumericAttribute maxLayerAttr;
 
     // OUTPUT ATTRIBUTES
     MFnTypedAttribute statusAttr; // Either stable or unstable
@@ -88,6 +88,7 @@ MStatus BobNode::initialize()
     colorContraintAttr.setHidden(false);
     inputMeshAttr.setHidden(true);
     exportStrAttr.setHidden(true);
+    maxLayerAttr.setHidden(true);
 
     MStatus returnStatus;
 
@@ -99,6 +100,9 @@ MStatus BobNode::initialize()
     BobNode::exportPath = exportStrAttr.create(
                 "exportPath", "exp", MFnData::kString, MFnStringData().create(""), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating export Path attribute!\n");
+
+    BobNode::maxLayer = maxLayerAttr.create("maxLayer", "ml", MFnNumericData::kInt, -1, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating max layer attribute!\n");
 
     BobNode::meshTexture = stringAttr.create(
                 "meshTexture", "mt", MFnData::kString, MFnStringData().create("None"), &returnStatus);
@@ -151,10 +155,10 @@ MStatus BobNode::initialize()
 
     // ADD ATTRIBUTES
     returnStatus = addAttribute(BobNode::inputMeshName);
-    McheckErr(returnStatus, "ERROR in adding input mesh nameattribute!\n");
+    McheckErr(returnStatus, "ERROR in adding input mesh name attribute!\n");
 
     returnStatus = addAttribute(BobNode::exportPath);
-    McheckErr(returnStatus, "ERROR in adding export path nameattribute!\n");
+    McheckErr(returnStatus, "ERROR in adding export path name attribute!\n");
 
     returnStatus = addAttribute(BobNode::meshTexture);
     McheckErr(returnStatus, "ERROR in adding mesh texture attribute!\n");
@@ -171,8 +175,11 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::stabilityStatus);
     McheckErr(returnStatus, "ERROR in adding statbility status attribute!\n")
 
-            returnStatus = addAttribute(BobNode::outputMesh);
+    returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
+
+    returnStatus = addAttribute(BobNode::maxLayer);
+    McheckErr(returnStatus, "ERROR in adding max layer attribute!\n");
 
     returnStatus = addAttribute(BobNode::oneXoneArr);
     McheckErr(returnStatus, "ERROR in creating output attribute!\n");
@@ -715,6 +722,12 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // Initialize voxel grid
             grid.initialize(boundingBox);
 
+            // set max layer
+            MPlug maxLayerPlug = fnNode.findPlug(BobNode::maxLayer, returnStatus);
+            McheckErr(returnStatus, "ERROR in getting max layer plug!\n");
+            maxLayerPlug.setInt(grid.getDim()[1]);
+            print("max layer: ", grid.getDim()[1]);
+
             // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = std::vector<MFloatPoint>();
             std::vector<glm::vec2> uvs = std::vector<glm::vec2>();
@@ -795,6 +808,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 MStatus BobNode::createBricksWithColor() {
     // create legoLayout folder and sort outliner alphabetically
     MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\"); outlinerEditor -edit -sortOrder dagName outlinerPanel1;");
+
     for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
         Brick b = it->second;
         if(b.type != EMPTY) {
@@ -805,13 +819,15 @@ MStatus BobNode::createBricksWithColor() {
 
             // get layer folder name
             MString height = "";
+            if(int(brickPos[1]) < 10) {
+                height += "0";
+            }
             height += int(brickPos[1]);
             MString layerStr = "layer" + height;
-            MGlobal::displayInfo(layerStr);
+
             // create folder for layer if there isn't one
             cmd += "if(!objExists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
             cmd = "";
 
             // create name of brick to duplicate

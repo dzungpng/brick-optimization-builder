@@ -1,4 +1,5 @@
 
+global int $currLayer = -1;
 
 //=====================================================================================================================//
 // Initialize																					
@@ -28,6 +29,12 @@ global proc AEInitializeBuild (string $nodeNameArr) {
 					     button -e -enable false InitializeButton; \
 					     button -e -enable true ExportButton; \
 					     editorTemplate -dimControl " + $nodeName + " ExportButton false; \
+					     button -e -enable true StepButton; \
+					     editorTemplate -dimControl " + $nodeName + " StepButton false; \
+					     optionMenuGrp -e -enable false colorMenu; \
+					     editorTemplate -dimControl " + $nodeName + " colorMenu false; \
+					     checkBox -e -enable false useMeshColors; \
+					     editorTemplate -dimControl " + $nodeName + " useMeshColors false; \
 					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initializing...\";";
 
 	button -label "Initialize" -enable true -c $initCmd InitializeButton;
@@ -50,6 +57,8 @@ global proc AEInitializeUpdate (string $nodeNameArr) {
 					     button -e -enable false InitializeButton; \
 					     button -e -enable true ExportButton; \
 					     editorTemplate -dimControl " + $nodeName + " ExportButton false; \
+					     button -e -enable true StepButton; \
+					     editorTemplate -dimControl " + $nodeName + " StepButton false; \
 					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Initializing...\";";
 
 	} else { // do nothing, node has already been initialized
@@ -103,60 +112,85 @@ global proc AEExportBuild (string $nodeNameArr) {
 	button -label "Export Layout" -enable false -c $exportCmd ExportButton;
 }
 
+
 global proc AEExportUpdate (string $nodeNameArr) {
 
 	// do nothing, same process 
 }
 
-//=====================================================================================================================
+//=====================================================================================================================//
+// Step Button																				
 //
-// Iterate																					
-//
-//=====================================================================================================================
+//=====================================================================================================================//
 
+global proc step() {
+	
+	global int $currLayer;
+	if($currLayer == -1) {
+		if(objExists("legoLayout")) {
+			// hide children separately so they show up correctly
+			string $children[] = listRelatives("-children","legoLayout");
+			for($child in $children) {
+				hide($child);
+			}
+			$currLayer = 0;
+		}
+	}
+	string $layerStr = "legoLayout|layer";
+	if ($currLayer < 10) {
+		$layerStr += "0";
+	}
+	$layerStr += string($currLayer);
+	showHidden($layerStr);
 
-global proc AEIterateBuild (string $nodeNameArr) {
-
-	// get node name
-	string $buffer[];
-	tokenize($nodeNameArr,".",$buffer);
-	string $nodeName = $buffer[0];
-
-	//------------------------------------------------------------------------------------------------------------------//
-	// Attribute controls and buttons																					//
-	//------------------------------------------------------------------------------------------------------------------//
-
-	string $iterCmd = "editorTemplate -dimControl " + $nodeName + " IterateButton true; \
-					     button -e -enable false IterateButton; \
-					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Computing...\";";
-	button -label "Iterate" -enable false -c $iterCmd IterateButton;
-	editorTemplate -dimControl " + $nodeName + " IterateButton true; 
+	$currLayer += 1;
+	print($layerStr); 
 }
 
-global proc AEIterateUpdate (string $nodeNameArr) {
+global proc reset() {
+	global int $currLayer;
+	$currLayer = -1;
+	step();
+}
+
+global proc showFullLayout() {
+	global int $currLayer;
+	$currLayer = -1;
+	showHidden("legoLayout", "-b");
+	if(objExists("legoLayout")) {
+		string $children[] = listRelatives("-children","legoLayout");
+		for($child in $children) {
+		//	showHidden($child);
+		}
+	}
+}
+
+global proc AEStepBuild (string $nodeNameArr) {
 
 	// get node name
 	string $buffer[];
 	tokenize($nodeNameArr,".",$buffer);
 	string $nodeName = $buffer[0];
-	string $iterCmd = "";
 
-	// dim/undim attribute fields based on nodeStage
-	string $stage = `getAttr ($nodeName + ".stabilityStatus")`;
-	if ($stage == "Uninitialized") {
-		editorTemplate -dimControl $nodeName IterateButton true;
-		button -e -enable false IterateButton;
-		string $iterCmd = "";
+		//--------------------------------------------------------------------------------------------------------------//
+		// User instructions / description																				//
+		//--------------------------------------------------------------------------------------------------------------//
 
-	} else { // allow the user to iterate since initialization has been completed
-		editorTemplate -dimControl $nodeName IterateButton false;
-		button -e -enable true IterateButton;
-		string $iterCmd = "editorTemplate -dimControl " + $nodeName + " IterateButton true; \
-					     button -e -enable false InitializeButton; \
-					     setAttr -type \"string\" " + $nodeName + ".stabilityStatus \"Computing...\";";
-	} 
+		separator -style none;
+		text -l "Step through the layout";
+		separator -style none;
 
-	button -e -c $iterCmd IterateButton;
+	string $stepCmd = "step();";
+	string $resetCmd = "reset();";
+	string $showFullCmd = "showFullLayout();";
+
+	//button -label "Reset" -enable false -c $resetCmd ResetStepButton;
+	button -label "Step" -enable false -c $stepCmd StepButton;
+}
+
+global proc AEStepUpdate (string $nodeNameArr) {
+
+	// do nothing, same process 
 }
 
 //=====================================================================================================================//
@@ -173,6 +207,16 @@ global proc string switchColorVal(string $nodeName) {
 	}
 }
 
+global proc int getMeshColorVal(string $nodeName) {
+
+	string $curr = `getAttr ($nodeName + ".useMeshColors")`;
+	if($curr == 0) {
+		return 1; 
+	} else {
+		return 0; 
+	}
+}
+
 global proc AEColorConstraintBuild (string $nodeNameArr) {
 
 	// get node name
@@ -185,6 +229,9 @@ global proc AEColorConstraintBuild (string $nodeNameArr) {
 	//
 	//-----------------------------------------------------------------------------------------------------------------//
 
+	string $toggleColors = "setAttr " + $nodeName + ".useMeshColors " + getMeshColorVal($nodeName);
+	checkBox -label "Use Mesh Colors" -cc $toggleColors colorCheckBox;
+    
     string $onChange = "setAttr -type \"string\" " + $nodeName + ".colorConstraint " + switchColorVal($nodeName);
 	optionMenuGrp -label "Color Constraint" -cc $onChange colorMenu;
 	menuItem -label "SOFT"; 
@@ -211,6 +258,9 @@ global proc AEColorConstraintUpdate (string $nodeNameArr) {
 	} else {
 		optionMenuGrp -e -value "SOFT" colorMenu;
 	}
+
+	int $colorVal = getAttr ($nodeName + ".useMeshColors"); 
+	checkBox -e -value $colorVal colorCheckBox;
 }
 
 
@@ -250,14 +300,19 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -addSeparator;
 
 	editorTemplate -beginLayout "Layout Settings" -collapse false;
-		editorTemplate -addControl "useMeshColors";
+		//editorTemplate -addControl "useMeshColors";
 		editorTemplate -callCustom "AEColorConstraintBuild" "AEColorConstraintUpdate" $nodeName;	
 	editorTemplate -endLayout;
 
 	editorTemplate -addSeparator;
 
+	editorTemplate -beginLayout "Layer Traversal" -collapse false;
+		editorTemplate -callCustom "AEStepBuild" "AEStepUpdate" $nodeName;	
+	editorTemplate -endLayout;
+
+	editorTemplate -addSeparator;
+
 	editorTemplate -callCustom "AEExportBuild" "AEExportUpdate" $nodeName;
-	//editorTemplate -callCustom "AEIterateBuild" "AEIterateUpdate" $nodeName;
 
 	editorTemplate -endLayout;
 }
