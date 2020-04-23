@@ -131,6 +131,13 @@ global proc hideLayoutChildren() {
 	}
 }
 
+global proc updateCurrLayerLabel(string $nodeName) {
+	global int $currLayer;
+	int $maxLayer = getAttr($nodeName + ".maxLayer") - 2;
+	string $label = "Current Layer: " + string($currLayer) + " / " + $maxLayer;
+	text -edit -l $label currLayerStr;
+}
+
 global proc step(string $nodeName) {
 	if(objExists("legoLayout")) {
 		global int $currLayer;
@@ -156,16 +163,9 @@ global proc step(string $nodeName) {
 			showHidden($layerStr);
 		} 
 		print("currLayer " + string($currLayer) + "\n");
+		updateCurrLayerLabel($nodeName);
 		$currLayer = $currLayer + 1;
 	}
-	
-}
-
-global proc reset(string $nodeName) {
-	global int $currLayer;
-	$currLayer = -1;
-	//hideLayoutChildren();
-	//step($nodeName);
 }
 
 global proc showFullLayout() {
@@ -194,9 +194,9 @@ global proc AEStepBuild (string $nodeNameArr) {
 		separator -style none;
 		text -l "Step through the layout";
 		separator -style none;
-
+	
 		separator -style none;
-		text -l "Current Layer: " currLayerStr;
+		text -l "Current Layer: " -fn "boldLabelFont" -align "left" currLayerStr;
 		separator -style none;
 
 	string $stepCmd = "step(\"" + $nodeName + "\");";
