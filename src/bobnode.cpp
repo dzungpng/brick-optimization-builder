@@ -175,7 +175,7 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::stabilityStatus);
     McheckErr(returnStatus, "ERROR in adding statbility status attribute!\n")
 
-    returnStatus = addAttribute(BobNode::outputMesh);
+            returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
 
     returnStatus = addAttribute(BobNode::maxLayer);
@@ -448,13 +448,58 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
     std::string t = texture.asChar();
     if (t.find(".color") != std::string::npos || t.find(".baseColor") != std::string::npos) { // sample color
-        MString cmd = "";
-        cmd += "getAttr(\"" + texture + "\");";
-        MDoubleArray result;
-        MGlobal::executeCommand(cmd, result);
-        MColor col = MColor(result[0], result[1], result[2]);
-        colors.push_back(col);
-    } else {
+        colors.resize(uvs.size(), MColor(.6, .2, .2));
+        //        MString cmd = "";
+        //        cmd += "getAttr(\"" + texture + "\");";
+        //        MDoubleArray result;
+        //        MGlobal::executeCommand(cmd, result);
+        //        MColor col = MColor(result[0], result[1], result[2]);
+        //        colors.push_back(col);
+/*
+        /// TODO: test this with plain lambert shaders since above doesn't work when there aren't textures
+        int numSamples = uvs.size();
+
+        MFloatPointArray pointArray;
+        MFloatPointArray refPointArray;
+        MFloatVectorArray normalArray;
+        pointArray.setLength(numSamples);
+
+        MFloatArray uCoords;
+        MFloatArray vCoords;
+        refPointArray.setLength(numSamples);
+        for(int i = 0; i < points.size(); i++) {
+            MFloatPoint point = points[i];
+            pointArray.set(point, i);
+            refPointArray.set(point, i);
+        }
+
+        // create return args
+        MFloatVectorArray resultColors;
+        MFloatVectorArray resultTransparencies;
+
+        MFloatMatrix cam;
+        MStatus status = MRenderUtil::sampleShadingNetwork(texture,
+                                                           numSamples,
+                                                           false, // use shadow map
+                                                           false, // reuse map
+                                                           cam, // camera matrix
+                                                           &pointArray,
+                                                           &uCoords,
+                                                           &vCoords,
+                                                           &normalArray, // normals
+                                                           &refPointArray,
+                                                           NULL, // tan us
+                                                           NULL, // tan vs
+                                                           NULL, // filter sizes
+                                                           resultColors,
+                                                           resultTransparencies);
+
+        for(int i = 0; i < resultColors.length(); i++) {
+            MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
+            colors.push_back(col);
+        }
+        */
+    } else { // sample from texture
         for(int i = 0; i < uvs.size(); i++) {
             MString u = "";
             u += uvs[i][0];
@@ -725,8 +770,8 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // set max layer
             MPlug maxLayerPlug = fnNode.findPlug(BobNode::maxLayer, returnStatus);
             McheckErr(returnStatus, "ERROR in getting max layer plug!\n");
-            maxLayerPlug.setInt(grid.getDim()[1]);
-            print("max layer: ", grid.getDim()[1]);
+            maxLayerPlug.setInt(int(grid.getDim()[1]));
+            print("grid dim: ", grid.getDim()[1]);
 
             // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = std::vector<MFloatPoint>();
