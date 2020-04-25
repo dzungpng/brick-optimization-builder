@@ -7,6 +7,8 @@ import maya.app.general.createImageFormats as createImageFormats
 class Render:
     def __init__(self, layer_folder):
         self.rs = renderSetup.model.renderSetup.instance()
+        if layer_folder.strip() == '':
+            raise ValueError('layer folder is empty! Please specify a layer folder')
         if layer_folder[-1] == '/':
             self.layer_folder = layer_folder
         else: 
@@ -15,19 +17,21 @@ class Render:
     def setUpRenderer(self):
         cmds.setAttr("defaultRenderGlobals.currentRenderer", "mayaHardware2", type="string")
         cmds.setAttr("hardwareRenderingGlobals.renderMode", 2)
+        cmds.setAttr("defaultResolution.width", 800)
+        cmds.setAttr("defaultResolution.height", 800)
         
         cmds.setAttr('defaultRenderGlobals.imageFormat', 8)
         cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
-        
-        
-    def renderAndSave(self, image_save_path):    
-        #cmds.ogsRender(camera='top') #noRenderView=False, currentFrame=True)
-        #cmds.render('top', x=768, y=576 )
         cmds.setAttr('frontShape.renderable', 0)
         cmds.setAttr('perspShape.renderable', 0)
         cmds.setAttr('sideShape.renderable', 0)
         cmds.setAttr('topShape.renderable', 1)
         
+        cmds.setAttr('top.translateX', 5.0)
+        cmds.setAttr('top.translateZ', 10.0)
+        
+        
+    def renderAndSave(self, image_save_path):            
         editor = 'renderView'
         cmds.renderWindowEditor(editor, currentCamera='top', e=True, writeImage=image_save_path)
         mel.eval('renderWindowRender redoPreviousRender renderView')
@@ -52,7 +56,7 @@ class Render:
         
             collec_obj.getSelector().staticSelection.set(['grid', layer_name])
         
-            over_obj = collec_obj.createOverride('MyFirstOverride', ov.AbsOverride.kTypeId) #absolute   
+            over_obj = collec_obj.createOverride('MyFirstOverride', ov.AbsOverride.kTypeId)    
             over_obj.finalize('defaultRenderQuality.shadingSamples')
         
             self.rs.switchToLayer(layer_obj)
@@ -60,8 +64,7 @@ class Render:
 
 
 if __name__ == '__main__':
-    # save_folder = cmds.getAttr('BOBNode1.layerFolder')
-    save_folder = '/Volumes/Seagate/bob_test/'
+    save_folder = cmds.getAttr('BOBNode1.jpgPath')
     r = Render(save_folder)
     cmds.polyPlane(subdivisionsX=100, subdivisionsY=100, width=100, height=100, name='grid')
     r.setUpRenderer()
