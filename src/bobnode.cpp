@@ -674,6 +674,9 @@ void BobNode::generateSingleConnectedComponent(MString colorConstraintInput, Gri
 #define WHILE
 #ifdef WHILE
     while(sIL > 1 && f < F_MAX) {
+        MString fStr = "f: ";
+        MGlobal::displayInfo(fStr + f);
+
         Grid L_p = layoutReconfiguration(L, wIL, f, colorConstraintInput);
         Brick wIL_p;
         int sIL_p = 0;
@@ -792,7 +795,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 colors.resize(uvs.size(), MColor());
             }
 
-
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
 
@@ -811,7 +813,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
-            //generateSingleConnectedComponent(colorContraintInput, this->grid);
+            // generateSingleConnectedComponent(colorContraintInput, this->grid);
 
 
             if(useMeshColors) {
