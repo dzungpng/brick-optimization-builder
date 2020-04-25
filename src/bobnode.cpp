@@ -9,8 +9,8 @@
 #include <maya/MFloatArray.h>
 #include <maya/MRenderUtilities.h>
 
-MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
-// MString projPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src");
+//MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
+MString projPath = MString("/Volumes/Seagate/brick-optimization-builder/src");
 
 //// helpers for printing
 static void print(MString label, int i) {
