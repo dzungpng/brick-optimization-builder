@@ -276,6 +276,7 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "nodeState";
 	editorTemplate -suppress "colorConstraint";
 	editorTemplate -suppress "exportPath";
+	editorTemplate -suppress "maxLayer";
 	editorTemplate -suppress "outputMesh";
 	editorTemplate -suppress "inputMesh";
 	editorTemplate -suppress "oneXone";
