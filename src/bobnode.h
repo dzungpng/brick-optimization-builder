@@ -98,6 +98,7 @@ public:
     static MObject useMeshColors; /// if true, iterate until max iterations or stable. otherwise, iterate once
     static MObject exportPath;
     static MObject maxLayer;
+    static MObject jpgPath;
 
     // array attrs data for instanced bricks
     static MObject oneXoneArr;
@@ -129,6 +130,7 @@ MObject BobNode::stabilityStatus;
 MObject BobNode::useMeshColors;
 MObject BobNode::exportPath;
 MObject BobNode::maxLayer;
+MObject BobNode::jpgPath;
 
 MObject BobNode::oneXoneArr;
 MObject BobNode::oneXtwoArr;

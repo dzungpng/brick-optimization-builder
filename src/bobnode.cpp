@@ -9,8 +9,8 @@
 #include <maya/MFloatArray.h>
 #include <maya/MRenderUtilities.h>
 
-MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
-// MString projPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src");
+//MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
+MString projPath = MString("/Volumes/Seagate/brick-optimization-builder/src");
 
 //// helpers for printing
 static void print(MString label, int i) {
@@ -76,6 +76,7 @@ MStatus BobNode::initialize()
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
     MFnNumericAttribute maxLayerAttr;
+    MFnTypedAttribute jpgPathAttr; // input for jpg layer folder to save the layer jpgs in
 
     // OUTPUT ATTRIBUTES
     MFnTypedAttribute statusAttr; // Either stable or unstable
@@ -89,6 +90,7 @@ MStatus BobNode::initialize()
     inputMeshAttr.setHidden(true);
     exportStrAttr.setHidden(true);
     maxLayerAttr.setHidden(true);
+    jpgPathAttr.setHidden(false);
 
     MStatus returnStatus;
 
@@ -100,6 +102,10 @@ MStatus BobNode::initialize()
     BobNode::exportPath = exportStrAttr.create(
                 "exportPath", "exp", MFnData::kString, MFnStringData().create(""), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating export Path attribute!\n");
+
+    BobNode::jpgPath = jpgPathAttr.create(
+                "jpgPath", "jpg", MFnData::kString, MFnStringData().create(""), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating jpg Path attribute!\n");
 
     BobNode::maxLayer = maxLayerAttr.create("maxLayer", "ml", MFnNumericData::kInt, -1, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating max layer attribute!\n");
@@ -159,6 +165,9 @@ MStatus BobNode::initialize()
 
     returnStatus = addAttribute(BobNode::exportPath);
     McheckErr(returnStatus, "ERROR in adding export path name attribute!\n");
+
+    returnStatus = addAttribute(BobNode::jpgPath);
+    McheckErr(returnStatus, "ERROR in adding jpg path name attribute!\n");
 
     returnStatus = addAttribute(BobNode::meshTexture);
     McheckErr(returnStatus, "ERROR in adding mesh texture attribute!\n");
@@ -674,6 +683,9 @@ void BobNode::generateSingleConnectedComponent(MString colorConstraintInput, Gri
 #define WHILE
 #ifdef WHILE
     while(sIL > 1 && f < F_MAX) {
+        MString fStr = "f: ";
+        MGlobal::displayInfo(fStr + f);
+
         Grid L_p = layoutReconfiguration(L, wIL, f, colorConstraintInput);
         Brick wIL_p;
         int sIL_p = 0;
@@ -792,7 +804,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
                 colors.resize(uvs.size(), MColor());
             }
 
-
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
 
@@ -811,7 +822,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
-            //generateSingleConnectedComponent(colorContraintInput, this->grid);
+            // generateSingleConnectedComponent(colorContraintInput, this->grid);
 
 
             if(useMeshColors) {
