@@ -6,6 +6,7 @@ import maya.app.general.createImageFormats as createImageFormats
 
 class Render:
     def __init__(self, layer_folder):
+        print("layer folder in renderer: %s" % layer_folder)
         self.rs = renderSetup.model.renderSetup.instance()
         if layer_folder.strip() == '':
             raise ValueError('layer folder is empty! Please specify a layer folder')

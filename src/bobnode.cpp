@@ -9,8 +9,8 @@
 #include <maya/MFloatArray.h>
 #include <maya/MRenderUtilities.h>
 
-//MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src");
-MString projPath = MString("/Volumes/Seagate/brick-optimization-builder/src");
+MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/");
+//MString projPath = MString("/Volumes/Seagate/brick-optimization-builder/");
 
 //// helpers for printing
 static void print(MString label, int i) {
@@ -90,7 +90,7 @@ MStatus BobNode::initialize()
     inputMeshAttr.setHidden(true);
     exportStrAttr.setHidden(true);
     maxLayerAttr.setHidden(true);
-    jpgPathAttr.setHidden(false);
+    jpgPathAttr.setHidden(true);
 
     MStatus returnStatus;
 
@@ -104,7 +104,7 @@ MStatus BobNode::initialize()
     McheckErr(returnStatus, "ERROR in creating export Path attribute!\n");
 
     BobNode::jpgPath = jpgPathAttr.create(
-                "jpgPath", "jpg", MFnData::kString, MFnStringData().create(""), &returnStatus);
+                "jpgPath", "jpg", MFnData::kString, MFnStringData().create(projPath + "layer_jpgs/"), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating jpg Path attribute!\n");
 
     BobNode::maxLayer = maxLayerAttr.create("maxLayer", "ml", MFnNumericData::kInt, -1, &returnStatus);
@@ -758,9 +758,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
         MString colorContraintInput = colorContraintHandle.asString();
         MObject inputMeshObj = inputMeshHandle.asMesh();
 
-        MString type = inputMeshObj.apiTypeStr();
-        MGlobal::displayInfo("mesh type: " + type);
-
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
 
@@ -825,6 +822,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // generateSingleConnectedComponent(colorContraintInput, this->grid);
 
 
+            // 7. create visual output
             if(useMeshColors) {
                 createBricksWithColor();
             } else {
@@ -843,18 +841,20 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             MString exportPath = exportPathHandle.asString();
 
             // directory storing the rendered layers
-            MString imagePath = "/Users/kathrynmiller/Desktop/test_renders/";
+            MDataHandle imagePathHandle = data.inputValue(BobNode::jpgPath, &returnStatus);
+            MString imagePath = imagePathHandle.asString();
 
             // call the script to export pdf
-            MString cmd = "source \"" + projPath + "/BOBNodeGUI.mel" + "\";\n";
-            cmd += "callPythonExport(\"" + exportPath + "\", \"" + imagePath + "\", \"" + projPath + "\");";;
+            MString cmd = "source \"" + projPath + "scripts/BOBNodeGUI.mel" + "\";\n";
+            cmd += "callPythonExport(\"" + exportPath + "\", \"" + imagePath + "\", \"" + projPath + "scripts/\");";;
             MGlobal::executeCommand(cmd);
 
         } else {
             // MGlobal::displayInfo("OTHER STABILITY STATUS");
             // MGlobal::displayInfo(stabStatus);
         }
-        MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
+        // select the node right away
+        MGlobal::executeCommand("select " + nodeName);
 
         return MS::kSuccess;
     }
@@ -1251,7 +1251,7 @@ MStatus initializePlugin( MObject obj )
     // code for setting up the menu items
 
     MString quoteInStr = "\\\"";
-    MString eval = MString("eval(\"source " + quoteInStr + projPath + "/BOBNodeGUI.mel" + quoteInStr + "\");");
+    MString eval = MString("eval(\"source " + quoteInStr + projPath + "scripts/BOBNodeGUI.mel" + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
     MString addNodeCmd =
             MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");

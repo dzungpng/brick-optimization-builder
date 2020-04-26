@@ -133,7 +133,7 @@ global proc hideLayoutChildren() {
 
 global proc updateCurrLayerLabel(string $nodeName) {
 	global int $currLayer;
-	int $maxLayer = getAttr($nodeName + ".maxLayer") - 2;
+	int $maxLayer = getAttr($nodeName + ".maxLayer") - 1;
 	string $label = "Current Layer: " + string($currLayer) + " / " + $maxLayer;
 	text -edit -l $label currLayerStr;
 }
@@ -276,6 +276,7 @@ global proc AEBOBNodeTemplate( string $nodeName ) {
 	editorTemplate -suppress "nodeState";
 	editorTemplate -suppress "colorConstraint";
 	editorTemplate -suppress "exportPath";
+	editorTemplate -suppress "jpgPath";
 	editorTemplate -suppress "maxLayer";
 	editorTemplate -suppress "outputMesh";
 	editorTemplate -suppress "inputMesh";
