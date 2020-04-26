@@ -1,3 +1,6 @@
+import fitz 
+import os, os.path
+import math  
 from maya.app import renderSetup
 import maya.cmds as cmds
 import maya.mel as mel
@@ -6,7 +9,6 @@ import maya.app.general.createImageFormats as createImageFormats
 
 class Render:
     def __init__(self, layer_folder):
-        print("layer folder in renderer: %s" % layer_folder)
         self.rs = renderSetup.model.renderSetup.instance()
         if layer_folder.strip() == '':
             raise ValueError('layer folder is empty! Please specify a layer folder')
@@ -64,13 +66,61 @@ class Render:
             self.renderAndSave(self.layer_folder + layer_name + '.jpg')
 
 
-if __name__ == '__main__':
-    save_folder = cmds.getAttr('BOBNode1.jpgPath')
+def exportLayers(save_folder=""):
+    #save_folder = cmds.getAttr('BOBNode1.jpgPath')
     r = Render(save_folder)
     cmds.polyPlane(subdivisionsX=100, subdivisionsY=100, width=100, height=100, name='grid')
     r.setUpRenderer()
     max_layers = cmds.getAttr('BOBNode1.maxLayer')
     r.renderLayers(max_layers)
+
+
+def exportToPDF(exportPath="", imagePath=""):
+    # open render view
+    #cmds.RenderViewWindow()
+    # first create the layers
+    exportLayers(imagePath)
+    print "inside export" 
+    doc = fitz.open()
+    buffer = 30
+    width = 842
+    height = 595
+    picWidth = (width - (3 * buffer)) / 2.0
+    picHeight = (height - (3 * buffer)) / 2.0
+
+    numLayers = len([name for name in os.listdir(imagePath) if (name.split('.')[-1] in ["png", "jpg", "jpeg"])])
+    numPages = math.ceil(numLayers / 4.0)
     
+    print "img path: %s" % imagePath
+    print "num layers: %s" % str(numLayers)
+    print "num pages: %s" % str(numPages)
+
+    if(numPages == 0):
+        cmds.error("Cannot create pdf with no layers")
+
+    currImg = 1
+    for p in range(int(numPages)):
+        doc.insertPage(p, width=width, height=height)
+        page = doc[p]
+        for r in range(2):
+            for c in range(2):
+                if currImg <= numLayers:
+                    
+                    posX = (c * picWidth) + ((c + 1) * buffer)
+                    posY = (r * picHeight) + ((r + 1) * buffer)
+
+                    rect = fitz.Rect(posX, posY, posX + picWidth, posY + picHeight)
+                        
+                    pix = fitz.Pixmap(imagePath + "layer" + str(currImg) + ".png")
+                    page.insertImage(rect, pixmap=pix, overlay=False)
+                    
+                    # insert text
+                    text = "Layer " + str(currImg)
+                    textPos = fitz.Point(posX + 15, posY - 8)
+                    page.insertText(textPos, text, fontsize = 14, overlay=True)
+                    
+                    currImg += 1
+    
+    doc.save(exportPath)
 
 
