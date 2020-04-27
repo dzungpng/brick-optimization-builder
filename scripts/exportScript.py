@@ -4,11 +4,13 @@ import math
 from maya.app import renderSetup
 import maya.cmds as cmds
 import maya.mel as mel
+import maya.utils
 import maya.app.general.createImageFormats as createImageFormats
 
 
 class Render:
     def __init__(self, layer_folder):
+        print "layer folder: %s" % layer_folder
         self.rs = renderSetup.model.renderSetup.instance()
         if layer_folder.strip() == '':
             raise ValueError('layer folder is empty! Please specify a layer folder')
@@ -52,9 +54,10 @@ class Render:
         fill_num_slots = len(str(num_max_layers))
         
         for i in range(num_max_layers):
-            layer_name = 'layer' + str(i).zfill(fill_num_slots)
+            layerNum = str(i)
+            layer_name = 'layer' + str(i)
             collection_name = 'collection' + str(i)
-            layer_obj  = self.rs.createRenderLayer(layer_name)
+            layer_obj  = renderSetup.model.renderSetup.instance().createRenderLayer(layer_name)
             collec_obj = layer_obj.createCollection(collection_name)
         
             collec_obj.getSelector().staticSelection.set(['grid', layer_name])
@@ -62,7 +65,7 @@ class Render:
             over_obj = collec_obj.createOverride('MyFirstOverride', ov.AbsOverride.kTypeId)    
             over_obj.finalize('defaultRenderQuality.shadingSamples')
         
-            self.rs.switchToLayer(layer_obj)
+            renderSetup.model.renderSetup.instance().switchToLayer(layer_obj)
             self.renderAndSave(self.layer_folder + layer_name + '.jpg')
 
 
@@ -75,12 +78,13 @@ def exportLayers(save_folder=""):
     r.renderLayers(max_layers)
 
 
-def exportToPDF(exportPath="", imagePath=""):
-    # open render view
-    #cmds.RenderViewWindow()
-    # first create the layers
-    exportLayers(imagePath)
+def configLayers(exportPath="", imagePath=""):
+    
     print "inside export" 
+
+    exportLayers(imagePath)
+    print [name for name in os.listdir(imagePath) if (name.split('.')[-1] in ["jpg"])]
+
     doc = fitz.open()
     buffer = 30
     width = 842
@@ -88,7 +92,7 @@ def exportToPDF(exportPath="", imagePath=""):
     picWidth = (width - (3 * buffer)) / 2.0
     picHeight = (height - (3 * buffer)) / 2.0
 
-    numLayers = len([name for name in os.listdir(imagePath) if (name.split('.')[-1] in ["png", "jpg", "jpeg"])])
+    numLayers = len([name for name in os.listdir(imagePath) if (name.split('.')[-1] in ["jpg"])])
     numPages = math.ceil(numLayers / 4.0)
     
     print "img path: %s" % imagePath
@@ -111,7 +115,7 @@ def exportToPDF(exportPath="", imagePath=""):
 
                     rect = fitz.Rect(posX, posY, posX + picWidth, posY + picHeight)
                         
-                    pix = fitz.Pixmap(imagePath + "layer" + str(currImg) + ".png")
+                    pix = fitz.Pixmap(imagePath + "layer" + str(currImg) + ".jpg")
                     page.insertImage(rect, pixmap=pix, overlay=False)
                     
                     # insert text
@@ -122,5 +126,12 @@ def exportToPDF(exportPath="", imagePath=""):
                     currImg += 1
     
     doc.save(exportPath)
+
+def exportToPDF(exportPath="", imagePath=""):
+    # open render view
+    #cmds.RenderViewWindow()
+    # first create the layers
+    #exportLayers(imagePath)
+    maya.utils.executeDeferred(configLayers, exportPath, imagePath)
 
 
