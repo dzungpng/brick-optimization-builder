@@ -52,7 +52,7 @@ Our end result is an MFnArrayData object with transformation values. These value
 
 There is one third party library we needed to make use of in order to implement our tool. We integrated Gurobi Optimization (https://www.gurobi.com/) and their interior point method to solve for the smallest maximum capacity present in the brick mesh. This is the library used by the authors of Legolization: Optimizing LEGO Designs and they provide a free academic license for their solver libraries. 
 
-# Installation and Setup
+## Installation and Setup
 
 
 
