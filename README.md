@@ -23,8 +23,36 @@ Our tool has one objective and that is to eventually provide the builder with a 
 ### Tool Input and Output
 The input to our tool is a 3 dimensional mesh present in the current Maya scene. A BOBNode can be created just with keypresses by selecting said mesh and going to the menu bar to create a BOBNode. Most attributes on the BOBNode can then be modified just using a mouse or trackpad though keyboard inputs are necessary for modifying the maximum number of iterations (seen in the proxy GUI below). All other operations are performed through button presses.
 
-Our tool will create a mesh composed of LEGO geometry as output. If choosing to iterate manually (that is, “Iterate until stable” is not checked), the user can see whether or not this layout is stable through the BOBNode attributes. Time permitting, we may also investigate using another third party software to output a .pdf file with images of each layer of the final LEGO mesh to act as an instruction set for the user. 
+Our tool creates a mesh composed of LEGO geometry as output. If choosing to iterate manually (that is, “Iterate until stable” is not checked), the user can see whether or not this layout is stable through the BOBNode attributes. Time permitting, we may also investigate using another third party software to output a .pdf file with images of each layer of the final LEGO mesh to act as an instruction set for the user. 
 
+# Software Design and Development
+We used the following classes and data structures to carry out the algorithms presented in our paper. 
+
+Brick:
+The brick class represents LEGO (Brick) objects. They formed the building blocks for the entire tool and contain the following information:
+Connected Component ID: ID to associate each brick with its connected component that is calculated once per iteration of the stability aware refinement algorithm.
+Individual ID: unique ID for each brick. This is used to check neighboring bricks in the brick grid (described below). 
+Enum type: the type of LEGO block this brick represents. For example, it could be a 1x1, 2x1, 2x2 etc. lego and this inherently tells us the scale of the brick as well.
+Position: position in world space of the brick
+Rotation: rotation of the brick about the world y-axis (since all bricks are axi aligned)
+Color: color associated with this brick. This is defined based on the original input mesh. 
+	
+Grid:
+The grid class holds information representing the entire LEGO sculpture. It allows us to access LEGOs in an organized fashion, thus speeding up computations like searching for neighbors surrounding a given brick as well as determining which LEGOs are connected. It has the following member variables:
+Array baseGrid: the private, internal data structure used to store Brick pointers
+Dimensions: a 3-dimensional vector storing the size of our bounding box and thus internal grid size
+
+Graph:
+The graph class is a helper class for representing connectivity of bricks. It is accessible by the Grid class and used for determining connected components. The underlying structure of each graph is an adjacency list with nodes being Brick* objects. It also has a method for computing connected components by running Depth First Search on its nodes.
+
+MPxNode (BOBNode):
+The MPxNode created for our authoring tool is its primary component, representing the legolization process as a whole. Each node maintains a Grid object that holds all current bricks in the mesh reconstruction. On initialization, a BOBNode takes its input mesh and voxelize it. The voxelized mesh is then used to populate the Grid member variable with 1x1 brick objects. The compute method of the node is used to perform improvements on the current brick layout with the stability analysis method outlined above. 
+	
+Our end result is an MFnArrayData object with transformation values. These values are then used to instance geometry and provide the user with a visual representation of the legolized mesh. 
+
+There is one third party library we needed to make use of in order to implement our tool. We integrated Gurobi Optimization (https://www.gurobi.com/) and their interior point method to solve for the smallest maximum capacity present in the brick mesh. This is the library used by the authors of Legolization: Optimizing LEGO Designs and they provide a free academic license for their solver libraries. 
+
+# Installation and Setup
 
 
 
