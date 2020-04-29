@@ -457,14 +457,14 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
     std::string t = texture.asChar();
     if (t.find(".color") != std::string::npos || t.find(".baseColor") != std::string::npos) { // sample color
-        colors.resize(uvs.size(), MColor(.6, .2, .2));
+      //  colors.resize(uvs.size(), MColor(.6, .2, .2));
         //        MString cmd = "";
         //        cmd += "getAttr(\"" + texture + "\");";
         //        MDoubleArray result;
         //        MGlobal::executeCommand(cmd, result);
         //        MColor col = MColor(result[0], result[1], result[2]);
         //        colors.push_back(col);
-/*
+
         /// TODO: test this with plain lambert shaders since above doesn't work when there aren't textures
         int numSamples = uvs.size();
 
@@ -507,7 +507,7 @@ void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector
             MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
             colors.push_back(col);
         }
-        */
+
     } else { // sample from texture
         for(int i = 0; i < uvs.size(); i++) {
             MString u = "";
