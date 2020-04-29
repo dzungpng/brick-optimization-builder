@@ -1,4 +1,5 @@
-# Brick-Optimization-Builder (B.O.B)
+Brick-Optimization-Builder (B.O.B)
+====================================
 
 ## I. Project Summary
 The goal of this project is to implement a tool for the creation and analysis of LEGO brick layouts. The usefulness of such a tool arises from the difficulty of both designing LEGO layouts and estimating their stability. There are many tools available for digitally constructing a LEGO model. This takes the tedium out of having to deconstruct failed designs or portions of sculptures in the middle of construction because the user already knows what the finished arrangement of bricks will look like as well as how many of each type are necessary. However, such tools do not tell the user if the digital model will hold up in real life and that is what our tool seeks to remedy. 
@@ -25,7 +26,7 @@ The input to our tool is a 3 dimensional mesh present in the current Maya scene.
 
 Our tool creates a mesh composed of LEGO geometry as output. If choosing to iterate manually (that is, “Iterate until stable” is not checked), the user can see whether or not this layout is stable through the BOBNode attributes. Time permitting, we may also investigate using another third party software to output a .pdf file with images of each layer of the final LEGO mesh to act as an instruction set for the user. 
 
-# Software Design and Development
+## Software Design and Development
 We used the following classes and data structures to carry out the algorithms presented in our paper. 
 
 Brick:
@@ -53,7 +54,13 @@ Our end result is an MFnArrayData object with transformation values. These value
 There is one third party library we needed to make use of in order to implement our tool. We integrated Gurobi Optimization (https://www.gurobi.com/) and their interior point method to solve for the smallest maximum capacity present in the brick mesh. This is the library used by the authors of Legolization: Optimizing LEGO Designs and they provide a free academic license for their solver libraries. 
 
 ## Installation and Setup
+Hardware: MacOS.
 
+To run the project on your computer, first clone it. Then build the project with your favorite C++ compiler. We recommend using QT Creator with Clang. Before building the project, change the `projPath` at the top of `bobnode.cpp` to the root directory of your project. Also on line 3 inside of BOBNodeGUI.mel, change the directory to your base directory. 
+
+After building your project, go into your terminal and copy the `AEBOBNodeTemplate.mel` file into the path of your Maya's environment. To find this, open up Maya and type into the Maya editor `getenv MAYA_SCRIPT_PATH`. Finally, head to your terminal and 
+
+Now we are ready to import the plugin into Maya. Make sure you have Maya developer packages installed (should come by default if you just install Maya from the Autodesk website). 
 
 
 
