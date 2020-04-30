@@ -1,6 +1,6 @@
 Brick-Optimization-Builder (B.O.B)
 ====================================
-
+![Image description](https://imgflip.com/gif/3z14y7)
 ## I. Project Summary
 The goal of this project is to implement a tool for the creation and analysis of LEGO brick layouts. The usefulness of such a tool arises from the difficulty of both designing LEGO layouts and estimating their stability. There are many tools available for digitally constructing a LEGO model. This takes the tedium out of having to deconstruct failed designs or portions of sculptures in the middle of construction because the user already knows what the finished arrangement of bricks will look like as well as how many of each type are necessary. However, such tools do not tell the user if the digital model will hold up in real life and that is what our tool seeks to remedy. 
 
