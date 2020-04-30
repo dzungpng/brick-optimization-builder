@@ -29,7 +29,7 @@ The input to our tool is a 3 dimensional mesh present in the current Maya scene.
 
 Our tool creates a mesh composed of LEGO geometry as output. If choosing to iterate manually (that is, “Iterate until stable” is not checked), the user can see whether or not this layout is stable through the BOBNode attributes. Time permitting, we may also investigate using another third party software to output a .pdf file with images of each layer of the final LEGO mesh to act as an instruction set for the user. 
 
-## Software Design and Development
+## III. Software Design and Development
 We used the following classes and data structures to carry out the algorithms presented in our paper. 
 
 Brick:
@@ -54,7 +54,7 @@ The MPxNode created for our authoring tool is its primary component, representin
 	
 Our end result is an MFnArrayData object with transformation values. These values are then used to instance geometry and provide the user with a visual representation of the legolized mesh. 
 
-## Installation and Setup
+## IV. Installation and Setup
 Hardware: MacOS.
 
 To run the project on your computer, first clone it. Then build the project with your favorite C++ compiler. We recommend using QT Creator with Clang. Before building the project, change the `projPath` at the top of `bobnode.cpp` to the root directory of your project. Also on line 3 inside of BOBNodeGUI.mel, change the directory to your base directory. 
