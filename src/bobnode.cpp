@@ -9,6 +9,9 @@
 #include <maya/MFloatArray.h>
 #include <maya/MRenderUtilities.h>
 
+MString projPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/");
+//MString projPath = MString("/Volumes/Seagate/brick-optimization-builder/");
+
 //// helpers for printing
 static void print(MString label, int i) {
     MString s = "";
@@ -20,6 +23,14 @@ static void printF(MString label, float i) {
     MString s = "";
     s += i;
     MGlobal::displayInfo(label + " " + i);
+}
+
+static void printVec3(MString label, glm::vec3 v) {
+    MGlobal::displayInfo(label);
+    printF("X:", v[0]);
+    printF("Y", v[1]);
+    printF("Z:", v[2]);
+    MGlobal::displayInfo("");
 }
 
 static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> &adjList) {
@@ -35,6 +46,20 @@ static void printAdjList(std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickI
     MGlobal::displayInfo("\n END ADJ LIST ");
 }
 
+static void printBaseGrid(Grid &grid) {
+    MGlobal::displayInfo("ALL BRICKS IN GRID");
+    for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
+        Brick b = it->second;
+        print("ID:", b.getId());
+        MGlobal::displayInfo("BRICK POS:");
+        print("X:", b.getPos()[0]);
+        print("Y:", b.getPos()[1]);
+        print("Z:", b.getPos()[2]);
+        MGlobal::displayInfo("\n");
+    }
+    MGlobal::displayInfo("\n");
+}
+
 
 void* BobNode::creator()
 {
@@ -46,11 +71,12 @@ MStatus BobNode::initialize()
 
     // INPUT ATTRIBUTES
     MFnTypedAttribute stringAttr; // use for input mesh name and file name
+    MFnTypedAttribute exportStrAttr;
     MFnTypedAttribute inputMeshAttr; // Input mesh (already voxelized by the voxelizerNode)
     MFnTypedAttribute colorContraintAttr; // HARD or SOFT
-    MFnNumericAttribute iterAttr; // max Iterations or until stable
     MFnNumericAttribute untilStableAttr; // bool for iterating until stable or just once
-
+    MFnNumericAttribute maxLayerAttr;
+    MFnTypedAttribute jpgPathAttr; // input for jpg layer folder to save the layer jpgs in
 
     // OUTPUT ATTRIBUTES
     MFnTypedAttribute statusAttr; // Either stable or unstable
@@ -61,8 +87,10 @@ MStatus BobNode::initialize()
     outputMeshAttr.setStorable(false);
     outputMeshAttr.setHidden(true);
     colorContraintAttr.setHidden(false);
-    iterAttr.setHidden(true);
     inputMeshAttr.setHidden(true);
+    exportStrAttr.setHidden(true);
+    maxLayerAttr.setHidden(true);
+    jpgPathAttr.setHidden(true);
 
     MStatus returnStatus;
 
@@ -71,6 +99,17 @@ MStatus BobNode::initialize()
                 "inputMeshName", "ipn", MFnData::kString, MFnStringData().create(""), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh name attribute!\n");
 
+    BobNode::exportPath = exportStrAttr.create(
+                "exportPath", "exp", MFnData::kString, MFnStringData().create(""), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating export Path attribute!\n");
+
+    BobNode::jpgPath = jpgPathAttr.create(
+                "jpgPath", "jpg", MFnData::kString, MFnStringData().create(projPath + "layer_jpgs/"), &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating jpg Path attribute!\n");
+
+    BobNode::maxLayer = maxLayerAttr.create("maxLayer", "ml", MFnNumericData::kInt, -1, &returnStatus);
+    McheckErr(returnStatus, "ERROR in creating max layer attribute!\n");
+
     BobNode::meshTexture = stringAttr.create(
                 "meshTexture", "mt", MFnData::kString, MFnStringData().create("None"), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating mesh texture attribute!\n");
@@ -78,13 +117,10 @@ MStatus BobNode::initialize()
     BobNode::inputMesh = inputMeshAttr.create("inputMesh", "inMesh", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating input mesh attribute!\n");
 
-    MString defaultColorConstraint = "HARD";
+    MString defaultColorConstraint = "SOFT";
     BobNode::colorConstraint = colorContraintAttr.create(
                 "colorConstraint", "col", MFnData::kString, MFnStringData().create(defaultColorConstraint), &returnStatus);
     McheckErr(returnStatus, "ERROR in creating color contraint attribute!\n");
-
-    BobNode::iteration = iterAttr.create("iterations", "itr", MFnNumericData::kInt, 1, &returnStatus);
-    McheckErr(returnStatus, "ERROR in creating iteration attribute!\n");
 
     BobNode::useMeshColors = untilStableAttr.create("useMeshColors", "umc", MFnNumericData::kBoolean, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR in creating use mesh colors attribute!\n");
@@ -125,7 +161,13 @@ MStatus BobNode::initialize()
 
     // ADD ATTRIBUTES
     returnStatus = addAttribute(BobNode::inputMeshName);
-    McheckErr(returnStatus, "ERROR in adding input mesh nameattribute!\n");
+    McheckErr(returnStatus, "ERROR in adding input mesh name attribute!\n");
+
+    returnStatus = addAttribute(BobNode::exportPath);
+    McheckErr(returnStatus, "ERROR in adding export path name attribute!\n");
+
+    returnStatus = addAttribute(BobNode::jpgPath);
+    McheckErr(returnStatus, "ERROR in adding jpg path name attribute!\n");
 
     returnStatus = addAttribute(BobNode::meshTexture);
     McheckErr(returnStatus, "ERROR in adding mesh texture attribute!\n");
@@ -136,9 +178,6 @@ MStatus BobNode::initialize()
     returnStatus = addAttribute(BobNode::colorConstraint);
     McheckErr(returnStatus, "ERROR in adding color constraint attribute!\n");
 
-    returnStatus = addAttribute(BobNode::iteration);
-    McheckErr(returnStatus, "ERROR in adding iteration attribute!\n");
-
     returnStatus = addAttribute(BobNode::useMeshColors);
     McheckErr(returnStatus, "ERROR in adding iterate until stable attribute!\n");
 
@@ -147,6 +186,9 @@ MStatus BobNode::initialize()
 
             returnStatus = addAttribute(BobNode::outputMesh);
     McheckErr(returnStatus, "ERROR in creating output mesh attribute!\n");
+
+    returnStatus = addAttribute(BobNode::maxLayer);
+    McheckErr(returnStatus, "ERROR in adding max layer attribute!\n");
 
     returnStatus = addAttribute(BobNode::oneXoneArr);
     McheckErr(returnStatus, "ERROR in creating output attribute!\n");
@@ -203,8 +245,9 @@ MStatus BobNode::initialize()
 }
 
 static bool isValidMerge(glm::vec2 scale, MColor col1, MColor col2, MString colorConstraintInput) {
+    float epsilon = .01;
     if (colorConstraintInput == "HARD") { // check that colors are equivalent first
-        if (abs(col1[0] - col2[0]) > .001 || abs(col1[1] - col2[1]) > .001 || abs(col1[2] - col2[2]) > .001) {
+        if (col1 != col2) {
             return false;
         }
     }
@@ -320,21 +363,54 @@ void BobNode::mergeBricks(const Brick &brick1, const Brick &brick2, Brick &newBr
         newScale = glm::vec2(brick1.getScale()[0] + brick2.getScale()[0], brick1.getScale()[1]);
         newPos = glm::vec3(std::min(pos1[0], pos2[0]), pos1[1], pos1[2]);
     }
+
+    //    MGlobal::displayInfo("MERGE BRICKS:");
+    //    print("brick1 id:", brick1.getId());
+    //    print("brick2 id:", brick2.getId());
+    //    MGlobal::displayInfo("brick1 pos:");
+    //    print("X:", pos1[0]);
+    //    print("Y:", pos1[1]);
+    //    print("Z:", pos1[2]);
+
+    //    MGlobal::displayInfo("brick1 scale:");
+    //    print("X:", brick1.getScale()[0]);
+    //    print("Z:", brick1.getScale()[1]);
+
+    //    MGlobal::displayInfo("brick2 pos:");
+    //    print("X:", pos2[0]);
+    //    print("Y:", pos2[1]);
+    //    print("Z:", pos2[2]);
+
+    //    MGlobal::displayInfo("brick2 scale:");
+    //    print("X:", brick2.getScale()[0]);
+    //    print("Z:", brick2.getScale()[1]);
+
+    //    MGlobal::displayInfo("new pos:");
+    //    print("X:", newPos[0]);
+    //    print("Y:", newPos[1]);
+    //    print("Z:", newPos[2]);
+
+    //    MGlobal::displayInfo("new scale:");
+    //    print("X:", newScale[0]);
+    //    print("Z:", newScale[1]);
     // update grid
     newBrick.setPos(newPos);
     newBrick.setScale(newScale);
     newBrick.setType(BRICK);
     newBrick.setColor(brick1.getColor());
     L.setBrick(newBrick);
+
+    //    print("new brick id:", newBrick.getId());
+    MGlobal::displayInfo("");
 }
 
 void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &brickSet, MString colorConstraintInput, Grid& L) {
     ///TODO: replace with more efficient way to get all bricks into vector (upon initialization of adjList probably)
     /// right now, use to make getting random key for adjList bc maps take O(n) time to get n^th key each time
     /// -> rather than O(n) to just init this vector and pop/push_back on queries
-
     std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds> adjList = std::map<Brick, std::set<Brick, cmpBrickIds>, cmpBrickIds>();
     updateAdjBricks(brickSet, adjList, colorConstraintInput, L);
+
     while(adjList.size() > 0) {
         int randIdx1 = std::rand() % adjList.size();
         auto it1 = std::begin(adjList);
@@ -352,7 +428,6 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 
             // add new brick to grid
             Brick newBrick = Brick();
-
 
             mergeBricks(brick1, brick2, newBrick, L);
 
@@ -382,13 +457,58 @@ void BobNode::generateInitialMaximalLayout(const std::set<Brick, cmpBrickIds> &b
 void BobNode::getMeshColors(const std::vector<glm::vec2> &uvs, const std::vector<MFloatPoint> &points, const MString &texture, std::vector<MColor> &colors) {
     std::string t = texture.asChar();
     if (t.find(".color") != std::string::npos || t.find(".baseColor") != std::string::npos) { // sample color
-        MString cmd = "";
-        cmd += "getAttr(\"" + texture + "\");";
-        MDoubleArray result;
-        MGlobal::executeCommand(cmd, result);
-        MColor col = MColor(result[0], result[1], result[2]);
-        colors.push_back(col);
-    } else {
+      //  colors.resize(uvs.size(), MColor(.6, .2, .2));
+        //        MString cmd = "";
+        //        cmd += "getAttr(\"" + texture + "\");";
+        //        MDoubleArray result;
+        //        MGlobal::executeCommand(cmd, result);
+        //        MColor col = MColor(result[0], result[1], result[2]);
+        //        colors.push_back(col);
+
+        /// TODO: test this with plain lambert shaders since above doesn't work when there aren't textures
+        int numSamples = uvs.size();
+
+        MFloatPointArray pointArray;
+        MFloatPointArray refPointArray;
+        MFloatVectorArray normalArray;
+        pointArray.setLength(numSamples);
+
+        MFloatArray uCoords;
+        MFloatArray vCoords;
+        refPointArray.setLength(numSamples);
+        for(int i = 0; i < points.size(); i++) {
+            MFloatPoint point = points[i];
+            pointArray.set(point, i);
+            refPointArray.set(point, i);
+        }
+
+        // create return args
+        MFloatVectorArray resultColors;
+        MFloatVectorArray resultTransparencies;
+
+        MFloatMatrix cam;
+        MStatus status = MRenderUtil::sampleShadingNetwork(texture,
+                                                           numSamples,
+                                                           false, // use shadow map
+                                                           false, // reuse map
+                                                           cam, // camera matrix
+                                                           &pointArray,
+                                                           &uCoords,
+                                                           &vCoords,
+                                                           &normalArray, // normals
+                                                           &refPointArray,
+                                                           NULL, // tan us
+                                                           NULL, // tan vs
+                                                           NULL, // filter sizes
+                                                           resultColors,
+                                                           resultTransparencies);
+
+        for(int i = 0; i < resultColors.length(); i++) {
+            MColor col = MColor(resultColors[i][0], resultColors[i][1], resultColors[i][2]);
+            colors.push_back(col);
+        }
+
+    } else { // sample from texture
         for(int i = 0; i < uvs.size(); i++) {
             MString u = "";
             u += uvs[i][0];
@@ -516,7 +636,7 @@ void BobNode::componentAnalysis(int& sIL, Brick& wIL, Grid& L) {
         /// Iterate the array until found an entry with a weight larger than or equal to the random number
         if(probabilities[i] >= r) {
             wIL = *graph.getBrickWithId(i);
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
             info = "wIL: ";
             MGlobal::displayInfo(info + i);
@@ -563,6 +683,9 @@ void BobNode::generateSingleConnectedComponent(MString colorConstraintInput, Gri
 #define WHILE
 #ifdef WHILE
     while(sIL > 1 && f < F_MAX) {
+        MString fStr = "f: ";
+        MGlobal::displayInfo(fStr + f);
+
         Grid L_p = layoutReconfiguration(L, wIL, f, colorConstraintInput);
         Brick wIL_p;
         int sIL_p = 0;
@@ -624,9 +747,6 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
         McheckErr(returnStatus, "ERROR in getting useMeshColors handle!\n");
         bool useMeshColors = useMeshColorsHandle.asBool();
 
-        MDataHandle iterationHandle = data.inputValue(BobNode::iteration, &returnStatus);
-        McheckErr(returnStatus, "ERROR in getting iteration handle!\n");
-
         // GET OUTPUT HANDLES
         MDataHandle outputMeshHandle = data.outputValue(BobNode::outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR in getting output mesh handle!\n");
@@ -636,11 +756,7 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
 
         // INITIALIZE INPUTS
         MString colorContraintInput = colorContraintHandle.asString();
-        int iterationInput = iterationHandle.asInt();
         MObject inputMeshObj = inputMeshHandle.asMesh();
-
-        MString type = inputMeshObj.apiTypeStr();
-        MGlobal::displayInfo("mesh type: " + type);
 
         // INITIALIZE OUTPUTS
         MString stabStatus = stabilityStatusHandle.asString();
@@ -660,6 +776,12 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             // Initialize voxel grid
             grid.initialize(boundingBox);
 
+            // set max layer
+            MPlug maxLayerPlug = fnNode.findPlug(BobNode::maxLayer, returnStatus);
+            McheckErr(returnStatus, "ERROR in getting max layer plug!\n");
+            maxLayerPlug.setInt(int(grid.getDim()[1]));
+            print("grid dim: ", grid.getDim()[1]);
+
             // 2. Determine which voxel centerpoints are contained within the mesh
             std::vector<MFloatPoint> voxels = std::vector<MFloatPoint>();
             std::vector<glm::vec2> uvs = std::vector<glm::vec2>();
@@ -672,7 +794,12 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             McheckErr(returnStatus, "ERROR in creating voxelized output mesh data!\n");
 
             // get colors associated with uvs by running mel script
-            getMeshColors(uvs, voxels, meshTexture, colors);
+            if(useMeshColors) {
+                getMeshColors(uvs, voxels, meshTexture, colors);
+            } else {
+                // fill colors with (0, 0, 0)
+                colors.resize(uvs.size(), MColor());
+            }
 
             // 4. Create a cubic polygon for each voxel and populate the MeshData object
             voxelizer.createVoxelMesh(voxels, colors, newOutputMeshData, grid);
@@ -692,9 +819,10 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             generateInitialMaximalLayout(brickSet, colorContraintInput, this->grid);
 
             // 6. Create a single connected component
-            generateSingleConnectedComponent(colorContraintInput, this->grid);
+            // generateSingleConnectedComponent(colorContraintInput, this->grid);
 
 
+            // 7. create visual output
             if(useMeshColors) {
                 createBricksWithColor();
             } else {
@@ -707,30 +835,36 @@ MStatus BobNode::compute(const MPlug& plug, MDataBlock& data) {
             stabilityPlug.setString("Initialized");
             MGlobal::executeCommand("setAttr -type \"string\" " + nodeName + ".stabilityStatus \"Initialized\";");
 
-        } else if (stabStatus == MString("Computing...")) {
-            // MGlobal::displayInfo("ITERATING");
-            // set status to "Stable" or "Unstable" based on analysis
-            // lock iterate button if mesh is stable
-            // NOTE; do we want to also keep track of a number to just show us how many iterations we've performed?
+        } else if (stabStatus == MString("Exporting...")) {
+            // get path for exported pdf
+            MDataHandle exportPathHandle = data.inputValue(BobNode::exportPath, &returnStatus);
+            MString exportPath = exportPathHandle.asString();
 
-            MPlug stabilityPlug = fnNode.findPlug("stabilityStatus");
-            stabilityPlug.setString("Stable");
-            // re-enable the iterate button - UNLESS layout is already stable
-            MGlobal::executeCommand("button -e -enable true IterateButton;");
+            // directory storing the rendered layers
+            MDataHandle imagePathHandle = data.inputValue(BobNode::jpgPath, &returnStatus);
+            MString imagePath = imagePathHandle.asString();
+
+            // call the script to export pdf
+            MString cmd = "source \"" + projPath + "scripts/BOBNodeGUI.mel" + "\";\n";
+            cmd += "callPythonExport(\"" + exportPath + "\", \"" + imagePath + "\", \"" + projPath + "scripts/\");";;
+            MGlobal::executeCommand(cmd);
+
         } else {
             // MGlobal::displayInfo("OTHER STABILITY STATUS");
             // MGlobal::displayInfo(stabStatus);
         }
-        MGlobal::executeCommand("dgdirty(\"" + nodeName + "\");");
+        // select the node right away
+        MGlobal::executeCommand("select " + nodeName);
 
         return MS::kSuccess;
     }
-    // MGlobal::displayInfo("FINISH COMPUTE");
     return MS::kFailure;
 }
 
 MStatus BobNode::createBricksWithColor() {
-    MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\");");
+    // create legoLayout folder and sort outliner alphabetically
+    MGlobal::executeCommand("string $legoGrp = group(\"-em\", \"-name\", \"legoLayout\"); outlinerEditor -edit -sortOrder dagName outlinerPanel1;");
+
     for (std::map<int, Brick>::iterator it=grid.allBricks.begin(); it!=grid.allBricks.end(); ++it) {
         Brick b = it->second;
         if(b.type != EMPTY) {
@@ -741,12 +875,15 @@ MStatus BobNode::createBricksWithColor() {
 
             // get layer folder name
             MString height = "";
-            height += brickPos[1];
+            if(int(brickPos[1]) < 10) {
+                height += "0";
+            }
+            height += int(brickPos[1]);
             MString layerStr = "layer" + height;
+
             // create folder for layer if there isn't one
-            cmd += "if(!exists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
+            cmd += "if(!objExists(\"legoLayout|\"+\"" + layerStr + "\" )) {group(\"-em\", \"-parent\", \"legoLayout\", \"-name\", \"" + layerStr + "\");}";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
             cmd = "";
 
             // create name of brick to duplicate
@@ -756,8 +893,6 @@ MStatus BobNode::createBricksWithColor() {
             brickStr += "x";
             int maxDim = std::max(brickScale[0], brickScale[1]);
             brickStr += maxDim;
-
-            MGlobal::displayInfo("brick str: " + brickStr);
 
             cmd = "select \"bricks|" + brickStr + " \";\n";
             cmd += "select(duplicate());\n";
@@ -787,7 +922,6 @@ MStatus BobNode::createBricksWithColor() {
             cmd += "select(\"legoLayout\");";
             cmd += "showHidden -a -b";
             MGlobal::executeCommand(cmd);
-            MGlobal::displayInfo(cmd);
         }
     }
 }
@@ -1082,7 +1216,7 @@ MStatus BobNode::setupBrickDataHandles(MDataBlock& data) {
         }
     }
 
-    // print("ALL BRICKS SIZE:", grid.allBricks.size());
+
 
     oneXoneDataHandle.setMObject(oneXoneObject);
     oneXtwoDataHandle.setMObject(oneXtwoObject);
@@ -1115,13 +1249,9 @@ MStatus initializePlugin( MObject obj )
     }
 
     // code for setting up the menu items
-    //    MString guiPath = plugin.loadPath() + MString("/brick-optimization-builder/src/BOBNodeGUI.mel");
-    //MString guiPath = MString("/Users/kathrynmiller/Documents/MayaPlugins/BOBPlugin/brick-optimization-builder/src/BOBNodeGUI.mel");
-    MString guiPath = MString("/Users/dzungnguyen/OneDrive - PennO365/classes/cis660/brick-optimization-builder/src/BOBNodeGUI.mel");
 
-    // MGlobal::displayInfo("PATH: " + guiPath);
     MString quoteInStr = "\\\"";
-    MString eval = MString("eval(\"source " + quoteInStr + guiPath + quoteInStr + "\");");
+    MString eval = MString("eval(\"source " + quoteInStr + projPath + "scripts/BOBNodeGUI.mel" + quoteInStr + "\");");
     MString menu = MString("menu - parent MayaWindow - l \"BOBNode\" BOBNode;");
     MString addNodeCmd =
             MString("menuItem - label \"Create BOBNode\" - parent MayaWindow|BOBNode - command \"createBOBNode()\" BOBNodeItem;");
