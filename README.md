@@ -70,7 +70,9 @@ Now we are ready to import the plugin into Maya. Make sure you have Maya develop
 
 To create a BOBNode instance, click on a mesh in the scene and click BOBNode > createBOBNode. You should see the following GUI:
 
-![](./images/UI.png)
+<p align="center">
+  <img src="./images/UI.png" alt="bob"/>
+</p>
 
 Pre-Initialization: There are two things to consider before creating the LEGO layout. If the mesh has a texture you would like reflected in the final LEGO model, check “Use Mesh Colors.” 
 Note: Unless this box is checked, you will not be able to export the layout as a pdf or step through the layout after initialization. This is because the layout is otherwise created using instancing
@@ -80,7 +82,10 @@ Post-Initialization: If mesh colors were used, the mesh can be navigated with th
 
 ## Happy Lego-ing~!
 
-![](./images/forms.gif)
+<p align="center">
+  <img src="./images/forms.gif" alt="bob"/>
+</p>
+
 
 
 
