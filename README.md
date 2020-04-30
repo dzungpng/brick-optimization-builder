@@ -1,6 +1,8 @@
 Brick-Optimization-Builder (B.O.B)
 ====================================
-![Image description](https://imgflip.com/gif/3z14y7)
+
+![](./images/bob.png)
+
 ## I. Project Summary
 The goal of this project is to implement a tool for the creation and analysis of LEGO brick layouts. The usefulness of such a tool arises from the difficulty of both designing LEGO layouts and estimating their stability. There are many tools available for digitally constructing a LEGO model. This takes the tedium out of having to deconstruct failed designs or portions of sculptures in the middle of construction because the user already knows what the finished arrangement of bricks will look like as well as how many of each type are necessary. However, such tools do not tell the user if the digital model will hold up in real life and that is what our tool seeks to remedy. 
 
@@ -51,16 +53,33 @@ The MPxNode created for our authoring tool is its primary component, representin
 	
 Our end result is an MFnArrayData object with transformation values. These values are then used to instance geometry and provide the user with a visual representation of the legolized mesh. 
 
-There is one third party library we needed to make use of in order to implement our tool. We integrated Gurobi Optimization (https://www.gurobi.com/) and their interior point method to solve for the smallest maximum capacity present in the brick mesh. This is the library used by the authors of Legolization: Optimizing LEGO Designs and they provide a free academic license for their solver libraries. 
-
 ## Installation and Setup
 Hardware: MacOS.
 
 To run the project on your computer, first clone it. Then build the project with your favorite C++ compiler. We recommend using QT Creator with Clang. Before building the project, change the `projPath` at the top of `bobnode.cpp` to the root directory of your project. Also on line 3 inside of BOBNodeGUI.mel, change the directory to your base directory. 
 
-After building your project, go into your terminal and copy the `AEBOBNodeTemplate.mel` file into the path of your Maya's environment. To find this, open up Maya and type into the Maya editor `getenv MAYA_SCRIPT_PATH`. Finally, head to your terminal and 
+After building your project, go into your terminal and copy the `AEBOBNodeTemplate.mel` file into the path of your Maya's environment. To find this, open up Maya and type into the Maya editor `getenv MAYA_SCRIPT_PATH`. Finally, head to your terminal to install the pdf export package [pymupdf](https://github.com/pymupdf/PyMuPDF). Type the following commands into your terminal (make sure [pip](https://pip.pypa.io/en/stable/) is installed):
 
-Now we are ready to import the plugin into Maya. Make sure you have Maya developer packages installed (should come by default if you just install Maya from the Autodesk website). 
+```
+$cd /Applications/Autodesk/maya20[xx]/Maya.app/Contents/bin
+$./mayapy -m pip install pymupdf
+```
+
+Now we are ready to import the plugin into Maya. Make sure you have Maya developer packages installed (should come by default if you just install Maya from the Autodesk website). Next, open up Maya (any version from 2017 and newer should work) and go to Windows > Settings/Preferences > Plug-in Manager and click on the Browse button. Locate the bundle file that was compiled from your project. You should see the `BOBNode` option added to your topmost panel to the right of `Help`. 
+
+To create a BOBNode instance, click on a mesh in the scene and click BOBNode > createBOBNode. You should see the following GUI:
+
+![](./images/UI.png)
+
+Pre-Initialization: There are two things to consider before creating the LEGO layout. If the mesh has a texture you would like reflected in the final LEGO model, check “Use Mesh Colors.” 
+Note: Unless this box is checked, you will not be able to export the layout as a pdf or step through the layout after initialization. This is because the layout is otherwise created using instancing
+The second thing to consider is whether or not you want to strictly stick to the color boundaries specified by the texture. The color constraint dropdown has two options, “SOFT” and “HARD.” Soft color constraints will merge two bricks even if they aren’t the same color and assign the new brick color arbitrarily. Hard color constraints will only merge two bricks if they have the same original color. This will affect the final color output, and again can only be used if “Use Mesh Colors” is checked. Once you have decided these attribute values, press “Initialize.”
+
+Post-Initialization: If mesh colors were used, the mesh can be navigated with the “Step” button in the node’s attribute editor. This will loop through the layers of the mesh as well as indicate the current highest visible layer. A pdf format of each layer (as an instruction manual) can be generated with the “Export” button. Pressing “Export” will open a file dialog for you to specify the output file path. Once a path is selected, the pdf will begin generation. 
+
+## Happy Lego-ing~!
+
+![](./images/forms.gif)
 
 
 
