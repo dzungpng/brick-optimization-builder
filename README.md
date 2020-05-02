@@ -5,6 +5,8 @@ Brick-Optimization-Builder (B.O.B)
 </p>
 
 ## I. Project Summary
+This tool is based on the paper [Legolization: Optimizing LEGO Designs]((from paper: https://graphics.cmlab.csie.ntu.edu.tw/~forestking/research/SIGA15-Legolization/)).
+
 The goal of this project is to implement a tool for the creation and analysis of LEGO brick layouts. The usefulness of such a tool arises from the difficulty of both designing LEGO layouts and estimating their stability. There are many tools available for digitally constructing a LEGO model. This takes the tedium out of having to deconstruct failed designs or portions of sculptures in the middle of construction because the user already knows what the finished arrangement of bricks will look like as well as how many of each type are necessary. However, such tools do not tell the user if the digital model will hold up in real life and that is what our tool seeks to remedy. 
 
 We envision a variety of people using our tool. These users include both professional LEGO sculptures as well as amateurs who construct unique models as a hobby. Our tool would also be useful for CG artists wanting to make a scene constructed of LEGOs (as is seen in the LEGO movies) in which case stability analysis may still be important depending on if simulations are intended to be run on the output. 
